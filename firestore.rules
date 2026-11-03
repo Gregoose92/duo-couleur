@@ -1,0 +1,51 @@
+rules_version = '2';
+// Règles de sécurité Duo Couleur
+// Principe : tout utilisateur connecté peut LIRE un salon, mais chacun n'ÉCRIT que ses propres données.
+service cloud.firestore {
+  match /databases/{db}/documents {
+
+    function signedIn()   { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function isHex(c)     { return c is string && c.matches('^#[0-9a-f]{6}$'); }
+    function validCode(c) { return c.matches('^[a-z0-9-]{1,32}$'); }
+    function myUsername() {
+      return get(/databases/$(db)/documents/users/$(request.auth.uid)).data.username;
+    }
+
+    // Profil : privé, pseudo non modifiable après création
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['username', 'createdAt', 'color'])
+        && request.resource.data.username is string
+        && request.resource.data.username.matches('^[a-z0-9_.-]{3,20}$')
+        && request.auth.token.email == request.resource.data.username + '@duo-couleur.app';
+      allow update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['username', 'createdAt', 'color'])
+        && request.resource.data.username == resource.data.username
+        && isHex(request.resource.data.color);
+      allow delete: if false;
+
+      // Historique des salons rejoints : privé
+      match /rooms/{code} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && validCode(code)
+          && request.resource.data.keys().hasOnly(['code', 'lastJoined'])
+          && request.resource.data.code == code
+          && request.resource.data.lastJoined == request.time;
+      }
+    }
+
+    // Présence dans un salon : lisible par les connectés, écrite seulement par soi-même
+    match /rooms/{code}/members/{uid} {
+      allow read: if signedIn() && validCode(code);
+      allow create, update: if isOwner(uid) && validCode(code)
+        && request.resource.data.keys().hasOnly(['name', 'color', 't', 'online'])
+        && request.resource.data.name == myUsername()        // impossible d'usurper un pseudo
+        && isHex(request.resource.data.color)
+        && request.resource.data.online is bool
+        && request.resource.data.t == request.time;          // horodatage serveur obligatoire
+      allow delete: if isOwner(uid);
+    }
+  }
+}

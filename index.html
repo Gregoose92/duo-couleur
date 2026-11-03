@@ -15,42 +15,71 @@
 <style>
   :root{
     --bg:#0d0e11; --panel:#16181d; --line:#262a31; --txt:#eceef2; --mute:#8a909c;
-    --accent:#7cf7c5; --r:18px;
+    --accent:#7cf7c5; --err:#ff6b6b; --r:18px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;min-height:100%;background:var(--bg);color:var(--txt);
     font:15px/1.4 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif}
   body{padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 18px)}
   .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
-  header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px}
   h1{font-size:18px;margin:0;letter-spacing:.3px;white-space:nowrap}
   h1 span{color:var(--mute);font-weight:400}
-  .status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--mute);text-align:right}
+  h2{font-size:13px;color:var(--mute);text-transform:uppercase;letter-spacing:.8px;margin:4px 2px 0;font-weight:600}
+  .status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--mute)}
   .dot{width:9px;height:9px;border-radius:50%;background:#555;flex:none}
   .dot.on{background:var(--accent);box-shadow:0 0 10px var(--accent)}
-  .dot.off{background:#ff6b6b}
+  .dot.off{background:var(--err)}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
-  label{font-size:12px;color:var(--mute);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
-  .row{display:flex;gap:10px}
-  .row>div{flex:1;min-width:0}
-  input[type=text]{width:100%;background:#0f1114;border:1px solid var(--line);color:var(--txt);
+  label{font-size:12px;color:var(--mute);display:block;margin:10px 0 5px;text-transform:uppercase;letter-spacing:.8px}
+  label:first-child{margin-top:0}
+  input[type=text],input[type=password]{width:100%;background:#0f1114;border:1px solid var(--line);color:var(--txt);
     border-radius:12px;padding:11px 12px;font-size:16px;outline:none}
-  input[type=text]:focus{border-color:var(--accent)}
+  input:focus{border-color:var(--accent)}
   button{font:inherit;cursor:pointer}
-  .btn{width:100%;margin-top:12px;background:var(--accent);color:#0b0c0f;border:0;border-radius:12px;
+  button:disabled{opacity:.5;cursor:default}
+  .btn{width:100%;margin-top:14px;background:var(--accent);color:#0b0c0f;border:0;border-radius:12px;
     padding:12px;font-weight:700;font-size:15px}
   .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
   .btns{display:flex;gap:10px}
   .btns .btn{margin-top:0}
   .link{background:none;border:0;color:var(--accent);padding:0;font-size:12px;margin-top:6px}
+  .err{color:var(--err);font-size:13px;margin-top:10px;min-height:1em}
+  .small{font-size:12px;color:var(--mute)}
+  .hidden{display:none!important}
 
+  /* Onglets auth */
+  .tabs{display:flex;background:#0f1114;border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:14px}
+  .tabs button{flex:1;border:0;background:none;color:var(--mute);padding:9px;border-radius:9px;font-weight:600}
+  .tabs button.on{background:var(--panel);color:var(--txt)}
+  .hero{text-align:center;padding:18px 0 4px}
+  .hero img{width:76px;height:76px}
+  .hero p{color:var(--mute);margin:8px 0 0;font-size:14px}
+
+  /* Barre utilisateur */
+  .user{display:flex;align-items:center;gap:8px;font-size:13px}
+  .avatar{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-weight:700;color:#0b0c0f;font-size:13px}
+  .iconbtn{background:none;border:1px solid var(--line);color:var(--mute);border-radius:9px;padding:5px 9px;font-size:12px}
+
+  /* Liste des salons */
+  .rooms{display:flex;flex-direction:column;gap:8px}
+  .room{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
+    border-radius:14px;padding:12px;cursor:pointer}
+  .room .info{flex:1;min-width:0}
+  .room .code{font:600 15px ui-monospace,Menlo,monospace}
+  .room .when{font-size:12px;color:var(--mute)}
+  .room .dots{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+  .room .dots i{width:14px;height:14px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
+  .room .del{background:none;border:0;color:var(--mute);font-size:18px;padding:4px 6px}
+  .empty-list{color:var(--mute);font-size:14px;text-align:center;padding:18px;border:1px dashed var(--line);border-radius:14px}
+
+  /* Salon */
   .screen{position:relative;border-radius:24px;height:46vh;min-height:240px;overflow:hidden;
     border:1px solid var(--line);background:#1b1d22;transition:background .35s ease,opacity .35s;
     display:flex;flex-direction:column;justify-content:space-between;padding:16px;cursor:pointer}
   .screen .who{font-size:13px;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.35);
     backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-self:flex-start;color:#fff}
-  .screen .hex{font:600 28px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#fff;
-    text-shadow:0 1px 8px rgba(0,0,0,.4)}
+  .screen .hex{font:600 28px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4)}
   .screen .meta{font-size:12px;color:rgba(255,255,255,.8);margin-top:4px}
   .screen.empty{cursor:default}
   .screen.empty .hex{font-size:16px;font-weight:500;font-family:inherit;color:var(--mute);text-shadow:none}
@@ -59,7 +88,6 @@
   .screen.light .who{background:rgba(255,255,255,.45);color:#111}
   .screen.light .hex,.screen.light .meta,.screen.light .hint{color:#111;text-shadow:none}
   .screen.away{opacity:.55}
-
   .mine{display:flex;align-items:center;gap:12px;margin-bottom:12px}
   .mine .sw{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);flex:none;transition:background .2s}
   .mine .t{font-size:13px;color:var(--mute)}
@@ -75,64 +103,83 @@
   input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0d0e11}
   .others{display:flex;gap:8px;flex-wrap:wrap}
   .others:empty{display:none}
-  .chip{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 9px;border-radius:999px;
-    background:#0f1114;border:1px solid var(--line)}
+  .chip{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 9px;border-radius:999px;background:#0f1114;border:1px solid var(--line)}
   .chip i{width:12px;height:12px;border-radius:4px;display:inline-block}
-  .small{font-size:12px;color:var(--mute)}
-  .hidden{display:none!important}
+  .chip.away{opacity:.5}
+
   #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);
     background:#fff;color:#111;padding:9px 14px;border-radius:999px;font-size:13px;z-index:20;
-    opacity:0;transition:opacity .25s;pointer-events:none}
+    opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw}
   #toast.show{opacity:1}
   #full{position:fixed;inset:0;z-index:10;display:flex;align-items:flex-end;justify-content:center;
     padding-bottom:calc(env(safe-area-inset-bottom) + 30px);transition:background .35s ease}
   #full span{font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.35);color:#fff}
+  pre{white-space:pre-wrap;font-size:12px;color:var(--mute)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
     <h1>Duo Couleur <span id="roomLabel"></span></h1>
-    <div class="status"><div class="dot" id="dot"></div><span id="stTxt">hors ligne</span></div>
+    <div id="userBar" class="user hidden">
+      <div class="avatar" id="avatar"></div><span id="userName"></span>
+      <button class="iconbtn" id="logoutBtn">Déconnexion</button>
+    </div>
+    <div class="status hidden" id="status"><div class="dot" id="dot"></div><span id="stTxt"></span></div>
   </header>
 
-  <!-- Étape 1 : rejoindre -->
-  <section class="card" id="setup">
-    <div class="row">
-      <div><label for="name">Ton pseudo</label><input type="text" id="name" maxlength="20" placeholder="Greg" autocomplete="nickname"></div>
-      <div>
-        <label for="code">Code salon</label>
-        <input type="text" id="code" maxlength="32" placeholder="ex. rouge-42" autocapitalize="off" autocorrect="off" spellcheck="false">
-        <button class="link" id="genBtn" type="button">↻ générer un code</button>
-      </div>
+  <!-- Écran : chargement / config manquante -->
+  <section id="vBoot" class="card"><span class="small">Chargement…</span></section>
+
+  <!-- Écran : connexion / inscription -->
+  <section id="vAuth" class="hidden">
+    <div class="hero"><img src="icon.svg" alt=""><p>Partage ta couleur en direct avec tes amis.</p></div>
+    <div class="card">
+      <div class="tabs"><button id="tLogin" class="on">Connexion</button><button id="tSignup">Créer un compte</button></div>
+      <form id="authForm" autocomplete="on">
+        <label for="aUser">Pseudo</label>
+        <input type="text" id="aUser" maxlength="20" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="greg">
+        <label for="aPass">Mot de passe</label>
+        <input type="password" id="aPass" autocomplete="current-password" placeholder="6 caractères minimum">
+        <div id="confirmWrap" class="hidden">
+          <label for="aPass2">Confirmer le mot de passe</label>
+          <input type="password" id="aPass2" autocomplete="new-password">
+        </div>
+        <div class="err" id="authErr"></div>
+        <button class="btn" id="authBtn" type="submit">Se connecter</button>
+      </form>
+      <p class="small" id="authHint" style="margin:10px 0 0">Pseudo : 3 à 20 caractères, lettres minuscules, chiffres, « . », « _ » ou « - ».</p>
     </div>
-    <button class="btn" id="joinBtn">Rejoindre</button>
-    <p class="small" style="margin:10px 0 0">Même code sur les deux téléphones, ou envoie le lien du salon à ton ami une fois dedans.</p>
   </section>
 
-  <!-- Étape 2 : jeu -->
-  <section id="game" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+  <!-- Écran : mes salons -->
+  <section id="vHome" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+    <div class="card">
+      <label for="code">Rejoindre ou créer un salon</label>
+      <input type="text" id="code" maxlength="32" placeholder="ex. rouge-42" autocapitalize="off" autocorrect="off" spellcheck="false">
+      <button class="link" id="genBtn" type="button">↻ générer un code</button>
+      <button class="btn" id="joinBtn">Entrer dans le salon</button>
+    </div>
+    <h2>Mes salons</h2>
+    <div class="rooms" id="rooms"><div class="empty-list">Chargement…</div></div>
+  </section>
+
+  <!-- Écran : salon -->
+  <section id="vRoom" class="hidden" style="display:flex;flex-direction:column;gap:14px">
     <div class="screen empty" id="screen">
       <div class="who" id="who">En attente de ton ami…</div>
       <span class="hint">toucher = plein écran</span>
-      <div>
-        <div class="hex" id="hex">Personne d'autre dans le salon</div>
-        <div class="meta" id="meta"></div>
-      </div>
+      <div><div class="hex" id="hex">Personne d'autre dans le salon</div><div class="meta" id="meta"></div></div>
     </div>
     <div class="others" id="others"></div>
-
     <div class="card">
-      <div class="mine">
-        <div class="sw" id="mySw"></div>
-        <div class="t">Ta couleur, visible par l'autre<b id="myHex">#000000</b></div>
-      </div>
+      <div class="mine"><div class="sw" id="mySw"></div><div class="t">Ta couleur, visible par les autres<b id="myHex">#000000</b></div></div>
       <div class="grid" id="grid"></div>
       <div class="hue"><input type="range" id="hue" min="0" max="359" value="200" aria-label="Teinte"></div>
     </div>
     <div class="btns">
       <button class="btn" id="shareBtn">Inviter un ami</button>
-      <button class="btn ghost" id="leaveBtn">Quitter</button>
+      <button class="btn ghost" id="leaveBtn">Mes salons</button>
     </div>
   </section>
 </div>
@@ -140,205 +187,258 @@
 <div id="full" class="hidden"><span>toucher pour fermer</span></div>
 <div id="toast"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
-<script>
-(function(){
-  "use strict";
-  /* ================= Config ================= */
-  // Relais MQTT publics (WebSocket sécurisé). Le 2e sert de secours.
-  const BROKERS = window.__DC_BROKERS || ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
-  const PREFIX  = "duocouleur/v1/";        // espace de noms des topics
-  const HEARTBEAT_MS = 15000;              // republication périodique
-  const AWAY_MS      = 45000;              // au-delà : ami "absent"
-  const EXPIRE_MS    = 12*3600*1000;       // au-delà : état ignoré
+<script type="module">
+import { firebaseConfig } from "./firebase-config.js";
+const V = "10.12.2";
+const $ = id => document.getElementById(id);
 
-  const PALETTE = ["#ff3b30","#ff9500","#ffcc00","#34c759","#00c7be","#30b0ff",
-                   "#007aff","#5856d6","#af52de","#ff2d92","#ffffff","#1c1c1e"];
-  const HEX_RE = /^#[0-9a-f]{6}$/i;
-  const $ = id => document.getElementById(id);
-  const store = {
-    get(k){ try{return localStorage.getItem(k)}catch(e){return null} },
-    set(k,v){ try{localStorage.setItem(k,v)}catch(e){} }
-  };
-  const rand = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b=>"abcdefghjkmnpqrstuvwxyz23456789"[b%31]).join("");
+/* ================= Config manquante ================= */
+const params = new URLSearchParams(location.search);
+const EMU = params.has("emu") && ["localhost","127.0.0.1"].includes(location.hostname);
+if (!EMU && (!firebaseConfig.apiKey || firebaseConfig.apiKey === "REMPLACER")) {
+  $("vBoot").innerHTML = "<b>Configuration Firebase manquante.</b><pre>Colle la config de ton projet Firebase dans firebase-config.js</pre>";
+  throw new Error("config manquante");
+}
 
-  /* ================= État ================= */
-  const myId = store.get("dc_id") || (()=>{ const v=rand(10); store.set("dc_id",v); return v; })();
-  let me = { name: store.get("dc_name") || "", color: store.get("dc_color") || "#30b0ff" };
-  let client = null, roomCode = null, brokerIdx = 0, hb = null, tick = null;
-  const peers = new Map();   // id -> {name,color,t,gone}
+const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
+const A = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
+const F = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
 
-  /* ================= UI de base ================= */
-  const urlRoom = new URLSearchParams(location.search).get("salon");
-  $("name").value = me.name;
-  $("code").value = urlRoom || store.get("dc_code") || "";
-  $("genBtn").onclick = ()=>{ $("code").value = rand(3)+"-"+rand(3); };
+const app  = initializeApp(EMU ? { apiKey:"demo", projectId:"demo-duo", authDomain:"localhost" } : firebaseConfig);
+const auth = A.getAuth(app);
+const db   = F.getFirestore(app);
+if (EMU) { A.connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings:true }); F.connectFirestoreEmulator(db, "localhost", 8080); }
 
-  function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1800); }
-  function setStatus(state, txt){ $("dot").className="dot "+(state||""); $("stTxt").textContent=txt; }
+/* ================= Constantes / utilitaires ================= */
+const DOMAIN = "@duo-couleur.app";               // le pseudo est converti en identifiant interne
+const USER_RE = /^[a-z0-9_.-]{3,20}$/;
+const HEX_RE  = /^#[0-9a-f]{6}$/;
+const HEARTBEAT_MS = 25000, AWAY_MS = 70000;
+const PALETTE = ["#ff3b30","#ff9500","#ffcc00","#34c759","#00c7be","#30b0ff",
+                 "#007aff","#5856d6","#af52de","#ff2d92","#ffffff","#1c1c1e"];
+const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
+const rand = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b=>"abcdefghjkmnpqrstuvwxyz23456789"[b%31]).join("");
+const cleanCode = s => (s||"").trim().toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"").slice(0,32);
+function hslToHex(h,s,l){ s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return "#"+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
+function isLight(hex){ const n=parseInt(hex.slice(1),16);return (0.299*(n>>16&255)+0.587*(n>>8&255)+0.114*(n&255))>165; }
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+function ago(ms){ const s=Math.round((Date.now()-ms)/1000); if(s<60)return"à l'instant"; const m=Math.round(s/60); if(m<60)return`il y a ${m} min`; const h=Math.round(m/60); if(h<24)return`il y a ${h} h`; const d=Math.round(h/24); return d===1?"hier":`il y a ${d} j`; }
+const tms = ts => ts && typeof ts.toMillis==="function" ? ts.toMillis() : Date.now();
 
-  function hslToHex(h,s,l){
-    s/=100; l/=100;
-    const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l);
-    const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
-    return "#"+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join("");
-  }
-  function isLight(hex){
-    const n=parseInt(hex.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
-    return (0.299*r+0.587*g+0.114*b) > 165;
-  }
+function show(view){
+  ["vBoot","vAuth","vHome","vRoom"].forEach(v=>$(v).classList.toggle("hidden", v!==view));
+  $("userBar").classList.toggle("hidden", !(view==="vHome"));
+  $("status").classList.toggle("hidden", view!=="vRoom");
+  if(view!=="vRoom") $("roomLabel").textContent="";
+}
 
-  PALETTE.forEach(c=>{
-    const b=document.createElement("button");
-    b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c);
-    b.onclick=()=>pick(c);
-    $("grid").appendChild(b);
-  });
-  let hueTimer=null;
-  $("hue").addEventListener("input", e=>{
-    me.color=hslToHex(+e.target.value,100,50); renderMine();
-    // limite le débit pendant le glissement (~12 msg/s max)
-    if(!hueTimer) hueTimer=setTimeout(()=>{ hueTimer=null; pick(me.color); },80);
-  });
+/* ================= État ================= */
+let me = null;              // { uid, username, color }
+let current = null;         // code du salon courant
+let unsubMembers = null, unsubRooms = null, hb = null, tick = null;
+let members = new Map();
+const pendingRoom = cleanCode(params.get("salon"));
 
-  function pick(c){ me.color=c; store.set("dc_color",c); renderMine(); publishMe(); }
-  function renderMine(){
-    $("mySw").style.background=me.color;
-    $("myHex").textContent=me.color.toUpperCase();
-    document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===me.color));
-  }
-  renderMine();
+/* ================= Authentification ================= */
+let mode = "login";
+function setMode(m){
+  mode=m;
+  $("tLogin").classList.toggle("on",m==="login"); $("tSignup").classList.toggle("on",m==="signup");
+  $("confirmWrap").classList.toggle("hidden",m==="login");
+  $("authBtn").textContent = m==="login" ? "Se connecter" : "Créer mon compte";
+  $("aPass").autocomplete = m==="login" ? "current-password" : "new-password";
+  $("authErr").textContent="";
+}
+$("tLogin").onclick=()=>setMode("login");
+$("tSignup").onclick=()=>setMode("signup");
 
-  /* ================= Rendu de l'ami ================= */
-  let friendColor=null;
-  function render(){
-    const now=Date.now();
-    const list=[...peers.values()].filter(p=>now-p.t < EXPIRE_MS).sort((a,b)=>b.t-a.t);
-    const main=list[0], sc=$("screen");
-    if(main){
-      const away = main.gone || now-main.t > AWAY_MS;
-      friendColor=main.color;
-      sc.className="screen"+(isLight(main.color)?" light":"")+(away?" away":"");
-      sc.style.background=main.color;
-      $("who").textContent="Écran de "+main.name+(away?" · hors ligne":"");
-      $("hex").textContent=main.color.toUpperCase();
-      $("meta").textContent="mis à jour à "+new Date(main.t).toLocaleTimeString("fr-FR");
-      if(!$("full").classList.contains("hidden")) $("full").style.background=main.color;
+const AUTH_ERRORS = {
+  "auth/email-already-in-use":"Ce pseudo est déjà pris.",
+  "auth/invalid-credential":"Pseudo ou mot de passe incorrect.",
+  "auth/wrong-password":"Pseudo ou mot de passe incorrect.",
+  "auth/user-not-found":"Pseudo ou mot de passe incorrect.",
+  "auth/invalid-email":"Pseudo invalide.",
+  "auth/weak-password":"Mot de passe trop court (6 caractères minimum).",
+  "auth/too-many-requests":"Trop de tentatives, réessaie dans quelques minutes.",
+  "auth/network-request-failed":"Pas de connexion réseau."
+};
+
+$("authForm").onsubmit = async e => {
+  e.preventDefault();
+  const u=$("aUser").value.trim().toLowerCase(), p=$("aPass").value;
+  const err=$("authErr"); err.textContent="";
+  if(!USER_RE.test(u)) { err.textContent="Pseudo : 3 à 20 caractères (a-z, 0-9, . _ -)."; return; }
+  if(p.length<6)        { err.textContent="Mot de passe : 6 caractères minimum."; return; }
+  if(mode==="signup" && p!==$("aPass2").value) { err.textContent="Les deux mots de passe ne correspondent pas."; return; }
+  $("authBtn").disabled=true;
+  try{
+    if(mode==="signup"){
+      const cred = await A.createUserWithEmailAndPassword(auth, u+DOMAIN, p);
+      await F.setDoc(F.doc(db,"users",cred.user.uid), { username:u, createdAt:F.serverTimestamp(), color:"#30b0ff" });
     }else{
-      friendColor=null;
-      sc.className="screen empty"; sc.style.background="";
-      $("who").textContent="En attente de ton ami…";
-      $("hex").textContent="Personne d'autre dans le salon";
-      $("meta").textContent="";
+      await A.signInWithEmailAndPassword(auth, u+DOMAIN, p);
     }
-    const box=$("others"); box.textContent="";
-    if(list.length>1) list.forEach(p=>{
-      const d=document.createElement("div"); d.className="chip";
-      const i=document.createElement("i"); i.style.background=p.color;
-      d.appendChild(i); d.appendChild(document.createTextNode(p.name));
-      box.appendChild(d);
+    $("aPass").value=""; $("aPass2").value="";
+  }catch(ex){
+    err.textContent = AUTH_ERRORS[ex.code] || ("Erreur : "+(ex.code||ex.message));
+  }finally{ $("authBtn").disabled=false; }
+};
+
+$("logoutBtn").onclick = async ()=>{ await leaveRoom(); stopRooms(); await A.signOut(auth); };
+
+A.onAuthStateChanged(auth, async user=>{
+  if(!user){ me=null; setMode("login"); show("vAuth"); return; }
+  const username = (user.email||"").replace(DOMAIN,"");
+  const ref = F.doc(db,"users",user.uid);
+  let snap = await F.getDoc(ref).catch(()=>null);
+  if(!snap || !snap.exists()){                       // profil absent (inscription interrompue) → on le recrée
+    await F.setDoc(ref,{ username, createdAt:F.serverTimestamp(), color:"#30b0ff" }).catch(()=>{});
+    snap = await F.getDoc(ref).catch(()=>null);
+  }
+  const data = snap && snap.exists() ? snap.data() : { username, color:"#30b0ff" };
+  me = { uid:user.uid, username:data.username, color: HEX_RE.test(data.color)?data.color:"#30b0ff" };
+  $("userName").textContent = me.username;
+  $("avatar").textContent = me.username[0].toUpperCase();
+  $("avatar").style.background = me.color;
+  renderMine();
+  if(pendingRoom) { enterRoom(pendingRoom); } else { goHome(); }
+});
+
+/* ================= Mes salons ================= */
+function goHome(){
+  history.replaceState(null,"",location.pathname+(EMU?"?emu":""));
+  show("vHome");
+  $("code").value = "";
+  watchRooms();
+}
+function stopRooms(){ if(unsubRooms){ unsubRooms(); unsubRooms=null; } }
+function watchRooms(){
+  stopRooms();
+  const q = F.query(F.collection(db,"users",me.uid,"rooms"), F.orderBy("lastJoined","desc"), F.limit(30));
+  unsubRooms = F.onSnapshot(q, snap=>{
+    const box=$("rooms"); box.textContent="";
+    if(snap.empty){ box.innerHTML='<div class="empty-list">Aucun salon pour l\'instant.<br>Crée-en un ci-dessus et invite un ami.</div>'; return; }
+    snap.docs.forEach((d,i)=>{
+      const r=d.data();
+      const el=document.createElement("div"); el.className="room";
+      const info=document.createElement("div"); info.className="info";
+      const c=document.createElement("div"); c.className="code"; c.textContent=r.code;
+      const w=document.createElement("div"); w.className="when"; w.textContent="Rejoint "+ago(tms(r.lastJoined));
+      const dots=document.createElement("div"); dots.className="dots";
+      info.append(c,w,dots);
+      const del=document.createElement("button"); del.className="del"; del.textContent="×"; del.setAttribute("aria-label","Retirer de ma liste");
+      del.onclick=async ev=>{ ev.stopPropagation(); await F.deleteDoc(d.ref).catch(()=>toast("Suppression impossible")); };
+      el.append(info,del);
+      el.onclick=()=>enterRoom(r.code);
+      box.appendChild(el);
+      if(i<15) loadRoomPreview(r.code, dots, w);   // qui est dans ce salon ?
     });
-  }
+  }, ()=>{ $("rooms").innerHTML='<div class="empty-list">Impossible de charger tes salons.</div>'; });
+}
+async function loadRoomPreview(code, dots, when){
+  try{
+    const s = await F.getDocs(F.collection(db,"rooms",code,"members"));
+    const others = s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.id!==me.uid && HEX_RE.test(m.color));
+    others.slice(0,8).forEach(m=>{ const i=document.createElement("i"); i.style.background=m.color; i.title=m.name; dots.appendChild(i); });
+    if(others.length) when.textContent += " · avec "+others.slice(0,3).map(m=>String(m.name).slice(0,20)).join(", ")+(others.length>3?"…":"");
+  }catch(e){}
+}
+$("genBtn").onclick=()=>{ $("code").value = rand(3)+"-"+rand(3); };
+$("joinBtn").onclick=()=>{ const c=cleanCode($("code").value); if(!c){ toast("Choisis un code de salon"); $("code").focus(); return; } enterRoom(c); };
 
-  $("screen").onclick=()=>{ if(!friendColor) return; const f=$("full"); f.style.background=friendColor; f.classList.remove("hidden"); };
-  $("full").onclick=()=>$("full").classList.add("hidden");
+/* ================= Salon ================= */
+PALETTE.forEach(c=>{ const b=document.createElement("button"); b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c); b.onclick=()=>pick(c); $("grid").appendChild(b); });
+let hueTimer=null;
+$("hue").addEventListener("input",e=>{
+  me.color=hslToHex(+e.target.value,100,50); renderMine();
+  if(!hueTimer) hueTimer=setTimeout(()=>{ hueTimer=null; pick(me.color); },250);   // ~4 écritures/s max
+});
+function renderMine(){
+  if(!me) return;
+  $("mySw").style.background=me.color; $("myHex").textContent=me.color.toUpperCase();
+  document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===me.color));
+}
+function pick(c){
+  me.color=c; renderMine(); $("avatar").style.background=c;
+  writePresence(true);
+  F.updateDoc(F.doc(db,"users",me.uid),{ color:c }).catch(()=>{});
+}
+function writePresence(online){
+  if(!current||!me) return Promise.resolve();
+  return F.setDoc(F.doc(db,"rooms",current,"members",me.uid),
+    { name:me.username, color:me.color, t:F.serverTimestamp(), online })
+    .catch(e=>{ console.warn(e); });
+}
 
-  /* ================= Couche MQTT ================= */
-  const myTopic = () => PREFIX+roomCode+"/"+myId;
-
-  function publishMe(){
-    if(!client || !client.connected || !roomCode) return;
-    const payload=JSON.stringify({ n:me.name, c:me.color, t:Date.now() });
-    client.publish(myTopic(), payload, { qos:0, retain:true });  // retain = un nouvel arrivant reçoit la dernière couleur
-  }
-
-  function onMessage(topic, buf){
-    const id = topic.slice((PREFIX+roomCode+"/").length);
-    if(!id || id===myId || id.includes("/")) return;
-    if(!buf || buf.length===0){                      // départ (ou testament) → garder la couleur, marquer absent
-      const p=peers.get(id); if(p){ p.gone=true; render(); } return;
-    }
-    if(buf.length>512) return;
-    let d; try{ d=JSON.parse(new TextDecoder().decode(buf)); }catch(e){ return; }
-    if(!d || !HEX_RE.test(String(d.c))) return;     // données non fiables : on valide
-    peers.set(id,{
-      name: String(d.n||"Ami").replace(/[\u0000-\u001f]/g,"").slice(0,20) || "Ami",
-      color: String(d.c).toLowerCase(),
-      t: Math.min(Number(d.t)||Date.now(), Date.now()),
-      gone:false
+async function enterRoom(code){
+  await leaveRoom(true);
+  current = code;
+  $("roomLabel").textContent="· "+code;
+  history.replaceState(null,"","?salon="+encodeURIComponent(code)+(EMU?"&emu":""));
+  stopRooms(); show("vRoom");
+  setStatus("","connexion…");
+  members.clear(); render();
+  await writePresence(true);
+  F.setDoc(F.doc(db,"users",me.uid,"rooms",code),{ code, lastJoined:F.serverTimestamp() }).catch(e=>console.warn(e));
+  unsubMembers = F.onSnapshot(F.collection(db,"rooms",code,"members"), { includeMetadataChanges:true }, snap=>{
+    setStatus(snap.metadata.fromCache ? "off":"on", snap.metadata.fromCache ? "hors ligne":"connecté");
+    members.clear();
+    snap.docs.forEach(d=>{
+      if(d.id===me.uid) return;
+      const m=d.data();
+      if(!HEX_RE.test(String(m.color))) return;
+      members.set(d.id,{ name:String(m.name||"Ami").slice(0,20), color:m.color, t:tms(m.t), online:m.online!==false });
     });
     render();
+  }, ()=>setStatus("off","accès refusé"));
+  hb = setInterval(()=>writePresence(true), HEARTBEAT_MS);
+  tick = setInterval(render, 5000);
+}
+async function leaveRoom(silent){
+  clearInterval(hb); clearInterval(tick); hb=tick=null;
+  if(unsubMembers){ unsubMembers(); unsubMembers=null; }
+  if(current){ const c=current; await writePresence(false); current=null; }
+  if(!silent && me) goHome();
+}
+function setStatus(s,t){ $("dot").className="dot "+s; $("stTxt").textContent=t; }
+
+let friendColor=null;
+function render(){
+  const now=Date.now();
+  const list=[...members.values()].map(m=>({...m, away: !m.online || now-m.t>AWAY_MS}))
+    .sort((a,b)=> (a.away-b.away) || (b.t-a.t));
+  const main=list[0], sc=$("screen");
+  if(main){
+    friendColor=main.color;
+    sc.className="screen"+(isLight(main.color)?" light":"")+(main.away?" away":"");
+    sc.style.background=main.color;
+    $("who").textContent="Écran de "+main.name+(main.away?" · hors ligne":"");
+    $("hex").textContent=main.color.toUpperCase();
+    $("meta").textContent="mis à jour "+ago(main.t);
+    if(!$("full").classList.contains("hidden")) $("full").style.background=main.color;
+  }else{
+    friendColor=null; sc.className="screen empty"; sc.style.background="";
+    $("who").textContent="En attente de ton ami…"; $("hex").textContent="Personne d'autre dans le salon"; $("meta").textContent="";
   }
-
-  function connect(){
-    if(typeof mqtt==="undefined"){ setStatus("off","librairie réseau non chargée"); return; }
-    const url=BROKERS[brokerIdx];
-    setStatus("","connexion…");
-    let everConnected=false;
-    client = mqtt.connect(url,{
-      clientId:"dc-"+myId+"-"+rand(4),
-      clean:true, keepalive:30, reconnectPeriod:2500, connectTimeout:7000,
-      will:{ topic:myTopic(), payload:"", qos:0, retain:true }   // si coupure brutale : on efface notre état
-    });
-    client.on("connect",()=>{
-      everConnected=true;
-      setStatus("on","connecté");
-      client.subscribe(PREFIX+roomCode+"/+",{qos:0});
-      publishMe();
-    });
-    client.on("message",onMessage);
-    client.on("reconnect",()=>setStatus("","reconnexion…"));
-    client.on("offline",()=>setStatus("off","hors ligne"));
-    client.on("error",()=>{});
-    // relais injoignable dès le départ → on bascule sur le secours
-    setTimeout(()=>{
-      if(!everConnected && client && roomCode){
-        client.end(true); brokerIdx=(brokerIdx+1)%BROKERS.length; connect();
-      }
-    },8000);
-  }
-
-  function join(){
-    me.name=($("name").value||"").trim().slice(0,20) || "Joueur";
-    const code=($("code").value||"").trim().toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"").slice(0,32);
-    if(!code){ $("code").focus(); toast("Choisis un code de salon"); return; }
-    $("code").value=code;
-    store.set("dc_name",me.name); store.set("dc_code",code);
-    roomCode=code; peers.clear(); render();
-    $("roomLabel").textContent="· "+code;
-    $("setup").classList.add("hidden"); $("game").classList.remove("hidden");
-    history.replaceState(null,"","?salon="+encodeURIComponent(code));
-    connect();
-    hb=setInterval(publishMe,HEARTBEAT_MS);
-    tick=setInterval(render,5000);
-  }
-
-  function leave(){
-    clearInterval(hb); clearInterval(tick);
-    if(client){
-      if(client.connected) client.publish(myTopic(),"",{qos:0,retain:true}); // efface notre état retenu
-      const c=client; setTimeout(()=>c.end(true),300); client=null;
-    }
-    roomCode=null; peers.clear(); render();
-    $("roomLabel").textContent="";
-    history.replaceState(null,"",location.pathname);
-    $("game").classList.add("hidden"); $("setup").classList.remove("hidden");
-    setStatus("","hors ligne");
-  }
-
-  $("joinBtn").onclick=join;
-  $("leaveBtn").onclick=leave;
-  $("shareBtn").onclick=async()=>{
-    const url=location.origin+location.pathname+"?salon="+encodeURIComponent(roomCode);
-    if(navigator.share){ try{ await navigator.share({title:"Duo Couleur",text:"Rejoins-moi sur Duo Couleur",url}); return; }catch(e){ if(e.name==="AbortError") return; } }
-    try{ await navigator.clipboard.writeText(url); toast("Lien copié"); }catch(e){ toast(url); }
-  };
-  // Au retour au premier plan (iOS coupe les sockets en arrière-plan) : republier
-  document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ publishMe(); render(); } });
-
-  // Arrivé via un lien d'invitation avec un pseudo déjà connu → on entre directement
-  if(urlRoom && me.name) join();
-})();
+  const box=$("others"); box.textContent="";
+  if(list.length>1) list.forEach(p=>{
+    const d=document.createElement("div"); d.className="chip"+(p.away?" away":"");
+    const i=document.createElement("i"); i.style.background=p.color;
+    d.append(i, document.createTextNode(p.name)); box.appendChild(d);
+  });
+}
+$("screen").onclick=()=>{ if(!friendColor)return; const f=$("full"); f.style.background=friendColor; f.classList.remove("hidden"); };
+$("full").onclick=()=>$("full").classList.add("hidden");
+$("leaveBtn").onclick=()=>leaveRoom(false);
+$("shareBtn").onclick=async()=>{
+  const url=location.origin+location.pathname+"?salon="+encodeURIComponent(current);
+  if(navigator.share){ try{ await navigator.share({title:"Duo Couleur",text:"Rejoins-moi sur Duo Couleur",url}); return; }catch(e){ if(e.name==="AbortError")return; } }
+  try{ await navigator.clipboard.writeText(url); toast("Lien copié"); }catch(e){ toast(url); }
+};
+document.addEventListener("visibilitychange",()=>{
+  if(!current) return;
+  if(document.hidden) writePresence(false); else { writePresence(true); render(); }
+});
 </script>
 </body>
 </html>
