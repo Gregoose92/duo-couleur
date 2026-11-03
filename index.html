@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Duo Couleur</title>
+<meta name="theme-color" content="#0d0e11">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Duo Couleur">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>
+  :root{
+    --bg:#0d0e11; --panel:#16181d; --line:#262a31; --txt:#eceef2; --mute:#8a909c;
+    --accent:#7cf7c5; --r:18px;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;min-height:100%;background:var(--bg);color:var(--txt);
+    font:15px/1.4 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif}
+  body{padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 18px)}
+  .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  h1{font-size:18px;margin:0;letter-spacing:.3px;white-space:nowrap}
+  h1 span{color:var(--mute);font-weight:400}
+  .status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--mute);text-align:right}
+  .dot{width:9px;height:9px;border-radius:50%;background:#555;flex:none}
+  .dot.on{background:var(--accent);box-shadow:0 0 10px var(--accent)}
+  .dot.off{background:#ff6b6b}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+  label{font-size:12px;color:var(--mute);display:block;margin-bottom:5px;text-transform:uppercase;letter-spacing:.8px}
+  .row{display:flex;gap:10px}
+  .row>div{flex:1;min-width:0}
+  input[type=text]{width:100%;background:#0f1114;border:1px solid var(--line);color:var(--txt);
+    border-radius:12px;padding:11px 12px;font-size:16px;outline:none}
+  input[type=text]:focus{border-color:var(--accent)}
+  button{font:inherit;cursor:pointer}
+  .btn{width:100%;margin-top:12px;background:var(--accent);color:#0b0c0f;border:0;border-radius:12px;
+    padding:12px;font-weight:700;font-size:15px}
+  .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  .btns{display:flex;gap:10px}
+  .btns .btn{margin-top:0}
+  .link{background:none;border:0;color:var(--accent);padding:0;font-size:12px;margin-top:6px}
+
+  .screen{position:relative;border-radius:24px;height:46vh;min-height:240px;overflow:hidden;
+    border:1px solid var(--line);background:#1b1d22;transition:background .35s ease,opacity .35s;
+    display:flex;flex-direction:column;justify-content:space-between;padding:16px;cursor:pointer}
+  .screen .who{font-size:13px;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.35);
+    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-self:flex-start;color:#fff}
+  .screen .hex{font:600 28px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#fff;
+    text-shadow:0 1px 8px rgba(0,0,0,.4)}
+  .screen .meta{font-size:12px;color:rgba(255,255,255,.8);margin-top:4px}
+  .screen.empty{cursor:default}
+  .screen.empty .hex{font-size:16px;font-weight:500;font-family:inherit;color:var(--mute);text-shadow:none}
+  .screen .hint{position:absolute;right:14px;top:16px;font-size:11px;color:rgba(255,255,255,.75)}
+  .screen.empty .hint{display:none}
+  .screen.light .who{background:rgba(255,255,255,.45);color:#111}
+  .screen.light .hex,.screen.light .meta,.screen.light .hint{color:#111;text-shadow:none}
+  .screen.away{opacity:.55}
+
+  .mine{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .mine .sw{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);flex:none;transition:background .2s}
+  .mine .t{font-size:13px;color:var(--mute)}
+  .mine .t b{display:block;color:var(--txt);font:600 16px ui-monospace,Menlo,monospace}
+  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .grid button{aspect-ratio:1;border-radius:12px;border:2px solid transparent;padding:0}
+  .grid button.sel{border-color:#fff;box-shadow:0 0 0 2px var(--bg) inset}
+  .hue{margin-top:14px}
+  input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:28px;border-radius:14px;
+    background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;
+    background:#fff;border:3px solid #0d0e11;box-shadow:0 1px 6px rgba(0,0,0,.5)}
+  input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0d0e11}
+  .others{display:flex;gap:8px;flex-wrap:wrap}
+  .others:empty{display:none}
+  .chip{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 9px;border-radius:999px;
+    background:#0f1114;border:1px solid var(--line)}
+  .chip i{width:12px;height:12px;border-radius:4px;display:inline-block}
+  .small{font-size:12px;color:var(--mute)}
+  .hidden{display:none!important}
+  #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);
+    background:#fff;color:#111;padding:9px 14px;border-radius:999px;font-size:13px;z-index:20;
+    opacity:0;transition:opacity .25s;pointer-events:none}
+  #toast.show{opacity:1}
+  #full{position:fixed;inset:0;z-index:10;display:flex;align-items:flex-end;justify-content:center;
+    padding-bottom:calc(env(safe-area-inset-bottom) + 30px);transition:background .35s ease}
+  #full span{font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.35);color:#fff}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Duo Couleur <span id="roomLabel"></span></h1>
+    <div class="status"><div class="dot" id="dot"></div><span id="stTxt">hors ligne</span></div>
+  </header>
+
+  <!-- Étape 1 : rejoindre -->
+  <section class="card" id="setup">
+    <div class="row">
+      <div><label for="name">Ton pseudo</label><input type="text" id="name" maxlength="20" placeholder="Greg" autocomplete="nickname"></div>
+      <div>
+        <label for="code">Code salon</label>
+        <input type="text" id="code" maxlength="32" placeholder="ex. rouge-42" autocapitalize="off" autocorrect="off" spellcheck="false">
+        <button class="link" id="genBtn" type="button">↻ générer un code</button>
+      </div>
+    </div>
+    <button class="btn" id="joinBtn">Rejoindre</button>
+    <p class="small" style="margin:10px 0 0">Même code sur les deux téléphones, ou envoie le lien du salon à ton ami une fois dedans.</p>
+  </section>
+
+  <!-- Étape 2 : jeu -->
+  <section id="game" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+    <div class="screen empty" id="screen">
+      <div class="who" id="who">En attente de ton ami…</div>
+      <span class="hint">toucher = plein écran</span>
+      <div>
+        <div class="hex" id="hex">Personne d'autre dans le salon</div>
+        <div class="meta" id="meta"></div>
+      </div>
+    </div>
+    <div class="others" id="others"></div>
+
+    <div class="card">
+      <div class="mine">
+        <div class="sw" id="mySw"></div>
+        <div class="t">Ta couleur, visible par l'autre<b id="myHex">#000000</b></div>
+      </div>
+      <div class="grid" id="grid"></div>
+      <div class="hue"><input type="range" id="hue" min="0" max="359" value="200" aria-label="Teinte"></div>
+    </div>
+    <div class="btns">
+      <button class="btn" id="shareBtn">Inviter un ami</button>
+      <button class="btn ghost" id="leaveBtn">Quitter</button>
+    </div>
+  </section>
+</div>
+
+<div id="full" class="hidden"><span>toucher pour fermer</span></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/mqtt@5/dist/mqtt.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  /* ================= Config ================= */
+  // Relais MQTT publics (WebSocket sécurisé). Le 2e sert de secours.
+  const BROKERS = window.__DC_BROKERS || ["wss://broker.hivemq.com:8884/mqtt", "wss://broker.emqx.io:8084/mqtt"];
+  const PREFIX  = "duocouleur/v1/";        // espace de noms des topics
+  const HEARTBEAT_MS = 15000;              // republication périodique
+  const AWAY_MS      = 45000;              // au-delà : ami "absent"
+  const EXPIRE_MS    = 12*3600*1000;       // au-delà : état ignoré
+
+  const PALETTE = ["#ff3b30","#ff9500","#ffcc00","#34c759","#00c7be","#30b0ff",
+                   "#007aff","#5856d6","#af52de","#ff2d92","#ffffff","#1c1c1e"];
+  const HEX_RE = /^#[0-9a-f]{6}$/i;
+  const $ = id => document.getElementById(id);
+  const store = {
+    get(k){ try{return localStorage.getItem(k)}catch(e){return null} },
+    set(k,v){ try{localStorage.setItem(k,v)}catch(e){} }
+  };
+  const rand = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b=>"abcdefghjkmnpqrstuvwxyz23456789"[b%31]).join("");
+
+  /* ================= État ================= */
+  const myId = store.get("dc_id") || (()=>{ const v=rand(10); store.set("dc_id",v); return v; })();
+  let me = { name: store.get("dc_name") || "", color: store.get("dc_color") || "#30b0ff" };
+  let client = null, roomCode = null, brokerIdx = 0, hb = null, tick = null;
+  const peers = new Map();   // id -> {name,color,t,gone}
+
+  /* ================= UI de base ================= */
+  const urlRoom = new URLSearchParams(location.search).get("salon");
+  $("name").value = me.name;
+  $("code").value = urlRoom || store.get("dc_code") || "";
+  $("genBtn").onclick = ()=>{ $("code").value = rand(3)+"-"+rand(3); };
+
+  function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),1800); }
+  function setStatus(state, txt){ $("dot").className="dot "+(state||""); $("stTxt").textContent=txt; }
+
+  function hslToHex(h,s,l){
+    s/=100; l/=100;
+    const k=n=>(n+h/30)%12, a=s*Math.min(l,1-l);
+    const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));
+    return "#"+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join("");
+  }
+  function isLight(hex){
+    const n=parseInt(hex.slice(1),16), r=n>>16&255, g=n>>8&255, b=n&255;
+    return (0.299*r+0.587*g+0.114*b) > 165;
+  }
+
+  PALETTE.forEach(c=>{
+    const b=document.createElement("button");
+    b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c);
+    b.onclick=()=>pick(c);
+    $("grid").appendChild(b);
+  });
+  let hueTimer=null;
+  $("hue").addEventListener("input", e=>{
+    me.color=hslToHex(+e.target.value,100,50); renderMine();
+    // limite le débit pendant le glissement (~12 msg/s max)
+    if(!hueTimer) hueTimer=setTimeout(()=>{ hueTimer=null; pick(me.color); },80);
+  });
+
+  function pick(c){ me.color=c; store.set("dc_color",c); renderMine(); publishMe(); }
+  function renderMine(){
+    $("mySw").style.background=me.color;
+    $("myHex").textContent=me.color.toUpperCase();
+    document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===me.color));
+  }
+  renderMine();
+
+  /* ================= Rendu de l'ami ================= */
+  let friendColor=null;
+  function render(){
+    const now=Date.now();
+    const list=[...peers.values()].filter(p=>now-p.t < EXPIRE_MS).sort((a,b)=>b.t-a.t);
+    const main=list[0], sc=$("screen");
+    if(main){
+      const away = main.gone || now-main.t > AWAY_MS;
+      friendColor=main.color;
+      sc.className="screen"+(isLight(main.color)?" light":"")+(away?" away":"");
+      sc.style.background=main.color;
+      $("who").textContent="Écran de "+main.name+(away?" · hors ligne":"");
+      $("hex").textContent=main.color.toUpperCase();
+      $("meta").textContent="mis à jour à "+new Date(main.t).toLocaleTimeString("fr-FR");
+      if(!$("full").classList.contains("hidden")) $("full").style.background=main.color;
+    }else{
+      friendColor=null;
+      sc.className="screen empty"; sc.style.background="";
+      $("who").textContent="En attente de ton ami…";
+      $("hex").textContent="Personne d'autre dans le salon";
+      $("meta").textContent="";
+    }
+    const box=$("others"); box.textContent="";
+    if(list.length>1) list.forEach(p=>{
+      const d=document.createElement("div"); d.className="chip";
+      const i=document.createElement("i"); i.style.background=p.color;
+      d.appendChild(i); d.appendChild(document.createTextNode(p.name));
+      box.appendChild(d);
+    });
+  }
+
+  $("screen").onclick=()=>{ if(!friendColor) return; const f=$("full"); f.style.background=friendColor; f.classList.remove("hidden"); };
+  $("full").onclick=()=>$("full").classList.add("hidden");
+
+  /* ================= Couche MQTT ================= */
+  const myTopic = () => PREFIX+roomCode+"/"+myId;
+
+  function publishMe(){
+    if(!client || !client.connected || !roomCode) return;
+    const payload=JSON.stringify({ n:me.name, c:me.color, t:Date.now() });
+    client.publish(myTopic(), payload, { qos:0, retain:true });  // retain = un nouvel arrivant reçoit la dernière couleur
+  }
+
+  function onMessage(topic, buf){
+    const id = topic.slice((PREFIX+roomCode+"/").length);
+    if(!id || id===myId || id.includes("/")) return;
+    if(!buf || buf.length===0){                      // départ (ou testament) → garder la couleur, marquer absent
+      const p=peers.get(id); if(p){ p.gone=true; render(); } return;
+    }
+    if(buf.length>512) return;
+    let d; try{ d=JSON.parse(new TextDecoder().decode(buf)); }catch(e){ return; }
+    if(!d || !HEX_RE.test(String(d.c))) return;     // données non fiables : on valide
+    peers.set(id,{
+      name: String(d.n||"Ami").replace(/[\u0000-\u001f]/g,"").slice(0,20) || "Ami",
+      color: String(d.c).toLowerCase(),
+      t: Math.min(Number(d.t)||Date.now(), Date.now()),
+      gone:false
+    });
+    render();
+  }
+
+  function connect(){
+    if(typeof mqtt==="undefined"){ setStatus("off","librairie réseau non chargée"); return; }
+    const url=BROKERS[brokerIdx];
+    setStatus("","connexion…");
+    let everConnected=false;
+    client = mqtt.connect(url,{
+      clientId:"dc-"+myId+"-"+rand(4),
+      clean:true, keepalive:30, reconnectPeriod:2500, connectTimeout:7000,
+      will:{ topic:myTopic(), payload:"", qos:0, retain:true }   // si coupure brutale : on efface notre état
+    });
+    client.on("connect",()=>{
+      everConnected=true;
+      setStatus("on","connecté");
+      client.subscribe(PREFIX+roomCode+"/+",{qos:0});
+      publishMe();
+    });
+    client.on("message",onMessage);
+    client.on("reconnect",()=>setStatus("","reconnexion…"));
+    client.on("offline",()=>setStatus("off","hors ligne"));
+    client.on("error",()=>{});
+    // relais injoignable dès le départ → on bascule sur le secours
+    setTimeout(()=>{
+      if(!everConnected && client && roomCode){
+        client.end(true); brokerIdx=(brokerIdx+1)%BROKERS.length; connect();
+      }
+    },8000);
+  }
+
+  function join(){
+    me.name=($("name").value||"").trim().slice(0,20) || "Joueur";
+    const code=($("code").value||"").trim().toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"").slice(0,32);
+    if(!code){ $("code").focus(); toast("Choisis un code de salon"); return; }
+    $("code").value=code;
+    store.set("dc_name",me.name); store.set("dc_code",code);
+    roomCode=code; peers.clear(); render();
+    $("roomLabel").textContent="· "+code;
+    $("setup").classList.add("hidden"); $("game").classList.remove("hidden");
+    history.replaceState(null,"","?salon="+encodeURIComponent(code));
+    connect();
+    hb=setInterval(publishMe,HEARTBEAT_MS);
+    tick=setInterval(render,5000);
+  }
+
+  function leave(){
+    clearInterval(hb); clearInterval(tick);
+    if(client){
+      if(client.connected) client.publish(myTopic(),"",{qos:0,retain:true}); // efface notre état retenu
+      const c=client; setTimeout(()=>c.end(true),300); client=null;
+    }
+    roomCode=null; peers.clear(); render();
+    $("roomLabel").textContent="";
+    history.replaceState(null,"",location.pathname);
+    $("game").classList.add("hidden"); $("setup").classList.remove("hidden");
+    setStatus("","hors ligne");
+  }
+
+  $("joinBtn").onclick=join;
+  $("leaveBtn").onclick=leave;
+  $("shareBtn").onclick=async()=>{
+    const url=location.origin+location.pathname+"?salon="+encodeURIComponent(roomCode);
+    if(navigator.share){ try{ await navigator.share({title:"Duo Couleur",text:"Rejoins-moi sur Duo Couleur",url}); return; }catch(e){ if(e.name==="AbortError") return; } }
+    try{ await navigator.clipboard.writeText(url); toast("Lien copié"); }catch(e){ toast(url); }
+  };
+  // Au retour au premier plan (iOS coupe les sockets en arrière-plan) : republier
+  document.addEventListener("visibilitychange",()=>{ if(!document.hidden){ publishMe(); render(); } });
+
+  // Arrivé via un lien d'invitation avec un pseudo déjà connu → on entre directement
+  if(urlRoom && me.name) join();
+})();
+</script>
+</body>
+</html>
