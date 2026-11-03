@@ -43,6 +43,10 @@
   .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
   .btns{display:flex;gap:10px}
   .btns .btn{margin-top:0}
+  .btn.big{margin-top:0;padding:18px;font-size:17px;border-radius:16px}
+  .joinrow{display:flex;gap:8px}
+  .joinrow input{flex:1;min-width:0}
+  .joinrow .btn{width:auto;margin-top:0;padding:0 16px}
   .link{background:none;border:0;color:var(--accent);padding:0;font-size:12px;margin-top:6px}
   .err{color:var(--err);font-size:13px;margin-top:10px;min-height:1em}
   .small{font-size:12px;color:var(--mute)}
@@ -154,11 +158,13 @@
 
   <!-- Écran : mes salons -->
   <section id="vHome" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+    <button class="btn big" id="createBtn">＋ Créer un salon</button>
     <div class="card">
-      <label for="code">Rejoindre ou créer un salon</label>
-      <input type="text" id="code" maxlength="32" placeholder="ex. rouge-42" autocapitalize="off" autocorrect="off" spellcheck="false">
-      <button class="link" id="genBtn" type="button">↻ générer un code</button>
-      <button class="btn" id="joinBtn">Entrer dans le salon</button>
+      <label for="code">Rejoindre avec un code</label>
+      <div class="joinrow">
+        <input type="text" id="code" maxlength="32" placeholder="ex. k7m-p2q" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+        <button class="btn ghost" id="joinBtn">Rejoindre</button>
+      </div>
     </div>
     <h2>Mes salons</h2>
     <div class="rooms" id="rooms"><div class="empty-list">Chargement…</div></div>
@@ -343,8 +349,11 @@ async function loadRoomPreview(code, dots, when){
     if(others.length) when.textContent += " · avec "+others.slice(0,3).map(m=>String(m.name).slice(0,20)).join(", ")+(others.length>3?"…":"");
   }catch(e){}
 }
-$("genBtn").onclick=()=>{ $("code").value = rand(3)+"-"+rand(3); };
-$("joinBtn").onclick=()=>{ const c=cleanCode($("code").value); if(!c){ toast("Choisis un code de salon"); $("code").focus(); return; } enterRoom(c); };
+// Créer : code aléatoire difficile à deviner, puis entrée directe + proposition d'inviter
+$("createBtn").onclick=async()=>{ await enterRoom(rand(3)+"-"+rand(3)); toast("Salon créé — invite un ami ↓"); };
+const doJoin=()=>{ const c=cleanCode($("code").value); if(!c){ toast("Tape le code reçu de ton ami"); $("code").focus(); return; } enterRoom(c); };
+$("joinBtn").onclick=doJoin;
+$("code").addEventListener("keydown",e=>{ if(e.key==="Enter") doJoin(); });
 
 /* ================= Salon ================= */
 PALETTE.forEach(c=>{ const b=document.createElement("button"); b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c); b.onclick=()=>pick(c); $("grid").appendChild(b); });
