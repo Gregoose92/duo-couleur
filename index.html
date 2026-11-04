@@ -109,6 +109,7 @@
   .friend .fn{font-weight:700;font-size:14px;word-break:break-all;line-height:1.2}
   .friend .fs{font-size:11px;opacity:.8;line-height:1.25}
   .friend{position:relative}
+  .friend .fn .me{font-size:10px;font-weight:800;text-transform:uppercase;opacity:.75;margin-left:2px}
   .friend .rm{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.25);
     color:inherit;font-size:15px;line-height:1;padding:0}
   .player .add{position:absolute;top:12px;right:12px;border:0;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800;
@@ -535,7 +536,9 @@ function renderFriends(){
     const f=look(f0.id,f0);
     const c=el("div","friend"); paint(c,f.color);
     const b=el("div");
-    b.append(el("div","fn",f.name));
+    const fn=el("div","fn",f.name);
+    if(f.id===me.uid) fn.append(el("span","me"," toi"));   // aperçu de son propre rendu
+    b.append(fn);
     if(f.status) b.append(el("div","fst","« "+f.status+" »"));
     if(f.avail) b.append(availEl(f.avail));
     else b.append(el("div","fs","ajouté "+ago(f.lastSeen)));
@@ -552,7 +555,6 @@ function renderFriends(){
 async function addByName(){
   const u=$("fName").value.trim().toLowerCase();
   if(!USER_RE.test(u)){ toast("Pseudo invalide"); $("fName").focus(); return; }
-  if(u===me.username){ toast("C'est toi 🙂"); return; }
   $("fAddBtn").disabled=true;
   try{
     const s=await F.getDocs(F.query(F.collection(db,"profiles"),F.where("username","==",u),F.limit(1)));
@@ -736,7 +738,7 @@ $("sheetBg").onclick=closeSheet;
 $("inviteBtn").onclick=openSheet;
 function renderSheet(){
   const box=$("shList"); box.textContent="";
-  const list=[...friends.values()];
+  const list=[...friends.values()].filter(f=>f.id!==me.uid);   // on ne s'invite pas soi-même
   if(!list.length){ box.innerHTML='<p class="small">Tu n\'as pas encore d\'amis dans l\'app : partage le lien ci-dessous. Ceux qui rejoignent deviendront tes amis.</p>'; return; }
   list.forEach(f0=>{
     const f=look(f0.id,f0);

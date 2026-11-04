@@ -38,10 +38,10 @@ service cloud.firestore {
           && (!('name' in request.resource.data) || validName(request.resource.data.name));
       }
 
-      // Mes amis (ajoutés manuellement, un par un). Le profil ajouté doit exister.
+      // Mes amis (ajoutés manuellement, un par un ; on peut s'ajouter soi-même pour voir son rendu). Le profil doit exister.
       match /friends/{fid} {
         allow read, delete: if isOwner(uid);
-        allow create, update: if isOwner(uid) && fid != uid
+        allow create, update: if isOwner(uid)
           && exists(/databases/$(db)/documents/profiles/$(fid))
           && request.resource.data.keys().hasOnly(['name', 'lastSeen', 'room'])
           && request.resource.data.name is string && request.resource.data.name.size() <= 20
