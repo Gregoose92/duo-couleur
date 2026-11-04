@@ -26,6 +26,14 @@
   body.tabs-on{padding-bottom:calc(env(safe-area-inset-bottom) + var(--tabh) + 22px)}
   .wrap{max-width:520px;margin:0 auto;min-width:0;display:flex;flex-direction:column;gap:14px}
   header{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px}
+  .hl{display:flex;align-items:center;gap:10px;min-width:0}
+  /* Bouton actualiser : discret, semi-transparent */
+  .reload{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;padding:0;
+    background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:var(--txt);opacity:.45;transition:opacity .2s}
+  .reload:active{opacity:.9}
+  .reload svg{width:15px;height:15px}
+  .reload.spin svg{animation:spin .6s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
   h1{font-size:20px;margin:0;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   h2{font-size:13px;color:var(--mute);text-transform:uppercase;letter-spacing:.8px;margin:6px 2px 0;font-weight:600;display:flex;align-items:center;gap:8px}
   h2 .n{background:var(--err);color:#fff;border-radius:999px;padding:0 7px;font-size:11px;line-height:18px}
@@ -242,7 +250,12 @@
 <body>
 <div class="wrap">
   <header>
-    <h1 id="title">WHATMOOD</h1>
+    <div class="hl">
+      <button class="reload" id="reloadBtn" aria-label="Actualiser la page" title="Actualiser">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
+      </button>
+      <h1 id="title">WHATMOOD</h1>
+    </div>
     <button class="iconbtn hidden" id="backBtn">← Groupes</button>
     <div class="status hidden" id="status"><div class="dot" id="dot"></div><span id="stTxt"></span></div>
   </header>
@@ -531,6 +544,12 @@ document.querySelectorAll("#tabbar button").forEach(b=>b.onclick=async()=>{
   tab=b.dataset.tab;
   if(tab==="vProfile") openProfile(false); else { if(tab==="vGroups") setURL(); show(tab); }
 });
+// Actualiser : on signale son départ du groupe, puis on recharge (le ?groupe= ramène au même groupe)
+$("reloadBtn").onclick=async()=>{
+  $("reloadBtn").classList.add("spin");
+  try{ if(current) await Promise.race([writePresence(false), new Promise(r=>setTimeout(r,400))]); }catch(e){}
+  location.reload();
+};
 $("backBtn").onclick = async()=>{ await leaveRoom(); setURL(); show("vGroups"); };
 function setURL(code){ history.replaceState(null,"", code ? "?groupe="+encodeURIComponent(code)+(EMU?"&emu":"") : location.pathname+(EMU?"?emu":"")); }
 
