@@ -22,7 +22,7 @@
     font:15px/1.4 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif}
   body{padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 18px)}
   body.tabs-on{padding-bottom:calc(env(safe-area-inset-bottom) + var(--tabh) + 22px)}
-  .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+  .wrap{max-width:520px;margin:0 auto;min-width:0;display:flex;flex-direction:column;gap:14px}
   header{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px}
   h1{font-size:20px;margin:0;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   h2{font-size:13px;color:var(--mute);text-transform:uppercase;letter-spacing:.8px;margin:6px 2px 0;font-weight:600;display:flex;align-items:center;gap:8px}
@@ -82,6 +82,21 @@
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;
     background:#fff;border:3px solid #0d0e11;box-shadow:0 1px 6px rgba(0,0,0,.5)}
   input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0d0e11}
+  .preview{height:auto;min-height:220px;padding:18px 14px}
+  .preview .pstat{font-size:14px;opacity:.9;text-align:center;max-width:90%;min-height:1em}
+  .pav,.avl{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+  .pav i,.avl i{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:0 0 0 2px rgba(255,255,255,.7)}
+  .moods{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:6px}
+  .moods button{aspect-ratio:1;min-width:0;border-radius:10px;border:2px solid transparent;background:#0f1114;font-size:20px;padding:0;line-height:1}
+  .moods button.sel{border-color:var(--accent);background:#1d2a26}
+  .moods button.none{font-size:9px;color:var(--mute);font-weight:700}
+  .seg{display:flex;gap:6px;flex-wrap:wrap}
+  .seg button{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:6px;background:#0f1114;border:1px solid var(--line);
+    color:var(--mute);border-radius:10px;padding:9px 4px;font-size:12px;font-weight:600;line-height:1.15;text-align:center}
+  .seg button i{width:9px;height:9px;border-radius:50%}
+  .seg button.sel{border-color:var(--accent);color:var(--txt)}
+  .player .pstatus,.friend .fst{font-size:12px;opacity:.9;line-height:1.25;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;margin:2px 0 4px;font-style:italic}
+  .friend .fst{font-size:11px;-webkit-line-clamp:2;margin:1px 0 2px}
   .onboard{text-align:center}
   .onboard h3{margin:0 0 4px;font-size:20px}
 
@@ -96,7 +111,7 @@
   .friend{position:relative}
   .friend .rm{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.25);
     color:inherit;font-size:15px;line-height:1;padding:0}
-  .player .add{position:absolute;bottom:12px;right:12px;border:0;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800;
+  .player .add{position:absolute;top:12px;right:12px;border:0;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800;
     background:rgba(0,0,0,.28);color:inherit}
   .player .add.is{background:transparent;opacity:.85;padding-right:0}
 
@@ -245,12 +260,27 @@
 
   <!-- Onglet 3 : Profil -->
   <section id="vProfile" class="hidden col">
-    <div class="onboard hidden" id="onboard"><h3>Bienvenue 👋</h3><p class="small" style="margin:0">Choisis ta couleur : c'est elle que tes amis verront.</p></div>
-    <div class="preview" id="pv"><div class="av" id="pvAv"></div><div class="pn" id="pvName"></div><div class="ph" id="pvHex"></div></div>
+    <div class="onboard hidden" id="onboard"><h3>Bienvenue 👋</h3><p class="small" style="margin:0">Crée ton profil : couleur, humeur, statut. C'est ce que tes amis verront.</p></div>
+    <div class="preview" id="pv"><div class="av" id="pvAv"></div><div class="pn" id="pvName"></div>
+      <div class="pstat" id="pvStatus"></div><div class="pav" id="pvAvail"></div></div>
     <div class="card">
       <label>Ma couleur</label>
       <div class="grid" id="grid"></div>
       <div class="hue"><input type="range" id="hue" min="0" max="359" value="200" aria-label="Teinte"></div>
+    </div>
+    <div class="card">
+      <label>Mon humeur</label>
+      <div class="moods" id="moods"></div>
+    </div>
+    <div class="card">
+      <label for="statusIn">Mon statut <span id="stCount" style="float:right">0/60</span></label>
+      <input type="text" id="statusIn" maxlength="60" placeholder="ex. dispo pour un verre 🍻" enterkeyhint="done">
+      <label>Disponibilité</label>
+      <div class="seg" id="avail">
+        <button data-v="dispo"><i style="background:#34c759"></i>Dispo</button>
+        <button data-v="occupe"><i style="background:#ff9500"></i>Occupé</button>
+        <button data-v="dnd"><i style="background:#ff3b30"></i>Pas dispo</button>
+      </div>
     </div>
     <button class="btn" id="saveBtn" style="margin-top:0">Enregistrer</button>
     <button class="btn ghost" id="logoutBtn" style="margin-top:0">Se déconnecter</button>
@@ -336,7 +366,40 @@ let members = new Map(), seenOnline = null;
 let friends = new Map();             // fid -> { name, lastSeen, room, color }
 let groupNames = new Map();          // code -> nom
 let subs = [];                       // abonnements globaux (amis, groupes, invitations)
-const profileSubs = new Map();       // fid -> unsubscribe (couleur live des amis)
+const profileSubs = new Map();       // uid -> unsubscribe (profil public en direct)
+const profiles = new Map();          // uid -> { username, color, mood, status, avail }
+const MOODS = ["😄","🥳","😎","🥰","😌","🤔","😴","🥱","😢","😤","🤯","🔥","🎉","🍻","🎧","💪","🎮","📚","💼","🏃","🍕","❤️","✨"];
+const AVAIL = { dispo:["Dispo","#34c759"], occupe:["Occupé","#ff9500"], dnd:["Pas dispo","#ff3b30"] };
+// Abonnement au profil public d'un joueur (ami ou membre d'un groupe) : couleur, humeur, statut, dispo
+function watchProfile(id){
+  if(profileSubs.has(id)) return;
+  profileSubs.set(id, F.onSnapshot(F.doc(db,"profiles",id), p=>{
+    if(!p.exists()) return;
+    const d=p.data();
+    profiles.set(id,{
+      username:String(d.username||"").slice(0,20),
+      color:HEX_RE.test(d.color)?d.color:null,
+      mood:typeof d.mood==="string"?d.mood.slice(0,16):"",
+      status:typeof d.status==="string"?d.status.slice(0,60):"",
+      avail:AVAIL[d.avail]?d.avail:""
+    });
+    scheduleRender();
+  }, ()=>{}));
+}
+let rq=0;
+function scheduleRender(){ if(rq) return; rq=requestAnimationFrame(()=>{ rq=0; renderFriends(); renderPlayers(); if(!$("sheet").classList.contains("hidden")) renderSheet(); }); }
+// Fusionne les infos connues d'un joueur avec son profil public en direct
+function look(id, fallback){
+  const pr=profiles.get(id)||{};
+  return { ...fallback, color:pr.color||fallback.color, name:pr.username||fallback.name, mood:pr.mood||"", status:pr.status||"", avail:pr.avail||"" };
+}
+function face(name, mood){ return mood || initial(name); }
+function availEl(avail, extra){
+  const s=el("span","avl"); const a=AVAIL[avail];
+  if(a){ const i=el("i"); i.style.background=a[1]; s.append(i, document.createTextNode((extra?extra+" · ":"")+a[0])); }
+  else if(extra){ s.append(el("i"), document.createTextNode(extra)); s.firstChild.style.background="currentColor"; s.firstChild.style.boxShadow="none"; }
+  return s;
+}
 
 /* ================= Navigation ================= */
 const TITLES = { vFriends:"Amis", vGroups:"Groupes", vProfile:"Mon profil" };
@@ -408,7 +471,7 @@ $("logoutBtn").onclick = async ()=>{ await leaveRoom(); stopAll(); await A.signO
 
 function stopAll(){
   subs.forEach(u=>u()); subs=[];
-  profileSubs.forEach(u=>u()); profileSubs.clear();
+  profileSubs.forEach(u=>u()); profileSubs.clear(); profiles.clear();
   friends.clear(); groupNames.clear();
 }
 
@@ -424,15 +487,18 @@ A.onAuthStateChanged(auth, async user=>{
   }
   const data=snap&&snap.exists()?snap.data():{ username, color:"#30b0ff" };
   me={ uid:user.uid, username:data.username, color:HEX_RE.test(data.color)?data.color:"#30b0ff" };
-  // profil public (créé / resynchronisé à chaque connexion, y compris pour les anciens comptes)
-  F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color }).catch(e=>console.warn("profil public",e));
+  // profil public : on lit humeur/statut/dispo, puis on resynchronise pseudo + couleur (merge = ne rien effacer)
+  const pub=await F.getDoc(F.doc(db,"profiles",me.uid)).catch(()=>null);
+  const pd=pub&&pub.exists()?pub.data():{};
+  me.mood=typeof pd.mood==="string"?pd.mood:""; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:"";
+  F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color },{ merge:true }).catch(e=>console.warn("profil public",e));
   renderMe();
   startListeners();
   if(justSignedUp){ justSignedUp=false; openProfile(true); }
   else if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); }
   else { tab="vGroups"; show("vGroups"); }
 });
-function renderMe(){ paint($("tabAv"), me.color); $("tabAv").textContent=initial(me.username); }
+function renderMe(){ paint($("tabAv"), me.color); $("tabAv").textContent=face(me.username, me.mood); }
 
 /* ================= Abonnements globaux ================= */
 function startListeners(){
@@ -446,17 +512,10 @@ function startListeners(){
     snap.docs.forEach(d=>{
       const f=d.data(); ids.add(d.id);
       const prev=friends.get(d.id);
-      friends.set(d.id,{ id:d.id, name:String(f.name||"Ami").slice(0,20), lastSeen:tms(f.lastSeen), room:f.room, color:prev?.color||"#3a3d44" });
-      if(!profileSubs.has(d.id)){     // couleur actuelle de l'ami, en direct
-        profileSubs.set(d.id, F.onSnapshot(F.doc(db,"profiles",d.id), p=>{
-          const fr=friends.get(d.id); if(!fr||!p.exists()) return;
-          const c=p.data().color; if(HEX_RE.test(c)) fr.color=c;
-          fr.name=String(p.data().username||fr.name).slice(0,20);
-          renderFriends(); if(!$("sheet").classList.contains("hidden")) renderSheet();
-        }, ()=>{}));
-      }
+      friends.set(d.id,{ id:d.id, name:String(f.name||"Ami").slice(0,20), lastSeen:tms(f.lastSeen), room:f.room, color:"#3a3d44" });
+      watchProfile(d.id);             // profil de l'ami en direct
     });
-    [...friends.keys()].forEach(id=>{ if(!ids.has(id)){ friends.delete(id); profileSubs.get(id)?.(); profileSubs.delete(id); } });
+    [...friends.keys()].forEach(id=>{ if(!ids.has(id)) friends.delete(id); });
     renderFriends(); renderPlayers();     // le bouton « Ajouter » devient « ✓ ami »
   }, ()=>{}));
   // Invitations reçues
@@ -472,12 +531,16 @@ function renderFriends(){
     return;
   }
   box.style.display="";
-  [...friends.values()].forEach(f=>{
+  [...friends.values()].forEach(f0=>{
+    const f=look(f0.id,f0);
     const c=el("div","friend"); paint(c,f.color);
     const b=el("div");
-    b.append(el("div","fn",f.name), el("div","fs","ajouté "+ago(f.lastSeen)+(groupNames.get(f.room)?" · "+groupNames.get(f.room):"")));
-    c.append(avatar(f.name,f.color), b);
-    c.querySelector(".av").style.background="rgba(0,0,0,.18)";
+    b.append(el("div","fn",f.name));
+    if(f.status) b.append(el("div","fst","« "+f.status+" »"));
+    if(f.avail) b.append(availEl(f.avail));
+    else b.append(el("div","fs","ajouté "+ago(f.lastSeen)));
+    const a=el("div","av"+(f.mood?" emo":""),face(f.name,f.mood)); a.style.background="rgba(0,0,0,.18)";
+    c.append(a, b);
     const rm=el("button","rm","×"); rm.setAttribute("aria-label","Retirer "+f.name);
     rm.onclick=ev=>{ ev.stopPropagation(); removeFriend(f.id,f.name); };
     c.appendChild(rm);
@@ -598,6 +661,7 @@ async function enterRoom(code, knownName){
       if(d.id===me.uid) return;
       const m=d.data(); if(!HEX_RE.test(String(m.color))) return;
       members.set(d.id,{ id:d.id, name:String(m.name||"Ami").slice(0,20), color:m.color, t:tms(m.t), online:m.online!==false });
+      watchProfile(d.id);
     });
     announceArrivals(snap.metadata.fromCache);
     renderPlayers();
@@ -629,12 +693,15 @@ function announceArrivals(fromCache){
   if(seenOnline) now.forEach(id=>{ if(!seenOnline.has(id)) toast(members.get(id).name+" a rejoint le groupe"); });
   seenOnline=now;
 }
-function playerCard(p,isMe){
+function playerCard(p0,isMe){
+  const p = isMe ? p0 : look(p0.id,p0);
   const away=!isMe && !isOn(p);
   const c=el("div","player"+(away?" away":"")); paint(c,p.color);
-  const a=el("div","av",initial(p.name));
-  const b=el("div"); const st=el("div","pst"); st.append(el("i"), document.createTextNode(away?"hors ligne · "+ago(p.t):"en ligne"));
-  b.append(el("div","pnm",p.name), st);
+  const a=el("div","av"+(p.mood?" emo":""),face(p.name,p.mood));
+  const b=el("div");
+  b.append(el("div","pnm",p.name));
+  if(p.status) b.append(el("div","pstatus","« "+p.status+" »"));
+  b.append(availEl(p.avail, away?"hors ligne · "+ago(p.t):"en ligne"));
   c.append(a,b);
   if(isMe) c.appendChild(el("div","tag","TOI"));
   else if(friends.has(p.id)) c.appendChild(el("div","add is","✓ ami"));
@@ -650,7 +717,7 @@ function playerCard(p,isMe){
 function renderPlayers(){
   if(!me||view!=="vRoom") return;
   const box=$("players"); box.textContent="";
-  box.appendChild(playerCard({ name:me.username, color:me.color },true));
+  box.appendChild(playerCard({ name:me.username, color:me.color, mood:me.mood, status:me.status, avail:me.avail },true));
   const list=[...members.values()].sort((a,b)=>(isOn(b)-isOn(a))||a.name.localeCompare(b.name));
   list.forEach(p=>box.appendChild(playerCard(p,false)));
   if(!list.some(isOn)){
@@ -671,9 +738,12 @@ function renderSheet(){
   const box=$("shList"); box.textContent="";
   const list=[...friends.values()];
   if(!list.length){ box.innerHTML='<p class="small">Tu n\'as pas encore d\'amis dans l\'app : partage le lien ci-dessous. Ceux qui rejoignent deviendront tes amis.</p>'; return; }
-  list.forEach(f=>{
+  list.forEach(f0=>{
+    const f=look(f0.id,f0);
     const r=el("div","frow");
-    r.append(avatar(f.name,f.color), el("div","nm",f.name));
+    const a=avatar(f.name,f.color); if(f.mood){ a.textContent=f.mood; a.classList.add("emo"); }
+    const nm=el("div","nm",f.name); if(f.avail){ nm.append(el("br")); nm.append(availEl(f.avail)); }
+    r.append(a, nm);
     const here=members.has(f.id) && isOn(members.get(f.id));
     const key=current+"|"+f.id;
     if(here) r.appendChild(el("span","done","déjà là"));
@@ -699,28 +769,44 @@ $("shareBtn").onclick=async()=>{
 };
 
 /* ================= Onglet Profil ================= */
-let draft=null;
-PALETTE.forEach(c=>{ const b=el("button"); b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c); b.onclick=()=>setDraft(c); $("grid").appendChild(b); });
-$("hue").addEventListener("input",e=>setDraft(hslToHex(+e.target.value,100,50)));
-function setDraft(c){
-  draft=c; paint($("pv"),c);
-  $("pvAv").textContent=initial(me.username); $("pvName").textContent=me.username; $("pvHex").textContent=c.toUpperCase();
-  document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===c));
+// Brouillon du profil : rien n'est publié avant « Enregistrer »
+let draft={ color:"#30b0ff", mood:"", status:"", avail:"" };
+PALETTE.forEach(c=>{ const b=el("button"); b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c); b.onclick=()=>setDraft({color:c}); $("grid").appendChild(b); });
+$("hue").addEventListener("input",e=>setDraft({color:hslToHex(+e.target.value,100,50)}));
+{ const none=el("button","none","aucune"); none.dataset.m=""; none.onclick=()=>setDraft({mood:""}); $("moods").appendChild(none);
+  MOODS.forEach(m=>{ const b=el("button",null,m); b.dataset.m=m; b.onclick=()=>setDraft({mood:m}); $("moods").appendChild(b); }); }
+$("statusIn").addEventListener("input",e=>setDraft({status:e.target.value.slice(0,60)}));
+document.querySelectorAll("#avail button").forEach(b=>b.onclick=()=>setDraft({avail: draft.avail===b.dataset.v ? "" : b.dataset.v}));
+function setDraft(patch){
+  Object.assign(draft,patch);
+  paint($("pv"),draft.color);
+  $("pvAv").textContent=face(me.username,draft.mood); $("pvAv").classList.toggle("emo",!!draft.mood);
+  $("pvName").textContent=me.username;
+  $("pvStatus").textContent=draft.status.trim()?"« "+draft.status.trim()+" »":"";
+  const pa=$("pvAvail"); pa.textContent=""; if(draft.avail) pa.append(...availEl(draft.avail).childNodes);
+  $("stCount").textContent=draft.status.length+"/60";
+  document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===draft.color));
+  document.querySelectorAll("#moods button").forEach(b=>b.classList.toggle("sel",b.dataset.m===draft.mood));
+  document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
 function openProfile(first){
   onboarding=!!first;
   $("onboard").classList.toggle("hidden",!onboarding);
   $("logoutBtn").classList.toggle("hidden",onboarding);
   $("saveBtn").textContent=onboarding?"C'est parti →":"Enregistrer";
-  setDraft(me.color);
+  draft={ color:me.color, mood:me.mood||"", status:me.status||"", avail:me.avail||"" };
+  $("statusIn").value=draft.status;
+  setDraft({});
   show("vProfile");
 }
 $("saveBtn").onclick=async()=>{
   $("saveBtn").disabled=true;
+  const status=draft.status.replace(/\s+/g," ").trim().slice(0,60);
   try{
-    await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft });
-    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft });
-    me.color=draft; renderMe();
+    await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft.color });
+    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft.color, mood:draft.mood, status, avail:draft.avail });
+    Object.assign(me,{ color:draft.color, mood:draft.mood, status, avail:draft.avail }); renderMe();
+    if(current) writePresence(true);          // la couleur suit dans le groupe ouvert
   }catch(e){ console.warn(e); toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
   $("saveBtn").disabled=false;
   if(onboarding){
