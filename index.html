@@ -15,16 +15,18 @@
 <style>
   :root{
     --bg:#0d0e11; --panel:#16181d; --line:#262a31; --txt:#eceef2; --mute:#8a909c;
-    --accent:#7cf7c5; --err:#ff6b6b; --r:18px;
+    --accent:#7cf7c5; --err:#ff6b6b; --r:18px; --tabh:64px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html,body{margin:0;min-height:100%;background:var(--bg);color:var(--txt);
     font:15px/1.4 -apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif}
   body{padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 18px)}
+  body.tabs-on{padding-bottom:calc(env(safe-area-inset-bottom) + var(--tabh) + 22px)}
   .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
   header{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px}
-  h1{font-size:18px;margin:0;letter-spacing:.3px;white-space:nowrap}
-  h2{font-size:13px;color:var(--mute);text-transform:uppercase;letter-spacing:.8px;margin:4px 2px 0;font-weight:600}
+  h1{font-size:20px;margin:0;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  h2{font-size:13px;color:var(--mute);text-transform:uppercase;letter-spacing:.8px;margin:6px 2px 0;font-weight:600;display:flex;align-items:center;gap:8px}
+  h2 .n{background:var(--err);color:#fff;border-radius:999px;padding:0 7px;font-size:11px;line-height:18px}
   .status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--mute)}
   .dot{width:9px;height:9px;border-radius:50%;background:#555;flex:none}
   .dot.on{background:var(--accent);box-shadow:0 0 10px var(--accent)}
@@ -40,7 +42,8 @@
   .btn{width:100%;margin-top:14px;background:var(--accent);color:#0b0c0f;border:0;border-radius:12px;
     padding:12px;font-weight:700;font-size:15px}
   .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
-  .btn.big{margin-top:0;padding:18px;font-size:17px;border-radius:16px}
+  .btn.big{margin-top:0;padding:16px;font-size:16px;border-radius:16px}
+  .btn.sm{width:auto;margin-top:0;padding:8px 14px;font-size:13px;border-radius:10px}
   .btns{display:flex;gap:10px}
   .btns .btn{margin-top:0}
   .joinrow{display:flex;gap:8px}
@@ -50,6 +53,8 @@
   .small{font-size:12px;color:var(--mute)}
   .hidden{display:none!important}
   .col{display:flex;flex-direction:column;gap:14px}
+  .iconbtn{background:none;border:1px solid var(--line);color:var(--mute);border-radius:9px;padding:5px 10px;font-size:13px}
+  .empty-list{color:var(--mute);font-size:14px;text-align:center;padding:22px 18px;border:1px dashed var(--line);border-radius:14px;line-height:1.5}
 
   /* Auth */
   .tabs{display:flex;background:#0f1114;border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:14px}
@@ -58,20 +63,14 @@
   .hero{text-align:center;padding:18px 0 4px}
   .hero img{width:76px;height:76px}
   .hero p{color:var(--mute);margin:8px 0 0;font-size:14px}
-  .iconbtn{background:none;border:1px solid var(--line);color:var(--mute);border-radius:9px;padding:5px 9px;font-size:12px}
 
-  /* Carte profil (accueil) */
-  .me{display:flex;align-items:center;gap:14px;cursor:pointer}
-  .me .av{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-weight:700;font-size:24px;line-height:1;flex:none;transition:background .2s}
-  .me .nm{font-weight:700;font-size:17px}
-  .me .sub{font-size:12px;color:var(--mute)}
-  .me .edit{margin-left:auto;color:var(--accent);font-size:13px;font-weight:600}
+  /* Avatar générique */
+  .av{display:grid;place-items:center;font-weight:800;line-height:1;flex:none;transition:background .25s}
 
-  /* Éditeur de profil */
+  /* Profil */
   .preview{border-radius:24px;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
     transition:background .25s ease;border:1px solid var(--line)}
-  .preview .bigav{width:84px;height:84px;border-radius:24px;display:grid;place-items:center;font-weight:800;font-size:40px;line-height:1;
-    background:rgba(0,0,0,.18)}
+  .preview .av{width:84px;height:84px;border-radius:24px;font-size:40px;background:rgba(0,0,0,.18)}
   .preview .pn{font-weight:700;font-size:20px}
   .preview .ph{font:600 13px ui-monospace,Menlo,monospace;opacity:.8}
   .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
@@ -86,43 +85,78 @@
   .onboard{text-align:center}
   .onboard h3{margin:0 0 4px;font-size:20px}
 
-  /* Liste des salons */
-  .rooms{display:flex;flex-direction:column;gap:8px}
-  .room{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
-  .room .info{flex:1;min-width:0}
-  .room .code{font:600 15px ui-monospace,Menlo,monospace}
-  .room .when{font-size:12px;color:var(--mute)}
-  .room .dots{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
-  .room .dots i{width:14px;height:14px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
-  .room .del{background:none;border:0;color:var(--mute);font-size:18px;padding:4px 6px}
-  .empty-list{color:var(--mute);font-size:14px;text-align:center;padding:18px;border:1px dashed var(--line);border-radius:14px}
+  /* Amis */
+  .friends{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .friend{border-radius:18px;aspect-ratio:1/1.15;padding:10px;display:flex;flex-direction:column;justify-content:space-between;
+    cursor:pointer;transition:background .3s,transform .15s;animation:pop .3s ease;overflow:hidden}
+  .friend:active{transform:scale(.96)}
+  .friend .av{width:38px;height:38px;border-radius:12px;font-size:18px;background:rgba(0,0,0,.18)}
+  .friend .fn{font-weight:700;font-size:14px;word-break:break-all;line-height:1.2}
+  .friend .fs{font-size:11px;opacity:.8;line-height:1.25}
 
-  /* Salon */
-  .roomhead{display:flex;align-items:center;justify-content:space-between}
-  .roomhead .rc{font:700 22px ui-monospace,Menlo,monospace;letter-spacing:.5px}
+  /* Groupes */
+  .list{display:flex;flex-direction:column;gap:8px}
+  .row{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
+  .row .info{flex:1;min-width:0}
+  .row .tt{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .code{font:500 12px ui-monospace,Menlo,monospace;color:var(--mute)}
+  .row .when{font-size:12px;color:var(--mute)}
+  .row .dots{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+  .row .dots i{width:14px;height:14px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
+  .row .del{background:none;border:0;color:var(--mute);font-size:18px;padding:4px 6px}
+  .row.invite{border-color:#3a6b5c;background:linear-gradient(180deg,#16211e,#16181d);cursor:default}
+  .row .gav{width:42px;height:42px;border-radius:12px;font-size:18px}
+  .newgroup .joinrow{margin-top:0}
+
+  /* Groupe ouvert */
+  .roomhead .rc{font:500 13px ui-monospace,Menlo,monospace;color:var(--mute)}
+  .roomhead{display:flex;align-items:flex-end;justify-content:space-between}
   .roomhead .cnt{font-size:13px;color:var(--mute)}
   .players{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
   .player{position:relative;border-radius:20px;aspect-ratio:1/1.1;padding:14px;display:flex;flex-direction:column;
-    justify-content:space-between;cursor:pointer;transition:background .3s,opacity .3s,transform .15s;overflow:hidden;
-    animation:pop .35s ease}
+    justify-content:space-between;cursor:pointer;transition:background .3s,opacity .3s,transform .15s;overflow:hidden;animation:pop .35s ease}
   .player:active{transform:scale(.97)}
   @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
-  .player .pav{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-weight:800;font-size:26px;line-height:1;background:rgba(0,0,0,.18)}
+  .player .av{width:54px;height:54px;border-radius:16px;font-size:26px;background:rgba(0,0,0,.18)}
   .player .pnm{font-weight:700;font-size:17px;word-break:break-all}
   .player .pst{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.85}
   .player .pst i{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
   .player .tag{position:absolute;top:12px;right:12px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.25)}
   .player.away{opacity:.4;filter:saturate(.5)}
   .player.wait{background:transparent!important;border:2px dashed var(--line);color:var(--mute);justify-content:center;align-items:center;
-    text-align:center;font-size:13px;cursor:default;animation:none}
+    text-align:center;font-size:13px;animation:none}
   .player.wait .plus{font-size:34px;line-height:1;margin-bottom:6px}
 
-  #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);
+  /* Barre d'onglets */
+  #tabbar{position:fixed;left:0;right:0;bottom:0;z-index:8;background:rgba(13,14,17,.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+    border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  #tabbar .in{max-width:520px;margin:0 auto;display:flex;height:var(--tabh)}
+  #tabbar button{flex:1;background:none;border:0;color:var(--mute);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    font-size:11px;font-weight:600;position:relative}
+  #tabbar button.on{color:var(--txt)}
+  #tabbar svg{width:26px;height:26px}
+  #tabbar .tav{width:26px;height:26px;border-radius:8px;font-size:13px;border:2px solid transparent}
+  #tabbar button.on .tav{border-color:#fff}
+  #tabbar .badge{position:absolute;top:8px;left:50%;margin-left:6px;background:var(--err);color:#fff;font-size:10px;font-weight:800;
+    min-width:17px;height:17px;border-radius:999px;display:grid;place-items:center;padding:0 4px}
+
+  /* Feuille d'invitation */
+  #sheetBg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:15}
+  #sheet{position:fixed;left:0;right:0;bottom:0;z-index:16;background:var(--panel);border-top-left-radius:22px;border-top-right-radius:22px;
+    border:1px solid var(--line);padding:10px 16px calc(env(safe-area-inset-bottom) + 18px);max-height:80vh;overflow:auto}
+  #sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line);margin:0 auto 12px}
+  #sheet h3{margin:0 0 4px;font-size:18px}
+  .frow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+  .frow:last-child{border-bottom:0}
+  .frow .av{width:38px;height:38px;border-radius:11px;font-size:17px}
+  .frow .nm{flex:1;font-weight:600}
+  .frow .done{color:var(--accent);font-size:13px;font-weight:700}
+
+  #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + var(--tabh) + 20px);transform:translateX(-50%);
     background:#fff;color:#111;padding:9px 14px;border-radius:999px;font-size:13px;z-index:20;
-    opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw}
+    opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw;text-align:center}
   #toast.show{opacity:1}
-  #full{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-    padding-bottom:calc(env(safe-area-inset-bottom) + 30px);transition:background .35s ease}
+  #full{position:fixed;inset:0;z-index:30;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;transition:background .35s ease}
   #full b{font-size:28px}
   #full span{font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.25)}
   pre{white-space:pre-wrap;font-size:12px;color:var(--mute)}
@@ -132,8 +166,7 @@
 <div class="wrap">
   <header>
     <h1 id="title">WHATMOOD</h1>
-    <button class="iconbtn hidden" id="backBtn">← Retour</button>
-    <button class="iconbtn hidden" id="logoutBtn">Déconnexion</button>
+    <button class="iconbtn hidden" id="backBtn">← Groupes</button>
     <div class="status hidden" id="status"><div class="dot" id="dot"></div><span id="stTxt"></span></div>
   </header>
 
@@ -160,26 +193,25 @@
     </div>
   </section>
 
-  <!-- Mon profil (éditeur de couleur) -->
-  <section id="vProfile" class="hidden col">
-    <div class="onboard hidden" id="onboard"><h3>Bienvenue 👋</h3><p class="small" style="margin:0">Choisis ta couleur : c'est elle que tes amis verront dans les salons.</p></div>
-    <div class="preview" id="pv"><div class="bigav" id="pvAv"></div><div class="pn" id="pvName"></div><div class="ph" id="pvHex"></div></div>
-    <div class="card">
-      <label>Ma couleur</label>
-      <div class="grid" id="grid"></div>
-      <div class="hue"><input type="range" id="hue" min="0" max="359" value="200" aria-label="Teinte"></div>
-    </div>
-    <button class="btn" id="saveBtn" style="margin-top:0">Enregistrer</button>
+  <!-- Onglet 1 : Amis -->
+  <section id="vFriends" class="hidden col">
+    <div class="friends" id="friends"></div>
   </section>
 
-  <!-- Accueil -->
-  <section id="vHome" class="hidden col">
-    <div class="card me" id="meCard">
-      <div class="av" id="meAv"></div>
-      <div><div class="nm" id="meName"></div><div class="sub">Mon profil</div></div>
-      <div class="edit">Modifier ›</div>
+  <!-- Onglet 2 : Groupes -->
+  <section id="vGroups" class="hidden col">
+    <div id="invWrap" class="col hidden" style="gap:8px">
+      <h2>Invitations <span class="n" id="invN"></span></h2>
+      <div class="list" id="invites"></div>
     </div>
-    <button class="btn big" id="createBtn">＋ Créer un salon</button>
+    <button class="btn big" id="newBtn">＋ Nouveau groupe</button>
+    <div class="card newgroup hidden" id="newCard">
+      <label for="gName">Nom du groupe</label>
+      <div class="joinrow">
+        <input type="text" id="gName" maxlength="30" placeholder="ex. Soirée vendredi" enterkeyhint="done">
+        <button class="btn" id="createBtn">Créer</button>
+      </div>
+    </div>
     <div class="card">
       <label for="code">Rejoindre avec un code</label>
       <div class="joinrow">
@@ -187,18 +219,55 @@
         <button class="btn ghost" id="joinBtn">Rejoindre</button>
       </div>
     </div>
-    <h2>Mes salons</h2>
-    <div class="rooms" id="rooms"><div class="empty-list">Chargement…</div></div>
+    <h2>Mes groupes</h2>
+    <div class="list" id="groups"><div class="empty-list">Chargement…</div></div>
   </section>
 
-  <!-- Salon -->
+  <!-- Groupe ouvert -->
   <section id="vRoom" class="hidden col">
-    <div class="roomhead"><div><div class="small">Salon</div><div class="rc" id="roomCode"></div></div><div class="cnt" id="count"></div></div>
+    <div class="roomhead"><div class="rc" id="roomCode"></div><div class="cnt" id="count"></div></div>
     <div class="players" id="players"></div>
-    <button class="btn" id="shareBtn" style="margin-top:0">Inviter un ami</button>
+    <button class="btn" id="inviteBtn" style="margin-top:0">Inviter des amis</button>
+  </section>
+
+  <!-- Onglet 3 : Profil -->
+  <section id="vProfile" class="hidden col">
+    <div class="onboard hidden" id="onboard"><h3>Bienvenue 👋</h3><p class="small" style="margin:0">Choisis ta couleur : c'est elle que tes amis verront.</p></div>
+    <div class="preview" id="pv"><div class="av" id="pvAv"></div><div class="pn" id="pvName"></div><div class="ph" id="pvHex"></div></div>
+    <div class="card">
+      <label>Ma couleur</label>
+      <div class="grid" id="grid"></div>
+      <div class="hue"><input type="range" id="hue" min="0" max="359" value="200" aria-label="Teinte"></div>
+    </div>
+    <button class="btn" id="saveBtn" style="margin-top:0">Enregistrer</button>
+    <button class="btn ghost" id="logoutBtn" style="margin-top:0">Se déconnecter</button>
   </section>
 </div>
 
+<!-- Barre d'onglets -->
+<nav id="tabbar" class="hidden"><div class="in">
+  <button data-tab="vFriends" id="tabFriends">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.2c2.9.3 5 2.4 5 5.3"/></svg>
+    Amis
+  </button>
+  <button data-tab="vGroups" id="tabGroups">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>
+    Groupes<span class="badge hidden" id="badge"></span>
+  </button>
+  <button data-tab="vProfile" id="tabProfile">
+    <div class="av tav" id="tabAv"></div>
+    Profil
+  </button>
+</div></nav>
+
+<div id="sheetBg" class="hidden"></div>
+<div id="sheet" class="hidden">
+  <div class="grab"></div>
+  <h3>Inviter dans <span id="shName"></span></h3>
+  <p class="small" style="margin:0 0 10px">Tes amis recevront l'invitation dans leur onglet Groupes.</p>
+  <div id="shList"></div>
+  <button class="btn ghost" id="shareBtn">Partager le lien d'invitation</button>
+</div>
 <div id="full" class="hidden"><b id="fullName"></b><span>toucher pour fermer</span></div>
 <div id="toast"></div>
 
@@ -210,7 +279,7 @@ const $ = id => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const EMU = params.has("emu") && ["localhost","127.0.0.1"].includes(location.hostname);
 if (!EMU && (!firebaseConfig.apiKey || firebaseConfig.apiKey === "REMPLACER")) {
-  $("vBoot").innerHTML = "<b>Configuration Firebase manquante.</b><pre>Colle la config de ton projet Firebase dans firebase-config.js</pre>";
+  $("vBoot").innerHTML = "<b>Configuration Firebase manquante.</b>";
   throw new Error("config manquante");
 }
 const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
@@ -222,7 +291,7 @@ const db   = F.getFirestore(app);
 if (EMU) { A.connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings:true }); F.connectFirestoreEmulator(db, "localhost", 8080); }
 
 /* ================= Utilitaires ================= */
-const DOMAIN = "@duo-couleur.app";
+const DOMAIN = "@duo-couleur.app";               // identifiant technique interne (ne pas changer)
 const USER_RE = /^[a-z0-9_.-]{3,20}$/;
 const HEX_RE  = /^#[0-9a-f]{6}$/;
 const HEARTBEAT_MS = 25000, AWAY_MS = 70000;
@@ -232,34 +301,55 @@ const rand = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b=>"abcd
 const cleanCode = s => (s||"").trim().toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"").slice(0,32);
 function hslToHex(h,s,l){ s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return "#"+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
 function isLight(hex){ const n=parseInt(hex.slice(1),16);return (0.299*(n>>16&255)+0.587*(n>>8&255)+0.114*(n&255))>165; }
-const ink = hex => isLight(hex) ? "#111" : "#fff";      // texte lisible sur la couleur
+const ink = hex => isLight(hex) ? "#111" : "#fff";
+function paint(el, color){ el.style.background=color; el.style.color=ink(color); }
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
 function ago(ms){ const s=Math.round((Date.now()-ms)/1000); if(s<60)return"à l'instant"; const m=Math.round(s/60); if(m<60)return`il y a ${m} min`; const h=Math.round(m/60); if(h<24)return`il y a ${h} h`; const d=Math.round(h/24); return d===1?"hier":`il y a ${d} j`; }
 const tms = ts => ts && typeof ts.toMillis==="function" ? ts.toMillis() : Date.now();
 const initial = n => (n||"?")[0].toUpperCase();
-function paint(el, color){ el.style.background=color; el.style.color=ink(color); }
-
-/* ================= Navigation ================= */
-let view = "vBoot";
-function show(v){
-  view = v;
-  ["vBoot","vAuth","vProfile","vHome","vRoom"].forEach(x=>$(x).classList.toggle("hidden", x!==v));
-  $("logoutBtn").classList.toggle("hidden", v!=="vHome");
-  $("backBtn").classList.toggle("hidden", !(v==="vRoom" || (v==="vProfile" && !onboarding)));
-  $("status").classList.add("hidden");
-  $("title").textContent = v==="vProfile" ? "Mon profil" : "WHATMOOD";
-}
-$("backBtn").onclick = ()=>{ if(view==="vRoom") leaveRoom(false); else goHome(); };
+function el(tag, cls, text){ const e=document.createElement(tag); if(cls) e.className=cls; if(text!=null) e.textContent=text; return e; }
+function avatar(name, color, cls){ const a=el("div","av "+(cls||""),initial(name)); paint(a,color); return a; }
+function showFull(name,color){ const f=$("full"); paint(f,color); $("fullName").textContent=name; f.classList.remove("hidden"); }
+$("full").onclick=()=>$("full").classList.add("hidden");
 
 /* ================= État ================= */
-let me = null;                 // { uid, username, color }
-let current = null, unsubMembers = null, unsubRooms = null, hb = null, tick = null;
-let members = new Map(), seenOnline = null;
+let me = null;                       // { uid, username, color }
+let view = "vBoot", tab = "vGroups";
 let onboarding = false, justSignedUp = false;
-let pendingRoom = cleanCode(params.get("salon"));
+let pendingRoom = cleanCode(params.get("groupe") || params.get("salon"));
+let current = null, currentName = "";
+let unsubMembers=null, hb=null, tick=null;
+let members = new Map(), seenOnline = null, friendSaved = new Set();
+let friends = new Map();             // fid -> { name, lastSeen, room, color }
+let groupNames = new Map();          // code -> nom
+let subs = [];                       // abonnements globaux (amis, groupes, invitations)
+const profileSubs = new Map();       // fid -> unsubscribe (couleur live des amis)
+
+/* ================= Navigation ================= */
+const TITLES = { vFriends:"Amis", vGroups:"Groupes", vProfile:"Mon profil" };
+function show(v){
+  view = v;
+  ["vBoot","vAuth","vFriends","vGroups","vRoom","vProfile"].forEach(x=>$(x).classList.toggle("hidden", x!==v));
+  const tabsOn = me && !onboarding && v!=="vAuth" && v!=="vBoot";
+  $("tabbar").classList.toggle("hidden", !tabsOn);
+  document.body.classList.toggle("tabs-on", !!tabsOn);
+  $("backBtn").classList.toggle("hidden", v!=="vRoom");
+  $("status").classList.toggle("hidden", v!=="vRoom");
+  $("title").textContent = v==="vRoom" ? (currentName||"Groupe") : (TITLES[v] || "WHATMOOD");
+  const active = v==="vRoom" ? "vGroups" : v;
+  document.querySelectorAll("#tabbar button").forEach(b=>b.classList.toggle("on", b.dataset.tab===active));
+  window.scrollTo(0,0);
+}
+document.querySelectorAll("#tabbar button").forEach(b=>b.onclick=async()=>{
+  if(view==="vRoom") await leaveRoom();
+  tab=b.dataset.tab;
+  if(tab==="vProfile") openProfile(false); else { if(tab==="vGroups") setURL(); show(tab); }
+});
+$("backBtn").onclick = async()=>{ await leaveRoom(); setURL(); show("vGroups"); };
+function setURL(code){ history.replaceState(null,"", code ? "?groupe="+encodeURIComponent(code)+(EMU?"&emu":"") : location.pathname+(EMU?"?emu":"")); }
 
 /* ================= Authentification ================= */
-let mode = "login";
+let mode="login";
 function setMode(m){
   mode=m;
   $("tLogin").classList.toggle("on",m==="login"); $("tSignup").classList.toggle("on",m==="signup");
@@ -290,135 +380,185 @@ $("authForm").onsubmit = async e => {
   $("authBtn").disabled=true;
   try{
     if(mode==="signup"){
-      justSignedUp = true;
-      const color = PALETTE[Math.floor(Math.random()*10)];           // couleur de départ, modifiable juste après
+      justSignedUp=true;
+      const color = PALETTE[Math.floor(Math.random()*10)];
       const cred = await A.createUserWithEmailAndPassword(auth, u+DOMAIN, p);
       await F.setDoc(F.doc(db,"users",cred.user.uid), { username:u, createdAt:F.serverTimestamp(), color });
     }else{
       await A.signInWithEmailAndPassword(auth, u+DOMAIN, p);
     }
     $("aPass").value=""; $("aPass2").value="";
-  }catch(ex){
-    justSignedUp=false;
-    err.textContent = AUTH_ERRORS[ex.code] || ("Erreur : "+(ex.code||ex.message));
-  }finally{ $("authBtn").disabled=false; }
+  }catch(ex){ justSignedUp=false; err.textContent = AUTH_ERRORS[ex.code] || ("Erreur : "+(ex.code||ex.message)); }
+  finally{ $("authBtn").disabled=false; }
 };
-$("logoutBtn").onclick = async ()=>{ await leaveRoom(true); stopRooms(); await A.signOut(auth); };
+$("logoutBtn").onclick = async ()=>{ await leaveRoom(); stopAll(); await A.signOut(auth); };
+
+function stopAll(){
+  subs.forEach(u=>u()); subs=[];
+  profileSubs.forEach(u=>u()); profileSubs.clear();
+  friends.clear(); groupNames.clear();
+}
 
 A.onAuthStateChanged(auth, async user=>{
-  if(!user){ me=null; setMode("login"); show("vAuth"); return; }
-  const username = (user.email||"").replace(DOMAIN,"");
-  const ref = F.doc(db,"users",user.uid);
-  // à l'inscription, le profil peut être en cours d'écriture : on attend un peu
+  if(!user){ me=null; stopAll(); setMode("login"); show("vAuth"); return; }
+  const username=(user.email||"").replace(DOMAIN,"");
+  const ref=F.doc(db,"users",user.uid);
   let snap=null;
-  for(let i=0;i<6;i++){ snap = await F.getDoc(ref).catch(()=>null); if(snap && snap.exists()) break; await new Promise(r=>setTimeout(r,300)); }
-  if(!snap || !snap.exists()){
+  for(let i=0;i<6;i++){ snap=await F.getDoc(ref).catch(()=>null); if(snap&&snap.exists()) break; await new Promise(r=>setTimeout(r,300)); }
+  if(!snap||!snap.exists()){
     await F.setDoc(ref,{ username, createdAt:F.serverTimestamp(), color:"#30b0ff" }).catch(()=>{});
-    snap = await F.getDoc(ref).catch(()=>null);
+    snap=await F.getDoc(ref).catch(()=>null);
   }
-  const data = snap && snap.exists() ? snap.data() : { username, color:"#30b0ff" };
-  me = { uid:user.uid, username:data.username, color: HEX_RE.test(data.color)?data.color:"#30b0ff" };
+  const data=snap&&snap.exists()?snap.data():{ username, color:"#30b0ff" };
+  me={ uid:user.uid, username:data.username, color:HEX_RE.test(data.color)?data.color:"#30b0ff" };
+  // profil public (créé / resynchronisé à chaque connexion, y compris pour les anciens comptes)
+  F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color }).catch(e=>console.warn("profil public",e));
   renderMe();
-  if(justSignedUp){ justSignedUp=false; openProfile(true); }     // nouveau compte → choisir sa couleur
+  startListeners();
+  if(justSignedUp){ justSignedUp=false; openProfile(true); }
   else if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); }
-  else goHome();
+  else { tab="vGroups"; show("vGroups"); }
 });
+function renderMe(){ paint($("tabAv"), me.color); $("tabAv").textContent=initial(me.username); }
 
-/* ================= Profil ================= */
-function renderMe(){
-  if(!me) return;
-  paint($("meAv"), me.color); $("meAv").textContent=initial(me.username);
-  $("meName").textContent=me.username;
-}
-let draft = null;
-PALETTE.forEach(c=>{ const b=document.createElement("button"); b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c); b.onclick=()=>setDraft(c); $("grid").appendChild(b); });
-$("hue").addEventListener("input",e=>setDraft(hslToHex(+e.target.value,100,50)));
-function setDraft(c){
-  draft=c;
-  paint($("pv"), c);
-  $("pvAv").textContent=initial(me.username); $("pvName").textContent=me.username; $("pvHex").textContent=c.toUpperCase();
-  document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===c));
-}
-function openProfile(first){
-  onboarding = !!first;
-  $("onboard").classList.toggle("hidden", !onboarding);
-  $("saveBtn").textContent = onboarding ? "C'est parti →" : "Enregistrer";
-  setDraft(me.color);
-  show("vProfile");
-}
-$("meCard").onclick=()=>openProfile(false);
-$("saveBtn").onclick=async()=>{
-  $("saveBtn").disabled=true;
-  try{
-    await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft });
-    me.color=draft; renderMe();
-    if(!onboarding) toast("Profil enregistré");
-  }catch(e){ toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
-  $("saveBtn").disabled=false;
-  const wasOnboarding=onboarding; onboarding=false;
-  if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); }
-  else goHome();
-  if(wasOnboarding) toast("Profil créé !");
-};
-
-/* ================= Accueil / Mes salons ================= */
-function goHome(){
-  history.replaceState(null,"",location.pathname+(EMU?"?emu":""));
-  show("vHome"); $("code").value=""; watchRooms();
-}
-function stopRooms(){ if(unsubRooms){ unsubRooms(); unsubRooms=null; } }
-function watchRooms(){
-  stopRooms();
-  const q = F.query(F.collection(db,"users",me.uid,"rooms"), F.orderBy("lastJoined","desc"), F.limit(30));
-  unsubRooms = F.onSnapshot(q, snap=>{
-    const box=$("rooms"); box.textContent="";
-    if(snap.empty){ box.innerHTML='<div class="empty-list">Aucun salon pour l\'instant.<br>Crée-en un et invite un ami.</div>'; return; }
-    snap.docs.forEach((d,i)=>{
-      const r=d.data();
-      const el=document.createElement("div"); el.className="room";
-      const info=document.createElement("div"); info.className="info";
-      const c=document.createElement("div"); c.className="code"; c.textContent=r.code;
-      const w=document.createElement("div"); w.className="when"; w.textContent="Rejoint "+ago(tms(r.lastJoined));
-      const dots=document.createElement("div"); dots.className="dots";
-      info.append(c,w,dots);
-      const del=document.createElement("button"); del.className="del"; del.textContent="×"; del.setAttribute("aria-label","Retirer de ma liste");
-      del.onclick=async ev=>{ ev.stopPropagation(); await F.deleteDoc(d.ref).catch(()=>toast("Suppression impossible")); };
-      el.append(info,del); el.onclick=()=>enterRoom(r.code);
-      box.appendChild(el);
-      if(i<15) loadRoomPreview(r.code, dots, w);
+/* ================= Abonnements globaux ================= */
+function startListeners(){
+  stopAll();
+  // Mes groupes
+  subs.push(F.onSnapshot(F.query(F.collection(db,"users",me.uid,"rooms"),F.orderBy("lastJoined","desc"),F.limit(40)), renderGroups,
+    ()=>{ $("groups").innerHTML='<div class="empty-list">Impossible de charger tes groupes.</div>'; }));
+  // Mes amis
+  subs.push(F.onSnapshot(F.query(F.collection(db,"users",me.uid,"friends"),F.orderBy("lastSeen","desc"),F.limit(60)), snap=>{
+    const ids=new Set();
+    snap.docs.forEach(d=>{
+      const f=d.data(); ids.add(d.id);
+      const prev=friends.get(d.id);
+      friends.set(d.id,{ id:d.id, name:String(f.name||"Ami").slice(0,20), lastSeen:tms(f.lastSeen), room:f.room, color:prev?.color||"#3a3d44" });
+      if(!profileSubs.has(d.id)){     // couleur actuelle de l'ami, en direct
+        profileSubs.set(d.id, F.onSnapshot(F.doc(db,"profiles",d.id), p=>{
+          const fr=friends.get(d.id); if(!fr||!p.exists()) return;
+          const c=p.data().color; if(HEX_RE.test(c)) fr.color=c;
+          fr.name=String(p.data().username||fr.name).slice(0,20);
+          renderFriends(); if(!$("sheet").classList.contains("hidden")) renderSheet();
+        }, ()=>{}));
+      }
     });
-  }, ()=>{ $("rooms").innerHTML='<div class="empty-list">Impossible de charger tes salons.</div>'; });
+    [...friends.keys()].forEach(id=>{ if(!ids.has(id)){ friends.delete(id); profileSubs.get(id)?.(); profileSubs.delete(id); } });
+    renderFriends();
+  }, ()=>{}));
+  // Invitations reçues
+  subs.push(F.onSnapshot(F.query(F.collection(db,"invites",me.uid,"items"),F.orderBy("t","desc")), renderInvites, ()=>{}));
 }
-async function loadRoomPreview(code, dots, when){
+
+/* ================= Onglet Amis ================= */
+function renderFriends(){
+  const box=$("friends"); box.textContent="";
+  if(!friends.size){
+    box.style.display="block";
+    box.innerHTML='<div class="empty-list">Pas encore d\'amis.<br>Ils apparaissent ici automatiquement dès que vous êtes ensemble dans un groupe.<br><br>Crée un groupe et partage le lien ✨</div>';
+    return;
+  }
+  box.style.display="";
+  [...friends.values()].forEach(f=>{
+    const c=el("div","friend"); paint(c,f.color);
+    const b=el("div");
+    b.append(el("div","fn",f.name), el("div","fs","vu "+ago(f.lastSeen)+(groupNames.get(f.room)?" · "+groupNames.get(f.room):"")));
+    c.append(avatar(f.name,f.color), b);
+    c.querySelector(".av").style.background="rgba(0,0,0,.18)";
+    c.onclick=()=>showFull(f.name,f.color);
+    box.appendChild(c);
+  });
+}
+
+/* ================= Onglet Groupes ================= */
+function renderInvites(snap){
+  const box=$("invites"); box.textContent="";
+  const n=snap.size;
+  $("invWrap").classList.toggle("hidden", !n);
+  $("invN").textContent=n; $("badge").textContent=n; $("badge").classList.toggle("hidden", !n);
+  snap.docs.forEach(d=>{
+    const v=d.data();
+    const r=el("div","row invite");
+    const g=el("div","av gav","✉"); g.style.background="#24423a"; g.style.color="var(--accent)";
+    const info=el("div","info");
+    info.append(el("div","tt",String(v.groupName||d.id).slice(0,30)), el("div","when","de "+String(v.fromName||"?").slice(0,20)+" · "+ago(tms(v.t))));
+    const ok=el("button","btn sm","Rejoindre");
+    ok.onclick=async()=>{ await F.deleteDoc(d.ref).catch(()=>{}); enterRoom(d.id); };
+    const no=el("button","del","×"); no.setAttribute("aria-label","Refuser");
+    no.onclick=()=>F.deleteDoc(d.ref).catch(()=>toast("Impossible de refuser"));
+    r.append(g,info,ok,no); box.appendChild(r);
+  });
+}
+function renderGroups(snap){
+  const box=$("groups"); box.textContent="";
+  if(snap.empty){ box.innerHTML='<div class="empty-list">Aucun groupe pour l\'instant.<br>Crée-en un et invite tes amis.</div>'; return; }
+  snap.docs.forEach((d,i)=>{
+    const r=d.data(); const name=r.name||r.code;
+    groupNames.set(r.code,name);
+    const row=el("div","row");
+    const g=el("div","av gav",initial(name)); g.style.background="#262a31"; g.style.color="var(--txt)";
+    const info=el("div","info");
+    const dots=el("div","dots"); const when=el("div","when","Ouvert "+ago(tms(r.lastJoined)));
+    info.append(el("div","tt",name), el("div","code",r.code), when, dots);
+    const del=el("button","del","×"); del.setAttribute("aria-label","Retirer de ma liste");
+    del.onclick=async ev=>{ ev.stopPropagation(); await F.deleteDoc(d.ref).catch(()=>toast("Suppression impossible")); };
+    row.append(g,info,del); row.onclick=()=>enterRoom(r.code);
+    box.appendChild(row);
+    if(i<15) loadGroupPreview(r.code,dots,g);
+  });
+  renderFriends();
+}
+async function loadGroupPreview(code,dots,g){
   try{
-    const s = await F.getDocs(F.collection(db,"rooms",code,"members"));
-    const others = s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>m.id!==me.uid && HEX_RE.test(m.color));
-    others.slice(0,8).forEach(m=>{ const i=document.createElement("i"); i.style.background=m.color; i.title=m.name; dots.appendChild(i); });
-    if(others.length) when.textContent += " · avec "+others.slice(0,3).map(m=>String(m.name).slice(0,20)).join(", ")+(others.length>3?"…":"");
+    const s=await F.getDocs(F.collection(db,"rooms",code,"members"));
+    const ms=s.docs.map(d=>({id:d.id,...d.data()})).filter(m=>HEX_RE.test(m.color));
+    ms.slice(0,10).forEach(m=>{ const i=el("i"); i.style.background=m.id===me.uid?me.color:m.color; i.title=m.name; dots.appendChild(i); });
+    const other=ms.find(m=>m.id!==me.uid); if(other){ g.style.background=other.color; g.style.color=ink(other.color); }
   }catch(e){}
 }
-$("createBtn").onclick=async()=>{ await enterRoom(rand(3)+"-"+rand(3)); toast("Salon créé — invite un ami"); };
-const doJoin=()=>{ const c=cleanCode($("code").value); if(!c){ toast("Tape le code reçu de ton ami"); $("code").focus(); return; } enterRoom(c); };
+$("newBtn").onclick=()=>{ $("newCard").classList.toggle("hidden"); if(!$("newCard").classList.contains("hidden")) $("gName").focus(); };
+async function createGroup(){
+  const name=$("gName").value.trim().replace(/\s+/g," ").slice(0,30);
+  if(!name){ toast("Donne un nom à ton groupe"); $("gName").focus(); return; }
+  $("createBtn").disabled=true;
+  const code=rand(3)+"-"+rand(3);
+  try{
+    await F.setDoc(F.doc(db,"rooms",code),{ name, createdBy:me.uid, createdAt:F.serverTimestamp() });
+    $("gName").value=""; $("newCard").classList.add("hidden");
+    await enterRoom(code, name);
+    openSheet();
+  }catch(e){ console.warn(e); toast("Création impossible"); }
+  finally{ $("createBtn").disabled=false; }
+}
+$("createBtn").onclick=createGroup;
+$("gName").addEventListener("keydown",e=>{ if(e.key==="Enter") createGroup(); });
+const doJoin=()=>{ const c=cleanCode($("code").value); if(!c){ toast("Tape le code reçu"); $("code").focus(); return; } $("code").value=""; enterRoom(c); };
 $("joinBtn").onclick=doJoin;
 $("code").addEventListener("keydown",e=>{ if(e.key==="Enter") doJoin(); });
 
-/* ================= Salon ================= */
+/* ================= Groupe ouvert ================= */
 function writePresence(online){
   if(!current||!me) return Promise.resolve();
   return F.setDoc(F.doc(db,"rooms",current,"members",me.uid),
     { name:me.username, color:me.color, t:F.serverTimestamp(), online }).catch(e=>console.warn(e));
 }
-async function enterRoom(code){
-  await leaveRoom(true);
-  stopRooms();
-  current=code; members.clear(); seenOnline=null;
-  $("roomCode").textContent=code;
-  history.replaceState(null,"","?salon="+encodeURIComponent(code)+(EMU?"&emu":""));
-  show("vRoom"); $("status").classList.remove("hidden"); setStatus("","connexion…");
+async function enterRoom(code, knownName){
+  await leaveRoom();
+  current=code; members.clear(); seenOnline=null; friendSaved=new Set();
+  currentName = knownName || groupNames.get(code) || "";
+  if(!knownName){
+    const s=await F.getDoc(F.doc(db,"rooms",code)).catch(()=>null);
+    if(s && s.exists() && s.data().name) currentName=String(s.data().name).slice(0,30);
+  }
+  if(!currentName) currentName=code;
+  $("roomCode").textContent="code "+code;
+  setURL(code);
+  show("vRoom"); setStatus("","connexion…");
   renderPlayers();
   await writePresence(true);
-  F.setDoc(F.doc(db,"users",me.uid,"rooms",code),{ code, lastJoined:F.serverTimestamp() }).catch(e=>console.warn(e));
-  unsubMembers = F.onSnapshot(F.collection(db,"rooms",code,"members"), { includeMetadataChanges:true }, snap=>{
+  const rec={ code, lastJoined:F.serverTimestamp() }; if(currentName!==code) rec.name=currentName;
+  F.setDoc(F.doc(db,"users",me.uid,"rooms",code),rec).catch(e=>console.warn(e));
+  unsubMembers=F.onSnapshot(F.collection(db,"rooms",code,"members"),{ includeMetadataChanges:true }, snap=>{
     setStatus(snap.metadata.fromCache?"off":"on", snap.metadata.fromCache?"hors ligne":"connecté");
     members.clear();
     snap.docs.forEach(d=>{
@@ -426,64 +566,128 @@ async function enterRoom(code){
       const m=d.data(); if(!HEX_RE.test(String(m.color))) return;
       members.set(d.id,{ id:d.id, name:String(m.name||"Ami").slice(0,20), color:m.color, t:tms(m.t), online:m.online!==false });
     });
+    if(!snap.metadata.fromCache) rememberFriends();
     announceArrivals(snap.metadata.fromCache);
     renderPlayers();
   }, ()=>setStatus("off","accès refusé"));
   hb=setInterval(()=>writePresence(true),HEARTBEAT_MS);
   tick=setInterval(renderPlayers,5000);
 }
-async function leaveRoom(silent){
+async function leaveRoom(){
   clearInterval(hb); clearInterval(tick); hb=tick=null;
   if(unsubMembers){ unsubMembers(); unsubMembers=null; }
   if(current){ await writePresence(false); current=null; }
-  if(!silent && me) goHome();
+  closeSheet();
+}
+// Tous ceux croisés dans un groupe deviennent des amis (une écriture par personne et par visite)
+function rememberFriends(){
+  members.forEach(m=>{
+    if(friendSaved.has(m.id)) return;
+    friendSaved.add(m.id);
+    F.setDoc(F.doc(db,"users",me.uid,"friends",m.id),{ name:m.name, lastSeen:F.serverTimestamp(), room:current }).catch(e=>console.warn(e));
+  });
 }
 function setStatus(s,t){ $("dot").className="dot "+s; $("stTxt").textContent=t; }
 const isOn = m => m.online && Date.now()-m.t < AWAY_MS;
-
-// « X a rejoint le salon » — pas au premier chargement
 function announceArrivals(fromCache){
   if(fromCache) return;
-  const now = new Set([...members.values()].filter(isOn).map(m=>m.id));
-  if(seenOnline) now.forEach(id=>{ if(!seenOnline.has(id)) toast(members.get(id).name+" a rejoint le salon"); });
-  seenOnline = now;
+  const now=new Set([...members.values()].filter(isOn).map(m=>m.id));
+  if(seenOnline) now.forEach(id=>{ if(!seenOnline.has(id)) toast(members.get(id).name+" a rejoint le groupe"); });
+  seenOnline=now;
 }
-
-function playerCard(p, isMe){
-  const away = !isMe && !isOn(p);
-  const el=document.createElement("div"); el.className="player"+(away?" away":"");
-  paint(el, p.color);
-  const av=document.createElement("div"); av.className="pav"; av.textContent=initial(p.name);
-  const bottom=document.createElement("div");
-  const nm=document.createElement("div"); nm.className="pnm"; nm.textContent=p.name;
-  const st=document.createElement("div"); st.className="pst";
-  st.innerHTML="<i></i>"; st.append(document.createTextNode(isMe ? "en ligne" : (away ? "hors ligne · "+ago(p.t) : "en ligne")));
-  bottom.append(nm,st);
-  el.append(av,bottom);
-  if(isMe){ const tag=document.createElement("div"); tag.className="tag"; tag.textContent="TOI"; el.appendChild(tag); }
-  el.onclick=()=>{ const f=$("full"); paint(f,p.color); $("fullName").textContent=p.name; f.classList.remove("hidden"); };
-  return el;
+function playerCard(p,isMe){
+  const away=!isMe && !isOn(p);
+  const c=el("div","player"+(away?" away":"")); paint(c,p.color);
+  const a=el("div","av",initial(p.name));
+  const b=el("div"); const st=el("div","pst"); st.append(el("i"), document.createTextNode(away?"hors ligne · "+ago(p.t):"en ligne"));
+  b.append(el("div","pnm",p.name), st);
+  c.append(a,b);
+  if(isMe) c.appendChild(el("div","tag","TOI"));
+  c.onclick=()=>showFull(p.name,p.color);
+  return c;
 }
 function renderPlayers(){
-  if(!me) return;
+  if(!me||view!=="vRoom") return;
   const box=$("players"); box.textContent="";
-  box.appendChild(playerCard({ name:me.username, color:me.color }, true));
-  const list=[...members.values()].sort((a,b)=> (isOn(b)-isOn(a)) || a.name.localeCompare(b.name));
+  box.appendChild(playerCard({ name:me.username, color:me.color },true));
+  const list=[...members.values()].sort((a,b)=>(isOn(b)-isOn(a))||a.name.localeCompare(b.name));
   list.forEach(p=>box.appendChild(playerCard(p,false)));
   if(!list.some(isOn)){
-    const w=document.createElement("div"); w.className="player wait";
-    w.innerHTML='<div><div class="plus">＋</div>En attente<br>d\'un ami…</div>';
+    const w=el("div","player wait"); w.innerHTML='<div><div class="plus">＋</div>Inviter<br>un ami</div>'; w.onclick=openSheet;
     box.appendChild(w);
   }
   const n=1+list.filter(isOn).length;
-  $("count").textContent = n+" connecté"+(n>1?"s":"");
+  $("count").textContent=n+" connecté"+(n>1?"s":"");
 }
-$("full").onclick=()=>$("full").classList.add("hidden");
+
+/* ================= Feuille d'invitation ================= */
+const invited=new Set();
+function openSheet(){ if(!current) return; $("shName").textContent=currentName; renderSheet(); $("sheetBg").classList.remove("hidden"); $("sheet").classList.remove("hidden"); }
+function closeSheet(){ $("sheetBg").classList.add("hidden"); $("sheet").classList.add("hidden"); }
+$("sheetBg").onclick=closeSheet;
+$("inviteBtn").onclick=openSheet;
+function renderSheet(){
+  const box=$("shList"); box.textContent="";
+  const list=[...friends.values()];
+  if(!list.length){ box.innerHTML='<p class="small">Tu n\'as pas encore d\'amis dans l\'app : partage le lien ci-dessous. Ceux qui rejoignent deviendront tes amis.</p>'; return; }
+  list.forEach(f=>{
+    const r=el("div","frow");
+    r.append(avatar(f.name,f.color), el("div","nm",f.name));
+    const here=members.has(f.id) && isOn(members.get(f.id));
+    const key=current+"|"+f.id;
+    if(here) r.appendChild(el("span","done","déjà là"));
+    else if(invited.has(key)) r.appendChild(el("span","done","Invité ✓"));
+    else{
+      const b=el("button","btn sm","Inviter");
+      b.onclick=async()=>{
+        b.disabled=true;
+        try{
+          await F.setDoc(F.doc(db,"invites",f.id,"items",current),{ fromUid:me.uid, fromName:me.username, groupName:currentName.slice(0,30), t:F.serverTimestamp() });
+          invited.add(key); renderSheet(); toast(f.name+" est invité");
+        }catch(e){ console.warn(e); b.disabled=false; toast("Invitation impossible"); }
+      };
+      r.appendChild(b);
+    }
+    box.appendChild(r);
+  });
+}
 $("shareBtn").onclick=async()=>{
-  const url=location.origin+location.pathname+"?salon="+encodeURIComponent(current);
-  if(navigator.share){ try{ await navigator.share({title:"WHATMOOD",text:"Rejoins mon salon WHATMOOD",url}); return; }catch(e){ if(e.name==="AbortError")return; } }
+  const url=location.origin+location.pathname+"?groupe="+encodeURIComponent(current);
+  if(navigator.share){ try{ await navigator.share({title:"WHATMOOD",text:"Rejoins le groupe « "+currentName+" » sur WHATMOOD",url}); return; }catch(e){ if(e.name==="AbortError")return; } }
   try{ await navigator.clipboard.writeText(url); toast("Lien copié"); }catch(e){ toast(url); }
 };
+
+/* ================= Onglet Profil ================= */
+let draft=null;
+PALETTE.forEach(c=>{ const b=el("button"); b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c); b.onclick=()=>setDraft(c); $("grid").appendChild(b); });
+$("hue").addEventListener("input",e=>setDraft(hslToHex(+e.target.value,100,50)));
+function setDraft(c){
+  draft=c; paint($("pv"),c);
+  $("pvAv").textContent=initial(me.username); $("pvName").textContent=me.username; $("pvHex").textContent=c.toUpperCase();
+  document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===c));
+}
+function openProfile(first){
+  onboarding=!!first;
+  $("onboard").classList.toggle("hidden",!onboarding);
+  $("logoutBtn").classList.toggle("hidden",onboarding);
+  $("saveBtn").textContent=onboarding?"C'est parti →":"Enregistrer";
+  setDraft(me.color);
+  show("vProfile");
+}
+$("saveBtn").onclick=async()=>{
+  $("saveBtn").disabled=true;
+  try{
+    await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft });
+    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft });
+    me.color=draft; renderMe();
+  }catch(e){ console.warn(e); toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
+  $("saveBtn").disabled=false;
+  if(onboarding){
+    onboarding=false; toast("Profil créé !");
+    if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); } else { show("vGroups"); }
+  } else toast("Profil enregistré");
+};
+
 document.addEventListener("visibilitychange",()=>{
   if(!current) return;
   if(document.hidden) writePresence(false); else { writePresence(true); renderPlayers(); }

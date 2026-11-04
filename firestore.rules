@@ -1,18 +1,20 @@
 rules_version = '2';
 // Règles de sécurité WHATMOOD
-// Principe : tout utilisateur connecté peut LIRE un salon, mais chacun n'ÉCRIT que ses propres données.
+// Principe : chacun n'écrit QUE ses propres données ; les profils publics et les groupes
+// sont lisibles par tout utilisateur connecté.
 service cloud.firestore {
   match /databases/{db}/documents {
 
     function signedIn()   { return request.auth != null; }
     function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
     function isHex(c)     { return c is string && c.matches('^#[0-9a-f]{6}$'); }
-    function validCode(c) { return c.matches('^[a-z0-9-]{1,32}$'); }
+    function validCode(c) { return c is string && c.matches('^[a-z0-9-]{1,32}$'); }
+    function validName(n) { return n is string && n.size() >= 1 && n.size() <= 30; }
     function myUsername() {
       return get(/databases/$(db)/documents/users/$(request.auth.uid)).data.username;
     }
 
-    // Profil : privé, pseudo non modifiable après création
+    // Compte privé (pseudo figé à la création)
     match /users/{uid} {
       allow read: if isOwner(uid);
       allow create: if isOwner(uid)
@@ -26,26 +28,70 @@ service cloud.firestore {
         && isHex(request.resource.data.color);
       allow delete: if false;
 
-      // Historique des salons rejoints : privé
+      // Mes groupes (historique privé)
       match /rooms/{code} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid) && validCode(code)
-          && request.resource.data.keys().hasOnly(['code', 'lastJoined'])
+          && request.resource.data.keys().hasOnly(['code', 'lastJoined', 'name'])
           && request.resource.data.code == code
-          && request.resource.data.lastJoined == request.time;
+          && request.resource.data.lastJoined == request.time
+          && (!('name' in request.resource.data) || validName(request.resource.data.name));
+      }
+
+      // Mes amis (ajoutés automatiquement quand on partage un groupe)
+      match /friends/{fid} {
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && fid != uid
+          && request.resource.data.keys().hasOnly(['name', 'lastSeen', 'room'])
+          && request.resource.data.name is string && request.resource.data.name.size() <= 20
+          && request.resource.data.lastSeen == request.time
+          && validCode(request.resource.data.room);
       }
     }
 
-    // Présence dans un salon : lisible par les connectés, écrite seulement par soi-même
-    match /rooms/{code}/members/{uid} {
+    // Profil public : pseudo + couleur, visible par les connectés
+    match /profiles/{uid} {
+      allow read: if signedIn();
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['username', 'color'])
+        && request.resource.data.username == myUsername()
+        && isHex(request.resource.data.color);
+      allow delete: if false;
+    }
+
+    // Groupe : nom figé à la création
+    match /rooms/{code} {
       allow read: if signedIn() && validCode(code);
-      allow create, update: if isOwner(uid) && validCode(code)
-        && request.resource.data.keys().hasOnly(['name', 'color', 't', 'online'])
-        && request.resource.data.name == myUsername()        // impossible d'usurper un pseudo
-        && isHex(request.resource.data.color)
-        && request.resource.data.online is bool
-        && request.resource.data.t == request.time;          // horodatage serveur obligatoire
-      allow delete: if isOwner(uid);
+      allow create: if signedIn() && validCode(code)
+        && request.resource.data.keys().hasOnly(['name', 'createdBy', 'createdAt'])
+        && validName(request.resource.data.name)
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update, delete: if false;
+
+      // Présence des joueurs dans le groupe
+      match /members/{uid} {
+        allow read: if signedIn() && validCode(code);
+        allow create, update: if isOwner(uid) && validCode(code)
+          && request.resource.data.keys().hasOnly(['name', 'color', 't', 'online'])
+          && request.resource.data.name == myUsername()
+          && isHex(request.resource.data.color)
+          && request.resource.data.online is bool
+          && request.resource.data.t == request.time;
+        allow delete: if isOwner(uid);
+      }
+    }
+
+    // Invitations reçues : n'importe quel connecté peut inviter quelqu'un d'autre,
+    // sous son vrai pseudo ; seul le destinataire peut les lire / supprimer.
+    match /invites/{uid}/items/{code} {
+      allow read, delete: if isOwner(uid);
+      allow create, update: if signedIn() && uid != request.auth.uid && validCode(code)
+        && request.resource.data.keys().hasOnly(['fromUid', 'fromName', 'groupName', 't'])
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.fromName == myUsername()
+        && validName(request.resource.data.groupName)
+        && request.resource.data.t == request.time;
     }
   }
 }
