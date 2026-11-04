@@ -24,7 +24,6 @@
   .wrap{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
   header{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px}
   h1{font-size:18px;margin:0;letter-spacing:.3px;white-space:nowrap}
-  h1 span{color:var(--mute);font-weight:400}
   h2{font-size:13px;color:var(--mute);text-transform:uppercase;letter-spacing:.8px;margin:4px 2px 0;font-weight:600}
   .status{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--mute)}
   .dot{width:9px;height:9px;border-radius:50%;background:#555;flex:none}
@@ -41,61 +40,40 @@
   .btn{width:100%;margin-top:14px;background:var(--accent);color:#0b0c0f;border:0;border-radius:12px;
     padding:12px;font-weight:700;font-size:15px}
   .btn.ghost{background:transparent;color:var(--txt);border:1px solid var(--line)}
+  .btn.big{margin-top:0;padding:18px;font-size:17px;border-radius:16px}
   .btns{display:flex;gap:10px}
   .btns .btn{margin-top:0}
-  .btn.big{margin-top:0;padding:18px;font-size:17px;border-radius:16px}
   .joinrow{display:flex;gap:8px}
   .joinrow input{flex:1;min-width:0}
   .joinrow .btn{width:auto;margin-top:0;padding:0 16px}
-  .link{background:none;border:0;color:var(--accent);padding:0;font-size:12px;margin-top:6px}
   .err{color:var(--err);font-size:13px;margin-top:10px;min-height:1em}
   .small{font-size:12px;color:var(--mute)}
   .hidden{display:none!important}
+  .col{display:flex;flex-direction:column;gap:14px}
 
-  /* Onglets auth */
+  /* Auth */
   .tabs{display:flex;background:#0f1114;border:1px solid var(--line);border-radius:12px;padding:3px;margin-bottom:14px}
   .tabs button{flex:1;border:0;background:none;color:var(--mute);padding:9px;border-radius:9px;font-weight:600}
   .tabs button.on{background:var(--panel);color:var(--txt)}
   .hero{text-align:center;padding:18px 0 4px}
   .hero img{width:76px;height:76px}
   .hero p{color:var(--mute);margin:8px 0 0;font-size:14px}
-
-  /* Barre utilisateur */
-  .user{display:flex;align-items:center;gap:8px;font-size:13px}
-  .avatar{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;font-weight:700;color:#0b0c0f;font-size:13px}
   .iconbtn{background:none;border:1px solid var(--line);color:var(--mute);border-radius:9px;padding:5px 9px;font-size:12px}
 
-  /* Liste des salons */
-  .rooms{display:flex;flex-direction:column;gap:8px}
-  .room{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);
-    border-radius:14px;padding:12px;cursor:pointer}
-  .room .info{flex:1;min-width:0}
-  .room .code{font:600 15px ui-monospace,Menlo,monospace}
-  .room .when{font-size:12px;color:var(--mute)}
-  .room .dots{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
-  .room .dots i{width:14px;height:14px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
-  .room .del{background:none;border:0;color:var(--mute);font-size:18px;padding:4px 6px}
-  .empty-list{color:var(--mute);font-size:14px;text-align:center;padding:18px;border:1px dashed var(--line);border-radius:14px}
+  /* Carte profil (accueil) */
+  .me{display:flex;align-items:center;gap:14px;cursor:pointer}
+  .me .av{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-weight:700;font-size:24px;line-height:1;flex:none;transition:background .2s}
+  .me .nm{font-weight:700;font-size:17px}
+  .me .sub{font-size:12px;color:var(--mute)}
+  .me .edit{margin-left:auto;color:var(--accent);font-size:13px;font-weight:600}
 
-  /* Salon */
-  .screen{position:relative;border-radius:24px;height:46vh;min-height:240px;overflow:hidden;
-    border:1px solid var(--line);background:#1b1d22;transition:background .35s ease,opacity .35s;
-    display:flex;flex-direction:column;justify-content:space-between;padding:16px;cursor:pointer}
-  .screen .who{font-size:13px;padding:6px 10px;border-radius:999px;background:rgba(0,0,0,.35);
-    backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);align-self:flex-start;color:#fff}
-  .screen .hex{font:600 28px/1 ui-monospace,SFMono-Regular,Menlo,monospace;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.4)}
-  .screen .meta{font-size:12px;color:rgba(255,255,255,.8);margin-top:4px}
-  .screen.empty{cursor:default}
-  .screen.empty .hex{font-size:16px;font-weight:500;font-family:inherit;color:var(--mute);text-shadow:none}
-  .screen .hint{position:absolute;right:14px;top:16px;font-size:11px;color:rgba(255,255,255,.75)}
-  .screen.empty .hint{display:none}
-  .screen.light .who{background:rgba(255,255,255,.45);color:#111}
-  .screen.light .hex,.screen.light .meta,.screen.light .hint{color:#111;text-shadow:none}
-  .screen.away{opacity:.55}
-  .mine{display:flex;align-items:center;gap:12px;margin-bottom:12px}
-  .mine .sw{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);flex:none;transition:background .2s}
-  .mine .t{font-size:13px;color:var(--mute)}
-  .mine .t b{display:block;color:var(--txt);font:600 16px ui-monospace,Menlo,monospace}
+  /* Éditeur de profil */
+  .preview{border-radius:24px;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+    transition:background .25s ease;border:1px solid var(--line)}
+  .preview .bigav{width:84px;height:84px;border-radius:24px;display:grid;place-items:center;font-weight:800;font-size:40px;line-height:1;
+    background:rgba(0,0,0,.18)}
+  .preview .pn{font-weight:700;font-size:20px}
+  .preview .ph{font:600 13px ui-monospace,Menlo,monospace;opacity:.8}
   .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
   .grid button{aspect-ratio:1;border-radius:12px;border:2px solid transparent;padding:0}
   .grid button.sel{border-color:#fff;box-shadow:0 0 0 2px var(--bg) inset}
@@ -105,39 +83,65 @@
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;
     background:#fff;border:3px solid #0d0e11;box-shadow:0 1px 6px rgba(0,0,0,.5)}
   input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0d0e11}
-  .others{display:flex;gap:8px;flex-wrap:wrap}
-  .others:empty{display:none}
-  .chip{display:flex;align-items:center;gap:6px;font-size:12px;padding:5px 9px;border-radius:999px;background:#0f1114;border:1px solid var(--line)}
-  .chip i{width:12px;height:12px;border-radius:4px;display:inline-block}
-  .chip.away{opacity:.5}
+  .onboard{text-align:center}
+  .onboard h3{margin:0 0 4px;font-size:20px}
+
+  /* Liste des salons */
+  .rooms{display:flex;flex-direction:column;gap:8px}
+  .room{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px;cursor:pointer}
+  .room .info{flex:1;min-width:0}
+  .room .code{font:600 15px ui-monospace,Menlo,monospace}
+  .room .when{font-size:12px;color:var(--mute)}
+  .room .dots{display:flex;gap:4px;margin-top:6px;flex-wrap:wrap}
+  .room .dots i{width:14px;height:14px;border-radius:5px;display:inline-block;border:1px solid rgba(255,255,255,.15)}
+  .room .del{background:none;border:0;color:var(--mute);font-size:18px;padding:4px 6px}
+  .empty-list{color:var(--mute);font-size:14px;text-align:center;padding:18px;border:1px dashed var(--line);border-radius:14px}
+
+  /* Salon */
+  .roomhead{display:flex;align-items:center;justify-content:space-between}
+  .roomhead .rc{font:700 22px ui-monospace,Menlo,monospace;letter-spacing:.5px}
+  .roomhead .cnt{font-size:13px;color:var(--mute)}
+  .players{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .player{position:relative;border-radius:20px;aspect-ratio:1/1.1;padding:14px;display:flex;flex-direction:column;
+    justify-content:space-between;cursor:pointer;transition:background .3s,opacity .3s,transform .15s;overflow:hidden;
+    animation:pop .35s ease}
+  .player:active{transform:scale(.97)}
+  @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
+  .player .pav{width:54px;height:54px;border-radius:16px;display:grid;place-items:center;font-weight:800;font-size:26px;line-height:1;background:rgba(0,0,0,.18)}
+  .player .pnm{font-weight:700;font-size:17px;word-break:break-all}
+  .player .pst{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.85}
+  .player .pst i{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
+  .player .tag{position:absolute;top:12px;right:12px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.25)}
+  .player.away{opacity:.4;filter:saturate(.5)}
+  .player.wait{background:transparent!important;border:2px dashed var(--line);color:var(--mute);justify-content:center;align-items:center;
+    text-align:center;font-size:13px;cursor:default;animation:none}
+  .player.wait .plus{font-size:34px;line-height:1;margin-bottom:6px}
 
   #toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 24px);transform:translateX(-50%);
     background:#fff;color:#111;padding:9px 14px;border-radius:999px;font-size:13px;z-index:20;
     opacity:0;transition:opacity .25s;pointer-events:none;max-width:90vw}
   #toast.show{opacity:1}
-  #full{position:fixed;inset:0;z-index:10;display:flex;align-items:flex-end;justify-content:center;
+  #full{position:fixed;inset:0;z-index:10;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
     padding-bottom:calc(env(safe-area-inset-bottom) + 30px);transition:background .35s ease}
-  #full span{font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.35);color:#fff}
+  #full b{font-size:28px}
+  #full span{font-size:12px;padding:6px 12px;border-radius:999px;background:rgba(0,0,0,.25)}
   pre{white-space:pre-wrap;font-size:12px;color:var(--mute)}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header>
-    <h1>Duo Couleur <span id="roomLabel"></span></h1>
-    <div id="userBar" class="user hidden">
-      <div class="avatar" id="avatar"></div><span id="userName"></span>
-      <button class="iconbtn" id="logoutBtn">Déconnexion</button>
-    </div>
+    <h1 id="title">Duo Couleur</h1>
+    <button class="iconbtn hidden" id="backBtn">← Retour</button>
+    <button class="iconbtn hidden" id="logoutBtn">Déconnexion</button>
     <div class="status hidden" id="status"><div class="dot" id="dot"></div><span id="stTxt"></span></div>
   </header>
 
-  <!-- Écran : chargement / config manquante -->
   <section id="vBoot" class="card"><span class="small">Chargement…</span></section>
 
-  <!-- Écran : connexion / inscription -->
+  <!-- Connexion / inscription -->
   <section id="vAuth" class="hidden">
-    <div class="hero"><img src="icon.svg" alt=""><p>Partage ta couleur en direct avec tes amis.</p></div>
+    <div class="hero"><img src="icon.svg" alt=""><p>Ton profil couleur, partagé en direct avec tes amis.</p></div>
     <div class="card">
       <div class="tabs"><button id="tLogin" class="on">Connexion</button><button id="tSignup">Créer un compte</button></div>
       <form id="authForm" autocomplete="on">
@@ -152,12 +156,29 @@
         <div class="err" id="authErr"></div>
         <button class="btn" id="authBtn" type="submit">Se connecter</button>
       </form>
-      <p class="small" id="authHint" style="margin:10px 0 0">Pseudo : 3 à 20 caractères, lettres minuscules, chiffres, « . », « _ » ou « - ».</p>
+      <p class="small" style="margin:10px 0 0">Pseudo : 3 à 20 caractères, lettres minuscules, chiffres, « . », « _ » ou « - ».</p>
     </div>
   </section>
 
-  <!-- Écran : mes salons -->
-  <section id="vHome" class="hidden" style="display:flex;flex-direction:column;gap:14px">
+  <!-- Mon profil (éditeur de couleur) -->
+  <section id="vProfile" class="hidden col">
+    <div class="onboard hidden" id="onboard"><h3>Bienvenue 👋</h3><p class="small" style="margin:0">Choisis ta couleur : c'est elle que tes amis verront dans les salons.</p></div>
+    <div class="preview" id="pv"><div class="bigav" id="pvAv"></div><div class="pn" id="pvName"></div><div class="ph" id="pvHex"></div></div>
+    <div class="card">
+      <label>Ma couleur</label>
+      <div class="grid" id="grid"></div>
+      <div class="hue"><input type="range" id="hue" min="0" max="359" value="200" aria-label="Teinte"></div>
+    </div>
+    <button class="btn" id="saveBtn" style="margin-top:0">Enregistrer</button>
+  </section>
+
+  <!-- Accueil -->
+  <section id="vHome" class="hidden col">
+    <div class="card me" id="meCard">
+      <div class="av" id="meAv"></div>
+      <div><div class="nm" id="meName"></div><div class="sub">Mon profil</div></div>
+      <div class="edit">Modifier ›</div>
+    </div>
     <button class="btn big" id="createBtn">＋ Créer un salon</button>
     <div class="card">
       <label for="code">Rejoindre avec un code</label>
@@ -170,27 +191,15 @@
     <div class="rooms" id="rooms"><div class="empty-list">Chargement…</div></div>
   </section>
 
-  <!-- Écran : salon -->
-  <section id="vRoom" class="hidden" style="display:flex;flex-direction:column;gap:14px">
-    <div class="screen empty" id="screen">
-      <div class="who" id="who">En attente de ton ami…</div>
-      <span class="hint">toucher = plein écran</span>
-      <div><div class="hex" id="hex">Personne d'autre dans le salon</div><div class="meta" id="meta"></div></div>
-    </div>
-    <div class="others" id="others"></div>
-    <div class="card">
-      <div class="mine"><div class="sw" id="mySw"></div><div class="t">Ta couleur, visible par les autres<b id="myHex">#000000</b></div></div>
-      <div class="grid" id="grid"></div>
-      <div class="hue"><input type="range" id="hue" min="0" max="359" value="200" aria-label="Teinte"></div>
-    </div>
-    <div class="btns">
-      <button class="btn" id="shareBtn">Inviter un ami</button>
-      <button class="btn ghost" id="leaveBtn">Mes salons</button>
-    </div>
+  <!-- Salon -->
+  <section id="vRoom" class="hidden col">
+    <div class="roomhead"><div><div class="small">Salon</div><div class="rc" id="roomCode"></div></div><div class="cnt" id="count"></div></div>
+    <div class="players" id="players"></div>
+    <button class="btn" id="shareBtn" style="margin-top:0">Inviter un ami</button>
   </section>
 </div>
 
-<div id="full" class="hidden"><span>toucher pour fermer</span></div>
+<div id="full" class="hidden"><b id="fullName"></b><span>toucher pour fermer</span></div>
 <div id="toast"></div>
 
 <script type="module">
@@ -198,52 +207,56 @@ import { firebaseConfig } from "./firebase-config.js";
 const V = "10.12.2";
 const $ = id => document.getElementById(id);
 
-/* ================= Config manquante ================= */
 const params = new URLSearchParams(location.search);
 const EMU = params.has("emu") && ["localhost","127.0.0.1"].includes(location.hostname);
 if (!EMU && (!firebaseConfig.apiKey || firebaseConfig.apiKey === "REMPLACER")) {
   $("vBoot").innerHTML = "<b>Configuration Firebase manquante.</b><pre>Colle la config de ton projet Firebase dans firebase-config.js</pre>";
   throw new Error("config manquante");
 }
-
 const { initializeApp } = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`);
 const A = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`);
 const F = await import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`);
-
 const app  = initializeApp(EMU ? { apiKey:"demo", projectId:"demo-duo", authDomain:"localhost" } : firebaseConfig);
 const auth = A.getAuth(app);
 const db   = F.getFirestore(app);
 if (EMU) { A.connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings:true }); F.connectFirestoreEmulator(db, "localhost", 8080); }
 
-/* ================= Constantes / utilitaires ================= */
-const DOMAIN = "@duo-couleur.app";               // le pseudo est converti en identifiant interne
+/* ================= Utilitaires ================= */
+const DOMAIN = "@duo-couleur.app";
 const USER_RE = /^[a-z0-9_.-]{3,20}$/;
 const HEX_RE  = /^#[0-9a-f]{6}$/;
 const HEARTBEAT_MS = 25000, AWAY_MS = 70000;
 const PALETTE = ["#ff3b30","#ff9500","#ffcc00","#34c759","#00c7be","#30b0ff",
-                 "#007aff","#5856d6","#af52de","#ff2d92","#ffffff","#1c1c1e"];
-const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
+                 "#007aff","#5856d6","#af52de","#ff2d92","#ffffff","#8e8e93"];
 const rand = n => Array.from(crypto.getRandomValues(new Uint8Array(n)), b=>"abcdefghjkmnpqrstuvwxyz23456789"[b%31]).join("");
 const cleanCode = s => (s||"").trim().toLowerCase().replace(/[^a-z0-9-]/g,"-").replace(/-+/g,"-").replace(/^-|-$/g,"").slice(0,32);
 function hslToHex(h,s,l){ s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-l);const f=n=>l-a*Math.max(-1,Math.min(k(n)-3,Math.min(9-k(n),1)));return "#"+[f(0),f(8),f(4)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
 function isLight(hex){ const n=parseInt(hex.slice(1),16);return (0.299*(n>>16&255)+0.587*(n>>8&255)+0.114*(n&255))>165; }
-function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2200); }
+const ink = hex => isLight(hex) ? "#111" : "#fff";      // texte lisible sur la couleur
+function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
 function ago(ms){ const s=Math.round((Date.now()-ms)/1000); if(s<60)return"à l'instant"; const m=Math.round(s/60); if(m<60)return`il y a ${m} min`; const h=Math.round(m/60); if(h<24)return`il y a ${h} h`; const d=Math.round(h/24); return d===1?"hier":`il y a ${d} j`; }
 const tms = ts => ts && typeof ts.toMillis==="function" ? ts.toMillis() : Date.now();
+const initial = n => (n||"?")[0].toUpperCase();
+function paint(el, color){ el.style.background=color; el.style.color=ink(color); }
 
-function show(view){
-  ["vBoot","vAuth","vHome","vRoom"].forEach(v=>$(v).classList.toggle("hidden", v!==view));
-  $("userBar").classList.toggle("hidden", !(view==="vHome"));
-  $("status").classList.toggle("hidden", view!=="vRoom");
-  if(view!=="vRoom") $("roomLabel").textContent="";
+/* ================= Navigation ================= */
+let view = "vBoot";
+function show(v){
+  view = v;
+  ["vBoot","vAuth","vProfile","vHome","vRoom"].forEach(x=>$(x).classList.toggle("hidden", x!==v));
+  $("logoutBtn").classList.toggle("hidden", v!=="vHome");
+  $("backBtn").classList.toggle("hidden", !(v==="vRoom" || (v==="vProfile" && !onboarding)));
+  $("status").classList.add("hidden");
+  $("title").textContent = v==="vProfile" ? "Mon profil" : "Duo Couleur";
 }
+$("backBtn").onclick = ()=>{ if(view==="vRoom") leaveRoom(false); else goHome(); };
 
 /* ================= État ================= */
-let me = null;              // { uid, username, color }
-let current = null;         // code du salon courant
-let unsubMembers = null, unsubRooms = null, hb = null, tick = null;
-let members = new Map();
-const pendingRoom = cleanCode(params.get("salon"));
+let me = null;                 // { uid, username, color }
+let current = null, unsubMembers = null, unsubRooms = null, hb = null, tick = null;
+let members = new Map(), seenOnline = null;
+let onboarding = false, justSignedUp = false;
+let pendingRoom = cleanCode(params.get("salon"));
 
 /* ================= Authentification ================= */
 let mode = "login";
@@ -257,7 +270,6 @@ function setMode(m){
 }
 $("tLogin").onclick=()=>setMode("login");
 $("tSignup").onclick=()=>setMode("signup");
-
 const AUTH_ERRORS = {
   "auth/email-already-in-use":"Ce pseudo est déjà pris.",
   "auth/invalid-credential":"Pseudo ou mot de passe incorrect.",
@@ -268,54 +280,91 @@ const AUTH_ERRORS = {
   "auth/too-many-requests":"Trop de tentatives, réessaie dans quelques minutes.",
   "auth/network-request-failed":"Pas de connexion réseau."
 };
-
 $("authForm").onsubmit = async e => {
   e.preventDefault();
-  const u=$("aUser").value.trim().toLowerCase(), p=$("aPass").value;
-  const err=$("authErr"); err.textContent="";
+  const u=$("aUser").value.trim().toLowerCase(), p=$("aPass").value, err=$("authErr");
+  err.textContent="";
   if(!USER_RE.test(u)) { err.textContent="Pseudo : 3 à 20 caractères (a-z, 0-9, . _ -)."; return; }
   if(p.length<6)        { err.textContent="Mot de passe : 6 caractères minimum."; return; }
   if(mode==="signup" && p!==$("aPass2").value) { err.textContent="Les deux mots de passe ne correspondent pas."; return; }
   $("authBtn").disabled=true;
   try{
     if(mode==="signup"){
+      justSignedUp = true;
+      const color = PALETTE[Math.floor(Math.random()*10)];           // couleur de départ, modifiable juste après
       const cred = await A.createUserWithEmailAndPassword(auth, u+DOMAIN, p);
-      await F.setDoc(F.doc(db,"users",cred.user.uid), { username:u, createdAt:F.serverTimestamp(), color:"#30b0ff" });
+      await F.setDoc(F.doc(db,"users",cred.user.uid), { username:u, createdAt:F.serverTimestamp(), color });
     }else{
       await A.signInWithEmailAndPassword(auth, u+DOMAIN, p);
     }
     $("aPass").value=""; $("aPass2").value="";
   }catch(ex){
+    justSignedUp=false;
     err.textContent = AUTH_ERRORS[ex.code] || ("Erreur : "+(ex.code||ex.message));
   }finally{ $("authBtn").disabled=false; }
 };
-
-$("logoutBtn").onclick = async ()=>{ await leaveRoom(); stopRooms(); await A.signOut(auth); };
+$("logoutBtn").onclick = async ()=>{ await leaveRoom(true); stopRooms(); await A.signOut(auth); };
 
 A.onAuthStateChanged(auth, async user=>{
   if(!user){ me=null; setMode("login"); show("vAuth"); return; }
   const username = (user.email||"").replace(DOMAIN,"");
   const ref = F.doc(db,"users",user.uid);
-  let snap = await F.getDoc(ref).catch(()=>null);
-  if(!snap || !snap.exists()){                       // profil absent (inscription interrompue) → on le recrée
+  // à l'inscription, le profil peut être en cours d'écriture : on attend un peu
+  let snap=null;
+  for(let i=0;i<6;i++){ snap = await F.getDoc(ref).catch(()=>null); if(snap && snap.exists()) break; await new Promise(r=>setTimeout(r,300)); }
+  if(!snap || !snap.exists()){
     await F.setDoc(ref,{ username, createdAt:F.serverTimestamp(), color:"#30b0ff" }).catch(()=>{});
     snap = await F.getDoc(ref).catch(()=>null);
   }
   const data = snap && snap.exists() ? snap.data() : { username, color:"#30b0ff" };
   me = { uid:user.uid, username:data.username, color: HEX_RE.test(data.color)?data.color:"#30b0ff" };
-  $("userName").textContent = me.username;
-  $("avatar").textContent = me.username[0].toUpperCase();
-  $("avatar").style.background = me.color;
-  renderMine();
-  if(pendingRoom) { enterRoom(pendingRoom); } else { goHome(); }
+  renderMe();
+  if(justSignedUp){ justSignedUp=false; openProfile(true); }     // nouveau compte → choisir sa couleur
+  else if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); }
+  else goHome();
 });
 
-/* ================= Mes salons ================= */
+/* ================= Profil ================= */
+function renderMe(){
+  if(!me) return;
+  paint($("meAv"), me.color); $("meAv").textContent=initial(me.username);
+  $("meName").textContent=me.username;
+}
+let draft = null;
+PALETTE.forEach(c=>{ const b=document.createElement("button"); b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c); b.onclick=()=>setDraft(c); $("grid").appendChild(b); });
+$("hue").addEventListener("input",e=>setDraft(hslToHex(+e.target.value,100,50)));
+function setDraft(c){
+  draft=c;
+  paint($("pv"), c);
+  $("pvAv").textContent=initial(me.username); $("pvName").textContent=me.username; $("pvHex").textContent=c.toUpperCase();
+  document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===c));
+}
+function openProfile(first){
+  onboarding = !!first;
+  $("onboard").classList.toggle("hidden", !onboarding);
+  $("saveBtn").textContent = onboarding ? "C'est parti →" : "Enregistrer";
+  setDraft(me.color);
+  show("vProfile");
+}
+$("meCard").onclick=()=>openProfile(false);
+$("saveBtn").onclick=async()=>{
+  $("saveBtn").disabled=true;
+  try{
+    await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft });
+    me.color=draft; renderMe();
+    if(!onboarding) toast("Profil enregistré");
+  }catch(e){ toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
+  $("saveBtn").disabled=false;
+  const wasOnboarding=onboarding; onboarding=false;
+  if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); }
+  else goHome();
+  if(wasOnboarding) toast("Profil créé !");
+};
+
+/* ================= Accueil / Mes salons ================= */
 function goHome(){
   history.replaceState(null,"",location.pathname+(EMU?"?emu":""));
-  show("vHome");
-  $("code").value = "";
-  watchRooms();
+  show("vHome"); $("code").value=""; watchRooms();
 }
 function stopRooms(){ if(unsubRooms){ unsubRooms(); unsubRooms=null; } }
 function watchRooms(){
@@ -323,7 +372,7 @@ function watchRooms(){
   const q = F.query(F.collection(db,"users",me.uid,"rooms"), F.orderBy("lastJoined","desc"), F.limit(30));
   unsubRooms = F.onSnapshot(q, snap=>{
     const box=$("rooms"); box.textContent="";
-    if(snap.empty){ box.innerHTML='<div class="empty-list">Aucun salon pour l\'instant.<br>Crée-en un ci-dessus et invite un ami.</div>'; return; }
+    if(snap.empty){ box.innerHTML='<div class="empty-list">Aucun salon pour l\'instant.<br>Crée-en un et invite un ami.</div>'; return; }
     snap.docs.forEach((d,i)=>{
       const r=d.data();
       const el=document.createElement("div"); el.className="room";
@@ -334,10 +383,9 @@ function watchRooms(){
       info.append(c,w,dots);
       const del=document.createElement("button"); del.className="del"; del.textContent="×"; del.setAttribute("aria-label","Retirer de ma liste");
       del.onclick=async ev=>{ ev.stopPropagation(); await F.deleteDoc(d.ref).catch(()=>toast("Suppression impossible")); };
-      el.append(info,del);
-      el.onclick=()=>enterRoom(r.code);
+      el.append(info,del); el.onclick=()=>enterRoom(r.code);
       box.appendChild(el);
-      if(i<15) loadRoomPreview(r.code, dots, w);   // qui est dans ce salon ?
+      if(i<15) loadRoomPreview(r.code, dots, w);
     });
   }, ()=>{ $("rooms").innerHTML='<div class="empty-list">Impossible de charger tes salons.</div>'; });
 }
@@ -349,104 +397,96 @@ async function loadRoomPreview(code, dots, when){
     if(others.length) when.textContent += " · avec "+others.slice(0,3).map(m=>String(m.name).slice(0,20)).join(", ")+(others.length>3?"…":"");
   }catch(e){}
 }
-// Créer : code aléatoire difficile à deviner, puis entrée directe + proposition d'inviter
-$("createBtn").onclick=async()=>{ await enterRoom(rand(3)+"-"+rand(3)); toast("Salon créé — invite un ami ↓"); };
+$("createBtn").onclick=async()=>{ await enterRoom(rand(3)+"-"+rand(3)); toast("Salon créé — invite un ami"); };
 const doJoin=()=>{ const c=cleanCode($("code").value); if(!c){ toast("Tape le code reçu de ton ami"); $("code").focus(); return; } enterRoom(c); };
 $("joinBtn").onclick=doJoin;
 $("code").addEventListener("keydown",e=>{ if(e.key==="Enter") doJoin(); });
 
 /* ================= Salon ================= */
-PALETTE.forEach(c=>{ const b=document.createElement("button"); b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c); b.onclick=()=>pick(c); $("grid").appendChild(b); });
-let hueTimer=null;
-$("hue").addEventListener("input",e=>{
-  me.color=hslToHex(+e.target.value,100,50); renderMine();
-  if(!hueTimer) hueTimer=setTimeout(()=>{ hueTimer=null; pick(me.color); },250);   // ~4 écritures/s max
-});
-function renderMine(){
-  if(!me) return;
-  $("mySw").style.background=me.color; $("myHex").textContent=me.color.toUpperCase();
-  document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===me.color));
-}
-function pick(c){
-  me.color=c; renderMine(); $("avatar").style.background=c;
-  writePresence(true);
-  F.updateDoc(F.doc(db,"users",me.uid),{ color:c }).catch(()=>{});
-}
 function writePresence(online){
   if(!current||!me) return Promise.resolve();
   return F.setDoc(F.doc(db,"rooms",current,"members",me.uid),
-    { name:me.username, color:me.color, t:F.serverTimestamp(), online })
-    .catch(e=>{ console.warn(e); });
+    { name:me.username, color:me.color, t:F.serverTimestamp(), online }).catch(e=>console.warn(e));
 }
-
 async function enterRoom(code){
   await leaveRoom(true);
-  current = code;
-  $("roomLabel").textContent="· "+code;
+  stopRooms();
+  current=code; members.clear(); seenOnline=null;
+  $("roomCode").textContent=code;
   history.replaceState(null,"","?salon="+encodeURIComponent(code)+(EMU?"&emu":""));
-  stopRooms(); show("vRoom");
-  setStatus("","connexion…");
-  members.clear(); render();
+  show("vRoom"); $("status").classList.remove("hidden"); setStatus("","connexion…");
+  renderPlayers();
   await writePresence(true);
   F.setDoc(F.doc(db,"users",me.uid,"rooms",code),{ code, lastJoined:F.serverTimestamp() }).catch(e=>console.warn(e));
   unsubMembers = F.onSnapshot(F.collection(db,"rooms",code,"members"), { includeMetadataChanges:true }, snap=>{
-    setStatus(snap.metadata.fromCache ? "off":"on", snap.metadata.fromCache ? "hors ligne":"connecté");
+    setStatus(snap.metadata.fromCache?"off":"on", snap.metadata.fromCache?"hors ligne":"connecté");
     members.clear();
     snap.docs.forEach(d=>{
       if(d.id===me.uid) return;
-      const m=d.data();
-      if(!HEX_RE.test(String(m.color))) return;
-      members.set(d.id,{ name:String(m.name||"Ami").slice(0,20), color:m.color, t:tms(m.t), online:m.online!==false });
+      const m=d.data(); if(!HEX_RE.test(String(m.color))) return;
+      members.set(d.id,{ id:d.id, name:String(m.name||"Ami").slice(0,20), color:m.color, t:tms(m.t), online:m.online!==false });
     });
-    render();
+    announceArrivals(snap.metadata.fromCache);
+    renderPlayers();
   }, ()=>setStatus("off","accès refusé"));
-  hb = setInterval(()=>writePresence(true), HEARTBEAT_MS);
-  tick = setInterval(render, 5000);
+  hb=setInterval(()=>writePresence(true),HEARTBEAT_MS);
+  tick=setInterval(renderPlayers,5000);
 }
 async function leaveRoom(silent){
   clearInterval(hb); clearInterval(tick); hb=tick=null;
   if(unsubMembers){ unsubMembers(); unsubMembers=null; }
-  if(current){ const c=current; await writePresence(false); current=null; }
+  if(current){ await writePresence(false); current=null; }
   if(!silent && me) goHome();
 }
 function setStatus(s,t){ $("dot").className="dot "+s; $("stTxt").textContent=t; }
+const isOn = m => m.online && Date.now()-m.t < AWAY_MS;
 
-let friendColor=null;
-function render(){
-  const now=Date.now();
-  const list=[...members.values()].map(m=>({...m, away: !m.online || now-m.t>AWAY_MS}))
-    .sort((a,b)=> (a.away-b.away) || (b.t-a.t));
-  const main=list[0], sc=$("screen");
-  if(main){
-    friendColor=main.color;
-    sc.className="screen"+(isLight(main.color)?" light":"")+(main.away?" away":"");
-    sc.style.background=main.color;
-    $("who").textContent="Écran de "+main.name+(main.away?" · hors ligne":"");
-    $("hex").textContent=main.color.toUpperCase();
-    $("meta").textContent="mis à jour "+ago(main.t);
-    if(!$("full").classList.contains("hidden")) $("full").style.background=main.color;
-  }else{
-    friendColor=null; sc.className="screen empty"; sc.style.background="";
-    $("who").textContent="En attente de ton ami…"; $("hex").textContent="Personne d'autre dans le salon"; $("meta").textContent="";
-  }
-  const box=$("others"); box.textContent="";
-  if(list.length>1) list.forEach(p=>{
-    const d=document.createElement("div"); d.className="chip"+(p.away?" away":"");
-    const i=document.createElement("i"); i.style.background=p.color;
-    d.append(i, document.createTextNode(p.name)); box.appendChild(d);
-  });
+// « X a rejoint le salon » — pas au premier chargement
+function announceArrivals(fromCache){
+  if(fromCache) return;
+  const now = new Set([...members.values()].filter(isOn).map(m=>m.id));
+  if(seenOnline) now.forEach(id=>{ if(!seenOnline.has(id)) toast(members.get(id).name+" a rejoint le salon"); });
+  seenOnline = now;
 }
-$("screen").onclick=()=>{ if(!friendColor)return; const f=$("full"); f.style.background=friendColor; f.classList.remove("hidden"); };
+
+function playerCard(p, isMe){
+  const away = !isMe && !isOn(p);
+  const el=document.createElement("div"); el.className="player"+(away?" away":"");
+  paint(el, p.color);
+  const av=document.createElement("div"); av.className="pav"; av.textContent=initial(p.name);
+  const bottom=document.createElement("div");
+  const nm=document.createElement("div"); nm.className="pnm"; nm.textContent=p.name;
+  const st=document.createElement("div"); st.className="pst";
+  st.innerHTML="<i></i>"; st.append(document.createTextNode(isMe ? "en ligne" : (away ? "hors ligne · "+ago(p.t) : "en ligne")));
+  bottom.append(nm,st);
+  el.append(av,bottom);
+  if(isMe){ const tag=document.createElement("div"); tag.className="tag"; tag.textContent="TOI"; el.appendChild(tag); }
+  el.onclick=()=>{ const f=$("full"); paint(f,p.color); $("fullName").textContent=p.name; f.classList.remove("hidden"); };
+  return el;
+}
+function renderPlayers(){
+  if(!me) return;
+  const box=$("players"); box.textContent="";
+  box.appendChild(playerCard({ name:me.username, color:me.color }, true));
+  const list=[...members.values()].sort((a,b)=> (isOn(b)-isOn(a)) || a.name.localeCompare(b.name));
+  list.forEach(p=>box.appendChild(playerCard(p,false)));
+  if(!list.some(isOn)){
+    const w=document.createElement("div"); w.className="player wait";
+    w.innerHTML='<div><div class="plus">＋</div>En attente<br>d\'un ami…</div>';
+    box.appendChild(w);
+  }
+  const n=1+list.filter(isOn).length;
+  $("count").textContent = n+" connecté"+(n>1?"s":"");
+}
 $("full").onclick=()=>$("full").classList.add("hidden");
-$("leaveBtn").onclick=()=>leaveRoom(false);
 $("shareBtn").onclick=async()=>{
   const url=location.origin+location.pathname+"?salon="+encodeURIComponent(current);
-  if(navigator.share){ try{ await navigator.share({title:"Duo Couleur",text:"Rejoins-moi sur Duo Couleur",url}); return; }catch(e){ if(e.name==="AbortError")return; } }
+  if(navigator.share){ try{ await navigator.share({title:"Duo Couleur",text:"Rejoins mon salon Duo Couleur",url}); return; }catch(e){ if(e.name==="AbortError")return; } }
   try{ await navigator.clipboard.writeText(url); toast("Lien copié"); }catch(e){ toast(url); }
 };
 document.addEventListener("visibilitychange",()=>{
   if(!current) return;
-  if(document.hidden) writePresence(false); else { writePresence(true); render(); }
+  if(document.hidden) writePresence(false); else { writePresence(true); renderPlayers(); }
 });
 </script>
 </body>
