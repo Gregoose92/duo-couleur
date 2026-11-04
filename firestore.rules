@@ -38,14 +38,15 @@ service cloud.firestore {
           && (!('name' in request.resource.data) || validName(request.resource.data.name));
       }
 
-      // Mes amis (ajoutés automatiquement quand on partage un groupe)
+      // Mes amis (ajoutés manuellement, un par un). Le profil ajouté doit exister.
       match /friends/{fid} {
         allow read, delete: if isOwner(uid);
         allow create, update: if isOwner(uid) && fid != uid
+          && exists(/databases/$(db)/documents/profiles/$(fid))
           && request.resource.data.keys().hasOnly(['name', 'lastSeen', 'room'])
           && request.resource.data.name is string && request.resource.data.name.size() <= 20
           && request.resource.data.lastSeen == request.time
-          && validCode(request.resource.data.room);
+          && (!('room' in request.resource.data) || validCode(request.resource.data.room));
       }
     }
 

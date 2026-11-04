@@ -93,6 +93,12 @@
   .friend .av{width:38px;height:38px;border-radius:12px;font-size:18px;background:rgba(0,0,0,.18)}
   .friend .fn{font-weight:700;font-size:14px;word-break:break-all;line-height:1.2}
   .friend .fs{font-size:11px;opacity:.8;line-height:1.25}
+  .friend{position:relative}
+  .friend .rm{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.25);
+    color:inherit;font-size:15px;line-height:1;padding:0}
+  .player .add{position:absolute;bottom:12px;right:12px;border:0;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800;
+    background:rgba(0,0,0,.28);color:inherit}
+  .player .add.is{background:transparent;opacity:.85;padding-right:0}
 
   /* Groupes */
   .list{display:flex;flex-direction:column;gap:8px}
@@ -195,6 +201,13 @@
 
   <!-- Onglet 1 : Amis -->
   <section id="vFriends" class="hidden col">
+    <div class="card">
+      <label for="fName">Ajouter un ami par pseudo</label>
+      <div class="joinrow">
+        <input type="text" id="fName" maxlength="20" placeholder="ex. leo" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+        <button class="btn" id="fAddBtn">Ajouter</button>
+      </div>
+    </div>
     <div class="friends" id="friends"></div>
   </section>
 
@@ -319,7 +332,7 @@ let onboarding = false, justSignedUp = false;
 let pendingRoom = cleanCode(params.get("groupe") || params.get("salon"));
 let current = null, currentName = "";
 let unsubMembers=null, hb=null, tick=null;
-let members = new Map(), seenOnline = null, friendSaved = new Set();
+let members = new Map(), seenOnline = null;
 let friends = new Map();             // fid -> { name, lastSeen, room, color }
 let groupNames = new Map();          // code -> nom
 let subs = [];                       // abonnements globaux (amis, groupes, invitations)
@@ -444,7 +457,7 @@ function startListeners(){
       }
     });
     [...friends.keys()].forEach(id=>{ if(!ids.has(id)){ friends.delete(id); profileSubs.get(id)?.(); profileSubs.delete(id); } });
-    renderFriends();
+    renderFriends(); renderPlayers();     // le bouton « Ajouter » devient « ✓ ami »
   }, ()=>{}));
   // Invitations reçues
   subs.push(F.onSnapshot(F.query(F.collection(db,"invites",me.uid,"items"),F.orderBy("t","desc")), renderInvites, ()=>{}));
@@ -455,20 +468,40 @@ function renderFriends(){
   const box=$("friends"); box.textContent="";
   if(!friends.size){
     box.style.display="block";
-    box.innerHTML='<div class="empty-list">Pas encore d\'amis.<br>Ils apparaissent ici automatiquement dès que vous êtes ensemble dans un groupe.<br><br>Crée un groupe et partage le lien ✨</div>';
+    box.innerHTML='<div class="empty-list">Pas encore d\'amis.<br>Ajoute-les par pseudo ci-dessus, ou avec le bouton <b>＋ Ajouter</b> sur leur carte dans un groupe.</div>';
     return;
   }
   box.style.display="";
   [...friends.values()].forEach(f=>{
     const c=el("div","friend"); paint(c,f.color);
     const b=el("div");
-    b.append(el("div","fn",f.name), el("div","fs","vu "+ago(f.lastSeen)+(groupNames.get(f.room)?" · "+groupNames.get(f.room):"")));
+    b.append(el("div","fn",f.name), el("div","fs","ajouté "+ago(f.lastSeen)+(groupNames.get(f.room)?" · "+groupNames.get(f.room):"")));
     c.append(avatar(f.name,f.color), b);
     c.querySelector(".av").style.background="rgba(0,0,0,.18)";
+    const rm=el("button","rm","×"); rm.setAttribute("aria-label","Retirer "+f.name);
+    rm.onclick=ev=>{ ev.stopPropagation(); removeFriend(f.id,f.name); };
+    c.appendChild(rm);
     c.onclick=()=>showFull(f.name,f.color);
     box.appendChild(c);
   });
 }
+// Ajout par pseudo : recherche dans les profils publics
+async function addByName(){
+  const u=$("fName").value.trim().toLowerCase();
+  if(!USER_RE.test(u)){ toast("Pseudo invalide"); $("fName").focus(); return; }
+  if(u===me.username){ toast("C'est toi 🙂"); return; }
+  $("fAddBtn").disabled=true;
+  try{
+    const s=await F.getDocs(F.query(F.collection(db,"profiles"),F.where("username","==",u),F.limit(1)));
+    if(s.empty){ toast("Aucun joueur « "+u+" »"); return; }
+    const d=s.docs[0];
+    if(friends.has(d.id)){ toast(u+" est déjà ton ami"); return; }
+    await addFriend(d.id,u); $("fName").value="";
+  }catch(e){ console.warn(e); toast("Ajout impossible"); }
+  finally{ $("fAddBtn").disabled=false; }
+}
+$("fAddBtn").onclick=addByName;
+$("fName").addEventListener("keydown",e=>{ if(e.key==="Enter") addByName(); });
 
 /* ================= Onglet Groupes ================= */
 function renderInvites(snap){
@@ -544,7 +577,7 @@ function writePresence(online){
 }
 async function enterRoom(code, knownName){
   await leaveRoom();
-  current=code; members.clear(); seenOnline=null; friendSaved=new Set();
+  current=code; members.clear(); seenOnline=null;
   currentName = knownName || groupNames.get(code) || "";
   if(!knownName){
     const s=await F.getDoc(F.doc(db,"rooms",code)).catch(()=>null);
@@ -566,7 +599,6 @@ async function enterRoom(code, knownName){
       const m=d.data(); if(!HEX_RE.test(String(m.color))) return;
       members.set(d.id,{ id:d.id, name:String(m.name||"Ami").slice(0,20), color:m.color, t:tms(m.t), online:m.online!==false });
     });
-    if(!snap.metadata.fromCache) rememberFriends();
     announceArrivals(snap.metadata.fromCache);
     renderPlayers();
   }, ()=>setStatus("off","accès refusé"));
@@ -579,13 +611,15 @@ async function leaveRoom(){
   if(current){ await writePresence(false); current=null; }
   closeSheet();
 }
-// Tous ceux croisés dans un groupe deviennent des amis (une écriture par personne et par visite)
-function rememberFriends(){
-  members.forEach(m=>{
-    if(friendSaved.has(m.id)) return;
-    friendSaved.add(m.id);
-    F.setDoc(F.doc(db,"users",me.uid,"friends",m.id),{ name:m.name, lastSeen:F.serverTimestamp(), room:current }).catch(e=>console.warn(e));
-  });
+// Ajout manuel d'un ami (bouton sur sa carte ou recherche par pseudo)
+async function addFriend(id, name, room){
+  const rec={ name:String(name).slice(0,20), lastSeen:F.serverTimestamp() }; if(room) rec.room=room;
+  await F.setDoc(F.doc(db,"users",me.uid,"friends",id), rec);
+  toast(name+" ajouté à tes amis");
+}
+async function removeFriend(id, name){
+  await F.deleteDoc(F.doc(db,"users",me.uid,"friends",id)).catch(()=>toast("Suppression impossible"));
+  toast(name+" retiré de tes amis");
 }
 function setStatus(s,t){ $("dot").className="dot "+s; $("stTxt").textContent=t; }
 const isOn = m => m.online && Date.now()-m.t < AWAY_MS;
@@ -603,6 +637,13 @@ function playerCard(p,isMe){
   b.append(el("div","pnm",p.name), st);
   c.append(a,b);
   if(isMe) c.appendChild(el("div","tag","TOI"));
+  else if(friends.has(p.id)) c.appendChild(el("div","add is","✓ ami"));
+  else{
+    const add=el("button","add","＋ Ajouter");
+    add.onclick=async ev=>{ ev.stopPropagation(); add.disabled=true;
+      try{ await addFriend(p.id,p.name,current); }catch(e){ console.warn(e); add.disabled=false; toast("Ajout impossible"); } };
+    c.appendChild(add);
+  }
   c.onclick=()=>showFull(p.name,p.color);
   return c;
 }
