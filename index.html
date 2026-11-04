@@ -86,6 +86,33 @@
     background:#fff;border:3px solid #0d0e11;box-shadow:0 1px 6px rgba(0,0,0,.5)}
   input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0d0e11}
   .preview{height:auto;min-height:220px;padding:18px 14px}
+  /* Carte-éditeur carrée : moitié de l'écran */
+  .preview.sq{width:min(100%,50vh);aspect-ratio:1;min-height:0;margin:0 auto;padding:6%;gap:4%;position:relative;cursor:pointer;
+    border-radius:28px;transition:background .25s ease,box-shadow .25s ease,transform .2s ease}
+  .preview.sq .av{width:34%;height:34%;font-size:min(16vw,8vh);border-radius:24%;cursor:pointer}
+  .preview.sq .pn{font-size:min(7vw,3.6vh)}
+  .preview.sq .pstat{font-size:min(4.4vw,2.3vh);cursor:pointer;padding:2px 8px;border-radius:10px}
+  .preview.sq .pav{cursor:pointer;font-size:min(3.8vw,2vh)}
+  .preview.sq .ph-empty{opacity:.55;font-style:normal;border:1.5px dashed currentColor;border-radius:999px;padding:3px 12px}
+  .preview.sq [data-ed].on{outline:2px solid currentColor;outline-offset:4px;border-radius:14px}
+  .preview.sq.ed-color{transform:scale(.98)}
+  /* pendant l'édition : carte réduite pour rester visible au-dessus du panneau */
+  body.editing .onboard{display:none}
+  body.editing .preview.sq{width:min(100%,calc(100vh - 46vh - 90px - env(safe-area-inset-top)))}
+  .edhint{position:absolute;bottom:10px;left:0;right:0;text-align:center;font-size:11px;opacity:.55;letter-spacing:.3px}
+  #pfBtns{max-width:min(100%,50vh);margin:0 auto;width:100%}
+  /* Panneau d'édition en bas */
+  .edsheet{position:fixed;left:0;right:0;bottom:0;z-index:16;background:var(--panel);border-top:1px solid var(--line);
+    border-top-left-radius:22px;border-top-right-radius:22px;padding:12px 16px calc(env(safe-area-inset-bottom) + 14px);
+    max-height:46vh;overflow:auto;box-shadow:0 -10px 30px rgba(0,0,0,.4);animation:up .22s ease}
+  @keyframes up{from{transform:translateY(30%);opacity:0}to{transform:none;opacity:1}}
+  .edsheet .edhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .edsheet .edhead b{font-size:16px}
+  .edsheet [data-sec]{display:none}
+  .edsheet [data-sec].show{display:block}
+  .wheelrow{display:flex;justify-content:center}
+  .edsheet .wheelwrap{width:min(240px,64vw,28vh);margin:0}
+  .valrow .hexout{float:none;min-width:70px;text-align:right}
   .preview .pstat{font-size:14px;opacity:.9;text-align:center;max-width:90%;min-height:1em}
   .pav,.avl{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
   .pav i,.avl i{width:9px;height:9px;border-radius:50%;display:inline-block;box-shadow:0 0 0 2px rgba(255,255,255,.7)}
@@ -264,22 +291,35 @@
 
   <!-- Onglet 3 : Profil -->
   <section id="vProfile" class="hidden col">
-    <div class="onboard hidden" id="onboard"><h3>Bienvenue 👋</h3><p class="small" style="margin:0">Crée ton profil : couleur, humeur, statut. C'est ce que tes amis verront.</p></div>
-    <div class="preview" id="pv"><div class="av" id="pvAv"></div><div class="pn" id="pvName"></div>
-      <div class="pstat" id="pvStatus"></div><div class="pav" id="pvAvail"></div></div>
-    <div class="card">
-      <label>Ma couleur <span id="hexOut" class="hexout"></span></label>
-      <div class="wheelwrap" id="wheelWrap">
-        <canvas id="wheel" width="560" height="560" aria-label="Roue de couleur"></canvas>
-        <div class="knob" id="knob"></div>
+    <div class="onboard hidden" id="onboard"><h3>Bienvenue 👋</h3><p class="small" style="margin:0">Crée ton profil : c'est ce que tes amis verront.</p></div>
+    <!-- La carte carrée EST l'éditeur : on touche un élément pour le modifier -->
+    <div class="preview sq" id="pv" data-ed="color">
+      <div class="av" id="pvAv" data-ed="mood"></div>
+      <div class="pn" id="pvName"></div>
+      <div class="pstat" id="pvStatus" data-ed="status"></div>
+      <div class="pav" id="pvAvail" data-ed="status"></div>
+      <div class="edhint" id="edHint">touche pour modifier</div>
+    </div>
+    <div class="btns" id="pfBtns">
+      <button class="btn" id="saveBtn">Enregistrer</button>
+      <button class="btn ghost" id="logoutBtn">Déconnexion</button>
+    </div>
+  </section>
+
+  <!-- Outils d'édition : s'ouvrent sous la carte, l'aperçu reste visible -->
+  <div id="edSheet" class="edsheet hidden">
+    <div class="edhead"><b id="edTitle"></b><button class="btn sm" id="edOk">OK</button></div>
+    <div data-sec="color">
+      <div class="wheelrow">
+        <div class="wheelwrap" id="wheelWrap">
+          <canvas id="wheel" width="560" height="560" aria-label="Roue de couleur"></canvas>
+          <div class="knob" id="knob"></div>
+        </div>
       </div>
-      <div class="valrow"><span>☾</span><input type="range" id="val" min="12" max="100" value="100" aria-label="Luminosité"><span>☀</span></div>
+      <div class="valrow"><span>☾</span><input type="range" id="val" min="12" max="100" value="100" aria-label="Luminosité"><span>☀</span><span id="hexOut" class="hexout"></span></div>
     </div>
-    <div class="card">
-      <label>Mon humeur</label>
-      <div class="moods" id="moods"></div>
-    </div>
-    <div class="card">
+    <div data-sec="mood"><div class="moods" id="moods"></div></div>
+    <div data-sec="status">
       <label for="statusIn">Mon statut <span id="stCount" style="float:right">0/60</span></label>
       <input type="text" id="statusIn" maxlength="60" placeholder="ex. dispo pour un verre 🍻" enterkeyhint="done">
       <label>Disponibilité</label>
@@ -289,9 +329,7 @@
         <button data-v="dnd"><i style="background:#ff3b30"></i>Pas dispo</button>
       </div>
     </div>
-    <button class="btn" id="saveBtn" style="margin-top:0">Enregistrer</button>
-    <button class="btn ghost" id="logoutBtn" style="margin-top:0">Se déconnecter</button>
-  </section>
+  </div>
 </div>
 
 <!-- Barre d'onglets -->
@@ -418,6 +456,7 @@ function availEl(avail, extra){
 /* ================= Navigation ================= */
 const TITLES = { vFriends:"Amis", vGroups:"Groupes", vProfile:"Mon profil" };
 function show(v){
+  if(v!=="vProfile" && typeof closeEditor==="function") closeEditor();
   view = v;
   ["vBoot","vAuth","vFriends","vGroups","vRoom","vProfile"].forEach(x=>$(x).classList.toggle("hidden", x!==v));
   const tabsOn = me && !onboarding && v!=="vAuth" && v!=="vBoot";
@@ -832,12 +871,45 @@ function setDraft(patch){
   syncWheel();
   $("pvAv").textContent=face(me.username,draft.mood); $("pvAv").classList.toggle("emo",!!draft.mood);
   $("pvName").textContent=me.username;
-  $("pvStatus").textContent=draft.status.trim()?"« "+draft.status.trim()+" »":"";
-  const pa=$("pvAvail"); pa.textContent=""; if(draft.avail) pa.append(...availEl(draft.avail).childNodes);
+  // emplacements vides : affichés en pointillé, uniquement dans l'éditeur
+  const st=draft.status.trim();
+  $("pvStatus").textContent=st?"« "+st+" »":"＋ statut"; $("pvStatus").classList.toggle("ph-empty",!st);
+  const pa=$("pvAvail"); pa.textContent=""; pa.classList.toggle("ph-empty",!draft.avail);
+  if(draft.avail) pa.append(...availEl(draft.avail).childNodes); else pa.textContent="＋ disponibilité";
   $("stCount").textContent=draft.status.length+"/60";
   document.querySelectorAll("#moods button").forEach(b=>b.classList.toggle("sel",b.dataset.m===draft.mood));
   document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
+/* --- Édition directe sur la carte --- */
+const ED_TITLES={ color:"Ma couleur", mood:"Mon humeur", status:"Statut & disponibilité" };
+let edOpen=null;
+function openEditor(sec){
+  edOpen=sec;
+  $("edTitle").textContent=ED_TITLES[sec];
+  document.querySelectorAll("#edSheet [data-sec]").forEach(x=>x.classList.toggle("show",x.dataset.sec===sec));
+  document.querySelectorAll("#pv [data-ed]").forEach(x=>x.classList.toggle("on",x.dataset.ed===sec));
+  $("pv").classList.toggle("ed-color",sec==="color");
+  $("edSheet").classList.remove("hidden"); $("edHint").classList.add("hidden");
+  $("pfBtns").classList.add("hidden"); $("tabbar").classList.add("hidden");
+  document.body.classList.add("editing"); window.scrollTo(0,0);
+  syncWheel();
+}
+function closeEditor(){
+  if(!edOpen) return; edOpen=null;
+  $("edSheet").classList.add("hidden"); $("edHint").classList.remove("hidden");
+  document.body.classList.remove("editing");
+  document.querySelectorAll("#pv [data-ed]").forEach(x=>x.classList.remove("on")); $("pv").classList.remove("ed-color");
+  $("pfBtns").classList.remove("hidden");
+  if(me && !onboarding && view==="vProfile") $("tabbar").classList.remove("hidden");
+  $("statusIn").blur();
+}
+// le fond de la carte → couleur ; l'emoji → humeur ; le statut / la dispo → statut
+$("pv").addEventListener("click",e=>{
+  const t=e.target.closest("[data-ed]"); const sec=t?t.dataset.ed:"color";
+  if(edOpen===sec) closeEditor(); else openEditor(sec);
+});
+$("edOk").onclick=closeEditor;
+$("statusIn").addEventListener("keydown",e=>{ if(e.key==="Enter") closeEditor(); });
 function openProfile(first){
   onboarding=!!first;
   $("onboard").classList.toggle("hidden",!onboarding);
@@ -848,8 +920,10 @@ function openProfile(first){
   $("statusIn").value=draft.status;
   setDraft({});
   show("vProfile");
+  closeEditor();
 }
 $("saveBtn").onclick=async()=>{
+  closeEditor();
   $("saveBtn").disabled=true;
   const status=draft.status.replace(/\s+/g," ").trim().slice(0,60);
   try{
