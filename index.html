@@ -12,6 +12,8 @@
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Pacifico&family=Permanent+Marker&family=Orbitron:wght@800&family=Playfair+Display:ital,wght@1,800&family=Press+Start+2P&family=Righteous&family=Monoton&family=Caveat:wght@700&family=Bungee&display=swap">
 <style>
   :root{
     --bg:#0d0e11; --panel:#16181d; --line:#262a31; --txt:#eceef2; --mute:#8a909c;
@@ -89,12 +91,31 @@
   /* Carte-éditeur carrée : moitié de l'écran */
   .preview.sq{width:min(100%,50vh);aspect-ratio:1;min-height:0;margin:0 auto;padding:6%;gap:4%;position:relative;cursor:pointer;
     border-radius:28px;transition:background .25s ease,box-shadow .25s ease,transform .2s ease}
-  .preview.sq .av{width:34%;height:34%;font-size:min(16vw,8vh);border-radius:24%;cursor:pointer}
-  .preview.sq .pn{font-size:min(7vw,3.6vh)}
+  .preview.sq .pn{cursor:pointer;padding:2px 10px;border-radius:14px}
+  .preview.sq .mood{cursor:pointer}
   .preview.sq .pstat{font-size:min(4.4vw,2.3vh);cursor:pointer;padding:2px 8px;border-radius:10px}
   .preview.sq .pav{cursor:pointer;font-size:min(3.8vw,2vh)}
   .preview.sq .ph-empty{opacity:.55;font-style:normal;border:1.5px dashed currentColor;border-radius:999px;padding:3px 12px}
   .preview.sq [data-ed].on{outline:2px solid currentColor;outline-offset:4px;border-radius:14px}
+  /* ===== Carte profil : pseudo géant au centre, humeur en badge, vignettage inversé ===== */
+  .pcard{container-type:inline-size;position:relative;overflow:hidden}
+  .pcard .bign{font-weight:800;line-height:1.02;text-align:center;word-break:break-word;letter-spacing:.01em;
+    font-size:min(30cqw, calc(150cqw / var(--len,6)));max-width:100%}
+  .pcard .mood{position:absolute;top:7cqw;left:7cqw;font-size:13cqw;line-height:1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.25))}
+  .pcard .mood.ph-empty{font-size:4.2cqw;top:6cqw;left:6cqw;padding:3px 10px}
+  .pcard .pstat,.pcard .pstatus,.pcard .fst{text-align:center}
+  .player.pcard,.friend.pcard{justify-content:center;align-items:center;gap:3cqw}
+  .player.pcard .meta,.friend.pcard .meta{position:absolute;left:0;right:0;bottom:6cqw;display:flex;justify-content:center}
+  .player.pcard .pstatus{font-size:max(11px,6.5cqw);margin:0;padding:0 6cqw;-webkit-line-clamp:2}
+  .friend.pcard .fst{font-size:max(10px,8cqw);margin:0;padding:0 5cqw;-webkit-line-clamp:2}
+  .friend.pcard .avl,.friend.pcard .fs{font-size:max(9px,7.5cqw)}
+  .player.pcard .avl{font-size:max(11px,6.5cqw)}
+  .friend.pcard .me{position:absolute;top:calc(6px + 6cqw);right:40px;font-size:max(9px,7cqw);font-weight:800;opacity:.8}
+  .fontlist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+  .fontlist button{background:#0f1114;border:2px solid var(--line);color:var(--txt);border-radius:12px;padding:12px 6px;
+    font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .fontlist button small{display:block;font:500 10px -apple-system,Inter,sans-serif;color:var(--mute);margin-top:4px}
+  .fontlist button.sel{border-color:var(--accent);background:#1d2a26}
   .preview.sq.ed-color{transform:scale(.98)}
   /* pendant l'édition : carte réduite pour rester visible au-dessus du panneau */
   body.editing .onboard{display:none}
@@ -293,9 +314,9 @@
   <section id="vProfile" class="hidden col">
     <div class="onboard hidden" id="onboard"><h3>Bienvenue 👋</h3><p class="small" style="margin:0">Crée ton profil : c'est ce que tes amis verront.</p></div>
     <!-- La carte carrée EST l'éditeur : on touche un élément pour le modifier -->
-    <div class="preview sq" id="pv" data-ed="color">
-      <div class="av" id="pvAv" data-ed="mood"></div>
-      <div class="pn" id="pvName"></div>
+    <div class="preview sq pcard" id="pv" data-ed="color">
+      <div class="mood" id="pvAv" data-ed="mood"></div>
+      <div class="pn" id="pvName" data-ed="font"></div>
       <div class="pstat" id="pvStatus" data-ed="status"></div>
       <div class="pav" id="pvAvail" data-ed="status"></div>
       <div class="edhint" id="edHint">touche pour modifier</div>
@@ -319,6 +340,7 @@
       <div class="valrow"><span>☾</span><input type="range" id="val" min="12" max="100" value="100" aria-label="Luminosité"><span>☀</span><span id="hexOut" class="hexout"></span></div>
     </div>
     <div data-sec="mood"><div class="moods" id="moods"></div></div>
+    <div data-sec="font"><div class="fontlist" id="fonts"></div></div>
     <div data-sec="status">
       <label for="statusIn">Mon statut <span id="stCount" style="float:right">0/60</span></label>
       <input type="text" id="statusIn" maxlength="60" placeholder="ex. dispo pour un verre 🍻" enterkeyhint="done">
@@ -396,7 +418,7 @@ function invRGB(hex){ const n=parseInt(hex.slice(1),16); return [255-(n>>16&255)
 function paintCard(el, color){
   paint(el, color);
   const i=invRGB(color);
-  el.style.boxShadow=`inset 0 0 0 1.5px rgba(${i},.30), inset 0 0 22px 2px rgba(${i},.22), inset 0 0 60px 6px rgba(${i},.10)`;
+  el.style.boxShadow=`inset 0 0 0 3px rgb(${i}), inset 0 0 18px 4px rgba(${i},.85), inset 0 0 55px 14px rgba(${i},.5), inset 0 0 110px 30px rgba(${i},.22)`;
 }
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
 function ago(ms){ const s=Math.round((Date.now()-ms)/1000); if(s<60)return"à l'instant"; const m=Math.round(s/60); if(m<60)return`il y a ${m} min`; const h=Math.round(m/60); if(h<24)return`il y a ${h} h`; const d=Math.round(h/24); return d===1?"hier":`il y a ${d} j`; }
@@ -421,6 +443,28 @@ let subs = [];                       // abonnements globaux (amis, groupes, invi
 const profileSubs = new Map();       // uid -> unsubscribe (profil public en direct)
 const profiles = new Map();          // uid -> { username, color, mood, status, avail }
 const MOODS = ["😄","🥳","😎","🥰","😌","🤔","😴","🥱","😢","😤","🤯","🔥","🎉","🍻","🎧","💪","🎮","📚","💼","🏃","🍕","❤️","✨"];
+const FONTS = {           // clé → [nom affiché, famille CSS, taille relative]
+  inter:["Classique","-apple-system,Inter,Segoe UI,sans-serif",1],
+  bebas:["Bebas Neue","'Bebas Neue',sans-serif",1.18],
+  bungee:["Bungee","'Bungee',sans-serif",.86],
+  righteous:["Righteous","'Righteous',sans-serif",1],
+  orbitron:["Orbitron","'Orbitron',sans-serif",.86],
+  marker:["Marker","'Permanent Marker',cursive",1],
+  pacifico:["Pacifico","'Pacifico',cursive",.9],
+  caveat:["Caveat","'Caveat',cursive",1.25],
+  playfair:["Playfair","'Playfair Display',serif",1],
+  monoton:["Monoton","'Monoton',cursive",.82],
+  pixel:["Pixel","'Press Start 2P',monospace",.62]
+};
+// Pseudo géant dans la police choisie, taille adaptée à la longueur
+function bigName(name, font, cls){
+  const f=FONTS[font]||FONTS.inter;
+  const e=el("div","bign"+(cls?" "+cls:""),name);
+  e.style.fontFamily=f[1];
+  e.style.setProperty("--len", Math.max(4, name.length/f[2]));
+  if(font==="pixel") e.style.lineHeight="1.3";
+  return e;
+}
 const AVAIL = { dispo:["Dispo","#34c759"], occupe:["Occupé","#ff9500"], dnd:["Pas dispo","#ff3b30"] };
 // Abonnement au profil public d'un joueur (ami ou membre d'un groupe) : couleur, humeur, statut, dispo
 function watchProfile(id){
@@ -433,7 +477,8 @@ function watchProfile(id){
       color:HEX_RE.test(d.color)?d.color:null,
       mood:typeof d.mood==="string"?d.mood.slice(0,16):"",
       status:typeof d.status==="string"?d.status.slice(0,60):"",
-      avail:AVAIL[d.avail]?d.avail:""
+      avail:AVAIL[d.avail]?d.avail:"",
+      font:FONTS[d.font]?d.font:"inter"
     });
     scheduleRender();
   }, ()=>{}));
@@ -443,7 +488,7 @@ function scheduleRender(){ if(rq) return; rq=requestAnimationFrame(()=>{ rq=0; r
 // Fusionne les infos connues d'un joueur avec son profil public en direct
 function look(id, fallback){
   const pr=profiles.get(id)||{};
-  return { ...fallback, color:pr.color||fallback.color, name:pr.username||fallback.name, mood:pr.mood||"", status:pr.status||"", avail:pr.avail||"" };
+  return { ...fallback, color:pr.color||fallback.color, name:pr.username||fallback.name, mood:pr.mood||"", status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter" };
 }
 function face(name, mood){ return mood || initial(name); }
 function availEl(avail, extra){
@@ -543,7 +588,7 @@ A.onAuthStateChanged(auth, async user=>{
   // profil public : on lit humeur/statut/dispo, puis on resynchronise pseudo + couleur (merge = ne rien effacer)
   const pub=await F.getDoc(F.doc(db,"profiles",me.uid)).catch(()=>null);
   const pd=pub&&pub.exists()?pub.data():{};
-  me.mood=typeof pd.mood==="string"?pd.mood:""; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:"";
+  me.mood=typeof pd.mood==="string"?pd.mood:""; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter";
   F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color },{ merge:true }).catch(e=>console.warn("profil public",e));
   renderMe();
   startListeners();
@@ -586,16 +631,12 @@ function renderFriends(){
   box.style.display="";
   [...friends.values()].forEach(f0=>{
     const f=look(f0.id,f0);
-    const c=el("div","friend"); paintCard(c,f.color);
-    const b=el("div");
-    const fn=el("div","fn",f.name);
-    if(f.id===me.uid) fn.append(el("span","me"," toi"));   // aperçu de son propre rendu
-    b.append(fn);
-    if(f.status) b.append(el("div","fst","« "+f.status+" »"));
-    if(f.avail) b.append(availEl(f.avail));
-    else b.append(el("div","fs","ajouté "+ago(f.lastSeen)));
-    const a=el("div","av"+(f.mood?" emo":""),face(f.name,f.mood)); a.style.background="rgba(0,0,0,.18)";
-    c.append(a, b);
+    const c=el("div","friend pcard"); paintCard(c,f.color);
+    if(f.mood) c.append(el("div","mood",f.mood));
+    if(f.id===me.uid) c.append(el("span","me","TOI"));   // aperçu de son propre rendu
+    c.append(bigName(f.name,f.font));
+    if(f.status) c.append(el("div","fst","« "+f.status+" »"));
+    const m=el("div","meta"); m.append(f.avail?availEl(f.avail):el("div","fs","ajouté "+ago(f.lastSeen))); c.append(m);
     const rm=el("button","rm","×"); rm.setAttribute("aria-label","Retirer "+f.name);
     rm.onclick=ev=>{ ev.stopPropagation(); removeFriend(f.id,f.name); };
     c.appendChild(rm);
@@ -750,13 +791,11 @@ function announceArrivals(fromCache){
 function playerCard(p0,isMe){
   const p = isMe ? p0 : look(p0.id,p0);
   const away=!isMe && !isOn(p);
-  const c=el("div","player"+(away?" away":"")); paintCard(c,p.color);
-  const a=el("div","av"+(p.mood?" emo":""),face(p.name,p.mood));
-  const b=el("div");
-  b.append(el("div","pnm",p.name));
-  if(p.status) b.append(el("div","pstatus","« "+p.status+" »"));
-  b.append(availEl(p.avail, away?"hors ligne · "+ago(p.t):"en ligne"));
-  c.append(a,b);
+  const c=el("div","player pcard"+(away?" away":"")); paintCard(c,p.color);
+  if(p.mood) c.append(el("div","mood",p.mood));
+  c.append(bigName(p.name,p.font));
+  if(p.status) c.append(el("div","pstatus","« "+p.status+" »"));
+  const m=el("div","meta"); m.append(availEl(p.avail, away?"hors ligne · "+ago(p.t):"en ligne")); c.append(m);
   if(isMe) c.appendChild(el("div","tag","TOI"));
   else if(friends.has(p.id)) c.appendChild(el("div","add is","✓ ami"));
   else{
@@ -771,7 +810,7 @@ function playerCard(p0,isMe){
 function renderPlayers(){
   if(!me||view!=="vRoom") return;
   const box=$("players"); box.textContent="";
-  box.appendChild(playerCard({ name:me.username, color:me.color, mood:me.mood, status:me.status, avail:me.avail },true));
+  box.appendChild(playerCard({ name:me.username, color:me.color, mood:me.mood, status:me.status, avail:me.avail, font:me.font },true));
   const list=[...members.values()].sort((a,b)=>(isOn(b)-isOn(a))||a.name.localeCompare(b.name));
   list.forEach(p=>box.appendChild(playerCard(p,false)));
   if(!list.some(isOn)){
@@ -869,8 +908,9 @@ function setDraft(patch){
   Object.assign(draft,patch);
   paintCard($("pv"),draft.color);
   syncWheel();
-  $("pvAv").textContent=face(me.username,draft.mood); $("pvAv").classList.toggle("emo",!!draft.mood);
-  $("pvName").textContent=me.username;
+  $("pvAv").textContent=draft.mood||"＋ humeur"; $("pvAv").classList.toggle("ph-empty",!draft.mood);
+  $("pvName").replaceChildren(bigName(me.username,draft.font));
+  document.querySelectorAll("#fonts button").forEach(b=>b.classList.toggle("sel",b.dataset.f===draft.font));
   // emplacements vides : affichés en pointillé, uniquement dans l'éditeur
   const st=draft.status.trim();
   $("pvStatus").textContent=st?"« "+st+" »":"＋ statut"; $("pvStatus").classList.toggle("ph-empty",!st);
@@ -881,7 +921,7 @@ function setDraft(patch){
   document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
 /* --- Édition directe sur la carte --- */
-const ED_TITLES={ color:"Ma couleur", mood:"Mon humeur", status:"Statut & disponibilité" };
+const ED_TITLES={ color:"Ma couleur", mood:"Mon humeur", font:"Police du pseudo", status:"Statut & disponibilité" };
 let edOpen=null;
 function openEditor(sec){
   edOpen=sec;
@@ -910,12 +950,21 @@ $("pv").addEventListener("click",e=>{
 });
 $("edOk").onclick=closeEditor;
 $("statusIn").addEventListener("keydown",e=>{ if(e.key==="Enter") closeEditor(); });
+function buildFonts(){
+  const box=$("fonts"); box.textContent="";
+  Object.entries(FONTS).forEach(([k,[label,fam]])=>{
+    const b=el("button"); b.dataset.f=k; b.style.fontFamily=fam; if(k==="pixel") b.style.fontSize="12px";
+    b.append(document.createTextNode(me.username)); const sm=el("small",null,label); b.append(sm);
+    b.onclick=()=>setDraft({font:k}); box.appendChild(b);
+  });
+}
 function openProfile(first){
+  buildFonts();
   onboarding=!!first;
   $("onboard").classList.toggle("hidden",!onboarding);
   $("logoutBtn").classList.toggle("hidden",onboarding);
   $("saveBtn").textContent=onboarding?"C'est parti →":"Enregistrer";
-  draft={ color:me.color, mood:me.mood||"", status:me.status||"", avail:me.avail||"" };
+  draft={ color:me.color, mood:me.mood||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter" };
   Object.assign(hsv, hexToHsv(me.color)); if(hsv.v<.12) hsv.v=.12;
   $("statusIn").value=draft.status;
   setDraft({});
@@ -928,8 +977,8 @@ $("saveBtn").onclick=async()=>{
   const status=draft.status.replace(/\s+/g," ").trim().slice(0,60);
   try{
     await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft.color });
-    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft.color, mood:draft.mood, status, avail:draft.avail });
-    Object.assign(me,{ color:draft.color, mood:draft.mood, status, avail:draft.avail }); renderMe();
+    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft.color, mood:draft.mood, status, avail:draft.avail, font:draft.font });
+    Object.assign(me,{ color:draft.color, mood:draft.mood, status, avail:draft.avail, font:draft.font }); renderMe();
     if(current) writePresence(true);          // la couleur suit dans le groupe ouvert
   }catch(e){ console.warn(e); toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
   $("saveBtn").disabled=false;

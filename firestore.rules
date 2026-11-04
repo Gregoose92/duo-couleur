@@ -54,12 +54,13 @@ service cloud.firestore {
     match /profiles/{uid} {
       allow read: if signedIn();
       allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'status', 'avail'])
+        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'status', 'avail', 'font'])
         && request.resource.data.username == myUsername()
         && isHex(request.resource.data.color)
         && (!('mood' in request.resource.data)   || (request.resource.data.mood is string && request.resource.data.mood.size() <= 16))
         && (!('status' in request.resource.data) || (request.resource.data.status is string && request.resource.data.status.size() <= 60))
-        && (!('avail' in request.resource.data)  || request.resource.data.avail in ['', 'dispo', 'occupe', 'dnd']);
+        && (!('avail' in request.resource.data)  || request.resource.data.avail in ['', 'dispo', 'occupe', 'dnd'])
+        && (!('font' in request.resource.data)   || request.resource.data.font in ['inter','bebas','bungee','righteous','orbitron','marker','pacifico','caveat','playfair','monoton','pixel']);
       allow delete: if false;
     }
 
