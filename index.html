@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Duo Couleur</title>
+<title>WHATMOOD</title>
 <meta name="theme-color" content="#0d0e11">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Duo Couleur">
+<meta name="apple-mobile-web-app-title" content="WHATMOOD">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -131,7 +131,7 @@
 <body>
 <div class="wrap">
   <header>
-    <h1 id="title">Duo Couleur</h1>
+    <h1 id="title">WHATMOOD</h1>
     <button class="iconbtn hidden" id="backBtn">← Retour</button>
     <button class="iconbtn hidden" id="logoutBtn">Déconnexion</button>
     <div class="status hidden" id="status"><div class="dot" id="dot"></div><span id="stTxt"></span></div>
@@ -247,7 +247,7 @@ function show(v){
   $("logoutBtn").classList.toggle("hidden", v!=="vHome");
   $("backBtn").classList.toggle("hidden", !(v==="vRoom" || (v==="vProfile" && !onboarding)));
   $("status").classList.add("hidden");
-  $("title").textContent = v==="vProfile" ? "Mon profil" : "Duo Couleur";
+  $("title").textContent = v==="vProfile" ? "Mon profil" : "WHATMOOD";
 }
 $("backBtn").onclick = ()=>{ if(view==="vRoom") leaveRoom(false); else goHome(); };
 
@@ -481,7 +481,7 @@ function renderPlayers(){
 $("full").onclick=()=>$("full").classList.add("hidden");
 $("shareBtn").onclick=async()=>{
   const url=location.origin+location.pathname+"?salon="+encodeURIComponent(current);
-  if(navigator.share){ try{ await navigator.share({title:"Duo Couleur",text:"Rejoins mon salon Duo Couleur",url}); return; }catch(e){ if(e.name==="AbortError")return; } }
+  if(navigator.share){ try{ await navigator.share({title:"WHATMOOD",text:"Rejoins mon salon WHATMOOD",url}); return; }catch(e){ if(e.name==="AbortError")return; } }
   try{ await navigator.clipboard.writeText(url); toast("Lien copié"); }catch(e){ toast(url); }
 };
 document.addEventListener("visibilitychange",()=>{

@@ -1,5 +1,5 @@
 rules_version = '2';
-// Règles de sécurité Duo Couleur
+// Règles de sécurité WHATMOOD
 // Principe : tout utilisateur connecté peut LIRE un salon, mais chacun n'ÉCRIT que ses propres données.
 service cloud.firestore {
   match /databases/{db}/documents {
