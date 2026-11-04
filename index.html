@@ -69,16 +69,19 @@
 
   /* Profil */
   .preview{border-radius:24px;height:200px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
-    transition:background .25s ease;border:1px solid var(--line)}
+    transition:background .25s ease,box-shadow .25s ease}
   .preview .av{width:84px;height:84px;border-radius:24px;font-size:40px;background:rgba(0,0,0,.18)}
   .preview .pn{font-weight:700;font-size:20px}
   .preview .ph{font:600 13px ui-monospace,Menlo,monospace;opacity:.8}
-  .grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
-  .grid button{aspect-ratio:1;border-radius:12px;border:2px solid transparent;padding:0}
-  .grid button.sel{border-color:#fff;box-shadow:0 0 0 2px var(--bg) inset}
-  .hue{margin-top:14px}
+  .wheelwrap{position:relative;width:min(280px,78vw);aspect-ratio:1;margin:6px auto 4px;touch-action:none;cursor:crosshair}
+  .wheelwrap canvas{width:100%;height:100%;border-radius:50%;display:block;box-shadow:0 0 0 1px var(--line),0 8px 30px rgba(0,0,0,.45)}
+  .knob{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;border:3px solid #fff;
+    box-shadow:0 0 0 1px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.5);pointer-events:none}
+  .valrow{display:flex;align-items:center;gap:10px;margin-top:14px;color:var(--mute);font-size:16px}
+  .valrow input{flex:1}
+  .hexout{float:right;font:600 12px ui-monospace,Menlo,monospace;color:var(--txt);letter-spacing:.5px}
   input[type=range]{width:100%;-webkit-appearance:none;appearance:none;height:28px;border-radius:14px;
-    background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00);outline:none}
+    background:linear-gradient(90deg,#000,#fff);outline:none}
   input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:30px;height:30px;border-radius:50%;
     background:#fff;border:3px solid #0d0e11;box-shadow:0 1px 6px rgba(0,0,0,.5)}
   input[type=range]::-moz-range-thumb{width:24px;height:24px;border-radius:50%;background:#fff;border:3px solid #0d0e11}
@@ -265,9 +268,12 @@
     <div class="preview" id="pv"><div class="av" id="pvAv"></div><div class="pn" id="pvName"></div>
       <div class="pstat" id="pvStatus"></div><div class="pav" id="pvAvail"></div></div>
     <div class="card">
-      <label>Ma couleur</label>
-      <div class="grid" id="grid"></div>
-      <div class="hue"><input type="range" id="hue" min="0" max="359" value="200" aria-label="Teinte"></div>
+      <label>Ma couleur <span id="hexOut" class="hexout"></span></label>
+      <div class="wheelwrap" id="wheelWrap">
+        <canvas id="wheel" width="560" height="560" aria-label="Roue de couleur"></canvas>
+        <div class="knob" id="knob"></div>
+      </div>
+      <div class="valrow"><span>☾</span><input type="range" id="val" min="12" max="100" value="100" aria-label="Luminosité"><span>☀</span></div>
     </div>
     <div class="card">
       <label>Mon humeur</label>
@@ -347,6 +353,13 @@ function hslToHex(h,s,l){ s/=100;l/=100;const k=n=>(n+h/30)%12,a=s*Math.min(l,1-
 function isLight(hex){ const n=parseInt(hex.slice(1),16);return (0.299*(n>>16&255)+0.587*(n>>8&255)+0.114*(n&255))>165; }
 const ink = hex => isLight(hex) ? "#111" : "#fff";
 function paint(el, color){ el.style.background=color; el.style.color=ink(color); }
+// Cadre de profil : couleur de fond + contour en couleur inversée, façon vignettage très léger
+function invRGB(hex){ const n=parseInt(hex.slice(1),16); return [255-(n>>16&255),255-(n>>8&255),255-(n&255)].join(","); }
+function paintCard(el, color){
+  paint(el, color);
+  const i=invRGB(color);
+  el.style.boxShadow=`inset 0 0 0 1.5px rgba(${i},.30), inset 0 0 22px 2px rgba(${i},.22), inset 0 0 60px 6px rgba(${i},.10)`;
+}
 function toast(m){ const t=$("toast"); t.textContent=m; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2400); }
 function ago(ms){ const s=Math.round((Date.now()-ms)/1000); if(s<60)return"à l'instant"; const m=Math.round(s/60); if(m<60)return`il y a ${m} min`; const h=Math.round(m/60); if(h<24)return`il y a ${h} h`; const d=Math.round(h/24); return d===1?"hier":`il y a ${d} j`; }
 const tms = ts => ts && typeof ts.toMillis==="function" ? ts.toMillis() : Date.now();
@@ -534,7 +547,7 @@ function renderFriends(){
   box.style.display="";
   [...friends.values()].forEach(f0=>{
     const f=look(f0.id,f0);
-    const c=el("div","friend"); paint(c,f.color);
+    const c=el("div","friend"); paintCard(c,f.color);
     const b=el("div");
     const fn=el("div","fn",f.name);
     if(f.id===me.uid) fn.append(el("span","me"," toi"));   // aperçu de son propre rendu
@@ -698,7 +711,7 @@ function announceArrivals(fromCache){
 function playerCard(p0,isMe){
   const p = isMe ? p0 : look(p0.id,p0);
   const away=!isMe && !isOn(p);
-  const c=el("div","player"+(away?" away":"")); paint(c,p.color);
+  const c=el("div","player"+(away?" away":"")); paintCard(c,p.color);
   const a=el("div","av"+(p.mood?" emo":""),face(p.name,p.mood));
   const b=el("div");
   b.append(el("div","pnm",p.name));
@@ -773,21 +786,55 @@ $("shareBtn").onclick=async()=>{
 /* ================= Onglet Profil ================= */
 // Brouillon du profil : rien n'est publié avant « Enregistrer »
 let draft={ color:"#30b0ff", mood:"", status:"", avail:"" };
-PALETTE.forEach(c=>{ const b=el("button"); b.style.background=c; b.dataset.c=c; b.setAttribute("aria-label",c); b.onclick=()=>setDraft({color:c}); $("grid").appendChild(b); });
-$("hue").addEventListener("input",e=>setDraft({color:hslToHex(+e.target.value,100,50)}));
+/* --- Roue de couleur (teinte = angle, saturation = distance au centre) + luminosité --- */
+function hsvToHex(h,sat,v){ const f=n=>{ const k=(n+h/60)%6; return v-v*sat*Math.max(0,Math.min(k,4-k,1)); };
+  return "#"+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
+function hexToHsv(hex){ const n=parseInt(hex.slice(1),16); const r=(n>>16&255)/255,g=(n>>8&255)/255,b=(n&255)/255;
+  const mx=Math.max(r,g,b), mn=Math.min(r,g,b), d=mx-mn; let h=0;
+  if(d){ if(mx===r) h=60*(((g-b)/d)%6); else if(mx===g) h=60*((b-r)/d+2); else h=60*((r-g)/d+4); }
+  return { h:(h+360)%360, s:mx?d/mx:0, v:mx }; }
+const hsv={ h:200, s:.8, v:1 };
+(function drawWheel(){
+  const cv=$("wheel"), ctx=cv.getContext("2d"), W=cv.width, R=W/2, img=ctx.createImageData(W,W);
+  for(let y=0;y<W;y++) for(let x=0;x<W;x++){
+    const dx=x-R, dy=y-R, r=Math.hypot(dx,dy), i=(y*W+x)*4;
+    if(r>R){ img.data[i+3]=0; continue; }
+    const hex=hsvToHex((Math.atan2(dy,dx)*180/Math.PI+360)%360, Math.min(1,r/R), 1), n=parseInt(hex.slice(1),16);
+    img.data[i]=n>>16&255; img.data[i+1]=n>>8&255; img.data[i+2]=n&255; img.data[i+3]=r>R-1.5?Math.round((R-r)/1.5*255):255;
+  }
+  ctx.putImageData(img,0,0);
+})();
+function syncWheel(){
+  const k=$("knob"); const a=hsv.h*Math.PI/180;
+  k.style.left=(50+Math.cos(a)*hsv.s*50)+"%"; k.style.top=(50+Math.sin(a)*hsv.s*50)+"%";
+  k.style.background=draft.color;
+  $("wheel").style.filter=`brightness(${Math.max(.25,hsv.v)})`;
+  $("val").value=Math.round(hsv.v*100);
+  $("val").style.background=`linear-gradient(90deg,#000,${hsvToHex(hsv.h,hsv.s,1)})`;
+  $("hexOut").textContent=draft.color.toUpperCase();
+}
+function pickAt(ev){
+  const r=$("wheelWrap").getBoundingClientRect();
+  const dx=ev.clientX-(r.left+r.width/2), dy=ev.clientY-(r.top+r.height/2);
+  hsv.h=(Math.atan2(dy,dx)*180/Math.PI+360)%360; hsv.s=Math.min(1,Math.hypot(dx,dy)/(r.width/2));
+  setDraft({ color:hsvToHex(hsv.h,hsv.s,hsv.v) });
+}
+$("wheelWrap").addEventListener("pointerdown",e=>{ e.preventDefault(); $("wheelWrap").setPointerCapture(e.pointerId); pickAt(e); });
+$("wheelWrap").addEventListener("pointermove",e=>{ if(e.buttons||e.pressure) pickAt(e); });
+$("val").addEventListener("input",e=>{ hsv.v=+e.target.value/100; setDraft({ color:hsvToHex(hsv.h,hsv.s,hsv.v) }); });
 { const none=el("button","none","aucune"); none.dataset.m=""; none.onclick=()=>setDraft({mood:""}); $("moods").appendChild(none);
   MOODS.forEach(m=>{ const b=el("button",null,m); b.dataset.m=m; b.onclick=()=>setDraft({mood:m}); $("moods").appendChild(b); }); }
 $("statusIn").addEventListener("input",e=>setDraft({status:e.target.value.slice(0,60)}));
 document.querySelectorAll("#avail button").forEach(b=>b.onclick=()=>setDraft({avail: draft.avail===b.dataset.v ? "" : b.dataset.v}));
 function setDraft(patch){
   Object.assign(draft,patch);
-  paint($("pv"),draft.color);
+  paintCard($("pv"),draft.color);
+  syncWheel();
   $("pvAv").textContent=face(me.username,draft.mood); $("pvAv").classList.toggle("emo",!!draft.mood);
   $("pvName").textContent=me.username;
   $("pvStatus").textContent=draft.status.trim()?"« "+draft.status.trim()+" »":"";
   const pa=$("pvAvail"); pa.textContent=""; if(draft.avail) pa.append(...availEl(draft.avail).childNodes);
   $("stCount").textContent=draft.status.length+"/60";
-  document.querySelectorAll("#grid button").forEach(b=>b.classList.toggle("sel",b.dataset.c===draft.color));
   document.querySelectorAll("#moods button").forEach(b=>b.classList.toggle("sel",b.dataset.m===draft.mood));
   document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
@@ -797,6 +844,7 @@ function openProfile(first){
   $("logoutBtn").classList.toggle("hidden",onboarding);
   $("saveBtn").textContent=onboarding?"C'est parti →":"Enregistrer";
   draft={ color:me.color, mood:me.mood||"", status:me.status||"", avail:me.avail||"" };
+  Object.assign(hsv, hexToHsv(me.color)); if(hsv.v<.12) hsv.v=.12;
   $("statusIn").value=draft.status;
   setDraft({});
   show("vProfile");
