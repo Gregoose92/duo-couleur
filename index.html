@@ -102,7 +102,7 @@
   .preview.sq{width:min(100%,50vh);aspect-ratio:1;min-height:0;margin:0 auto;padding:6%;gap:4%;position:relative;cursor:pointer;
     border-radius:28px;transition:background .25s ease,box-shadow .25s ease,transform .2s ease}
   .preview.sq .pn{cursor:pointer;padding:2px 10px;border-radius:14px}
-  .preview.sq .place{cursor:pointer}
+  .preview.sq .place,.preview.sq .act{cursor:pointer}
   .preview.sq .pstat{font-size:min(4.4vw,2.3vh);cursor:pointer;padding:2px 8px;border-radius:10px}
   .preview.sq .pav{cursor:pointer;font-size:min(3.8vw,2vh)}
   .preview.sq .ph-empty{opacity:.55;font-style:normal;border:1.5px dashed currentColor;border-radius:999px;padding:3px 12px}
@@ -110,12 +110,17 @@
   /* ===== Carte profil : pseudo géant au centre, humeur en badge, vignettage inversé ===== */
   .pcard{container-type:inline-size;position:relative;overflow:hidden}
   .pcard .bign{font-weight:800;line-height:1.02;text-align:center;word-break:break-word;letter-spacing:.01em;
-    font-size:min(30cqw, calc(150cqw / var(--len,6)));max-width:100%}
+    font-size:min(30cqw, calc(132cqw / var(--len,6)));max-width:100%;white-space:nowrap}
   /* Lieu : grande icône à traits en haut à gauche, couleur du contour */
   .pcard .place{position:absolute;top:6cqw;left:6cqw;width:24cqw;height:24cqw}
   .pcard .place svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 1px rgba(255,255,255,.18))}
   /* Petites cartes (amis) : icône plus grande et trait plus épais pour rester lisible d'un coup d'œil */
-  .friend.pcard .place{top:5cqw;left:5cqw;width:34cqw;height:34cqw}
+  .pcard .act{position:absolute;top:6cqw;left:38cqw;width:24cqw;height:24cqw}
+  .pcard .act svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 1px rgba(255,255,255,.18))}
+  .pcard .act.ph-empty{width:auto;height:auto;left:50%;transform:translateX(-50%);font-size:4.2cqw;padding:3px 10px;white-space:nowrap}
+  .friend.pcard .place{top:5cqw;left:5cqw;width:29cqw;height:29cqw}
+  .friend.pcard .act{top:5cqw;left:35.5cqw;width:29cqw;height:29cqw}
+  .friend.pcard .act svg{stroke-width:2.6}
   .friend.pcard .place svg{stroke-width:2.6}
   .friend.pcard .bign{margin-top:16cqw}
   .pcard .place.ph-empty{width:auto;height:auto;font-size:4.2cqw;padding:3px 10px;top:6cqw;left:6cqw}
@@ -127,12 +132,13 @@
   .placelist button.none{justify-content:center;color:var(--mute)}
   .pcard .pstat,.pcard .pstatus,.pcard .fst{text-align:center}
   .player.pcard,.friend.pcard{justify-content:center;align-items:center;gap:3cqw}
-  .player.pcard .meta,.friend.pcard .meta{position:absolute;left:0;right:0;bottom:6cqw;display:flex;justify-content:center}
+  .player.pcard .meta,.friend.pcard .meta{position:absolute;left:7cqw;right:24cqw;bottom:6cqw;display:flex;justify-content:flex-start}
   .player.pcard .pstatus{font-size:max(11px,6.5cqw);margin:0;padding:0 6cqw;-webkit-line-clamp:2}
   .friend.pcard .fst{font-size:max(10px,8cqw);margin:0;padding:0 5cqw;-webkit-line-clamp:2}
   .friend.pcard .avl,.friend.pcard .fs{font-size:max(9px,7.5cqw)}
   .player.pcard .avl{font-size:max(11px,6.5cqw)}
-  .friend.pcard .me{position:absolute;top:calc(6px + 6cqw);right:40px;font-size:max(9px,7cqw);font-weight:800;opacity:.8}
+  .friend.pcard .meta{right:calc(5cqw + 32px)}
+  .friend.pcard .me{margin-left:4px;font-size:max(9px,7cqw);font-weight:800;opacity:.8}
   .fontlist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
   .fontlist button{background:#0f1114;border:2px solid var(--line);color:var(--txt);border-radius:12px;padding:12px 6px;
     font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -179,16 +185,16 @@
   /* Amis */
   .friends{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .friend{border-radius:18px;aspect-ratio:1/1.15;padding:10px;display:flex;flex-direction:column;justify-content:space-between;
-    cursor:pointer;transition:background .3s,transform .15s;animation:pop .3s ease;overflow:hidden}
+    cursor:pointer;transition:background .3s,transform .15s;overflow:hidden}
   .friend:active{transform:scale(.96)}
   .friend .av{width:38px;height:38px;border-radius:12px;font-size:18px;background:rgba(0,0,0,.18)}
   .friend .fn{font-weight:700;font-size:14px;word-break:break-all;line-height:1.2}
   .friend .fs{font-size:11px;opacity:.8;line-height:1.25}
   .friend{position:relative}
   .friend .fn .me{font-size:10px;font-weight:800;text-transform:uppercase;opacity:.75;margin-left:2px}
-  .friend .rm{position:absolute;top:6px;right:6px;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.25);
+  .friend .rm{position:absolute;bottom:5cqw;right:5cqw;width:26px;height:26px;border-radius:50%;border:0;background:rgba(0,0,0,.25);
     color:inherit;font-size:15px;line-height:1;padding:0}
-  .player .add{position:absolute;top:12px;right:12px;border:0;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800;
+  .player .add{position:absolute;bottom:5cqw;right:5cqw;border:0;border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800;
     background:rgba(0,0,0,.28);color:inherit}
   .player .add.is{background:transparent;opacity:.85;padding-right:0}
 
@@ -212,14 +218,15 @@
   .roomhead .cnt{font-size:13px;color:var(--mute)}
   .players{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
   .player{position:relative;border-radius:20px;aspect-ratio:1/1.1;padding:14px;display:flex;flex-direction:column;
-    justify-content:space-between;cursor:pointer;transition:background .3s,opacity .3s,transform .15s;overflow:hidden;animation:pop .35s ease}
+    justify-content:space-between;cursor:pointer;transition:background .3s,opacity .3s,transform .15s;overflow:hidden}
   .player:active{transform:scale(.97)}
+  .player.new,.friend.new{animation:pop .35s ease}
   @keyframes pop{from{transform:scale(.9);opacity:0}to{transform:none;opacity:1}}
   .player .av{width:54px;height:54px;border-radius:16px;font-size:26px;background:rgba(0,0,0,.18)}
   .player .pnm{font-weight:700;font-size:17px;word-break:break-all}
   .player .pst{display:flex;align-items:center;gap:6px;font-size:12px;opacity:.85}
   .player .pst i{width:8px;height:8px;border-radius:50%;background:currentColor;display:inline-block}
-  .player .tag{position:absolute;top:12px;right:12px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.25)}
+  .player .tag{position:absolute;bottom:5cqw;right:5cqw;font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;background:rgba(0,0,0,.25)}
   .player.away{opacity:.4;filter:saturate(.5)}
   .player.wait{background:transparent!important;border:2px dashed var(--line);color:var(--mute);justify-content:center;align-items:center;
     text-align:center;font-size:13px;animation:none}
@@ -346,6 +353,7 @@
     <!-- La carte carrée EST l'éditeur : on touche un élément pour le modifier -->
     <div class="preview sq pcard" id="pv" data-ed="color">
       <div class="place" id="pvAv" data-ed="place"></div>
+      <div class="act" id="pvAct" data-ed="act"></div>
       <div class="pn" id="pvName" data-ed="font"></div>
       <div class="pstat" id="pvStatus" data-ed="status"></div>
       <div class="pav" id="pvAvail" data-ed="status"></div>
@@ -375,6 +383,7 @@
       <div class="valrow"><span>☾</span><input type="range" id="val" min="12" max="100" value="100" aria-label="Luminosité"><span>☀</span><span id="hexOut" class="hexout"></span></div>
     </div>
     <div data-sec="place"><div class="placelist" id="places"></div></div>
+    <div data-sec="act"><div class="placelist" id="acts"></div></div>
     <div data-sec="font"><div class="fontlist" id="fonts"></div></div>
     <div data-sec="status">
       <label for="statusIn">Mon statut <span id="stCount" style="float:right">0/60</span></label>
@@ -510,20 +519,38 @@ const PLACES = {          // clé → [nom, tracés SVG]
   ecole:["École",'<path d="M2 9.5 12 4.5l10 5-10 5z"/><path d="M6 11.5v4.5c0 1.6 2.7 3 6 3s6-1.4 6-3v-4.5"/><path d="M22 9.5v5"/>'],
   ville:["Ville",'<path d="M2.5 21h19"/><path d="M4.5 21V11h5v10"/><path d="M9.5 21V4h6v17"/><path d="M15.5 21v-8h4v8"/><path d="M12 8h1M12 11.5h1M12 15h1"/>'],
   campagne:["Campagne",'<circle cx="17" cy="6.5" r="2.5"/><path d="M2 19c2.5-4.5 5.5-6.5 8.5-6.5 3.5 0 5 3 7.5 3 1.5 0 2.8-.7 4-1.7"/><path d="M2 21.5h20"/>'],
-  travail:["Travail",'<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.2C9 4.5 9.5 4 10.2 4h3.6c.7 0 1.2.5 1.2 1.2V7"/><path d="M3 13h18"/>'],
+  travail:["Bureau",'<rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5.2C9 4.5 9.5 4 10.2 4h3.6c.7 0 1.2.5 1.2 1.2V7"/><path d="M3 13h18"/>'],
   resto:["Resto",'<path d="M5 3v5a2.5 2.5 0 0 0 5 0V3"/><path d="M7.5 3v18"/><path d="M17 21V3c2.2 1.5 3 4.5 3 8h-3"/>'],
   cafe:["Café",'<path d="M4 9.5h12V15a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M16 11h1.5a2.5 2.5 0 0 1 0 5H16"/><path d="M8 3.5c-1 1 1 2 0 3M12 3.5c-1 1 1 2 0 3"/>'],
-  sport:["Sport",'<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>'],
   plage:["Plage",'<path d="M3 12a9 9 0 0 1 18 0z"/><path d="M12 12v8.5"/><path d="M2.5 21h19"/>'],
-  concert:["Concert",'<path d="M9 18V5.5l11-2.5v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>'],
   cine:["Ciné",'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7.5 4v16M16.5 4v16M3 9h4.5M3 15h4.5M16.5 9H21M16.5 15H21"/>'],
   voyage:["Voyage",'<path d="M2.5 12.5 21 4l-4 16-5-6-5 3.5V13z"/><path d="M12 14l9-10"/>'],
   route:["En route",'<path d="M3.5 16.5v-4l2.5-5.5h12l2.5 5.5v4z"/><path d="M3.5 12.5h17"/><circle cx="7.5" cy="16.5" r="2"/><circle cx="16.5" cy="16.5" r="2"/>'],
-  montagne:["Montagne",'<path d="M2 20.5 9 8l4.5 7 2.5-3.5 6 9z"/><path d="M7.2 11.2 9 13l1.8-1.8"/>'],
-  soiree:["Soirée",'<circle cx="12" cy="13.5" r="7"/><path d="M12 3v3.5M5 13.5h14M12 6.5v14M6.8 9.5h10.4M6.8 17.5h10.4"/>'],
-  shopping:["Shopping",'<path d="M5 8h14l-1 13H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>'],
-  dodo:["Dodo",'<path d="M3 19V7"/><path d="M3 14.5h18V19"/><path d="M21 14.5v-1.5a3 3 0 0 0-3-3h-7.5v4.5"/><circle cx="6.8" cy="11.5" r="1.6"/>']
+  montagne:["Montagne",'<path d="M2 20.5 9 8l4.5 7 2.5-3.5 6 9z"/><path d="M7.2 11.2 9 13l1.8-1.8"/>']
 };
+const ACTS = {            // clé → [nom, tracés SVG] — même style que les lieux
+  after:["After",'<path d="M2.5 18.5h19"/><path d="M6.5 18.5a5.5 5.5 0 0 1 11 0"/><path d="M12 6.5v2.5M5.3 9.8l1.6 1.6M18.7 9.8l-1.6 1.6M2.5 14.5h2M19.5 14.5h2"/><path d="M5 4.2l.6 1.2 1.3.2-.9.9.2 1.3L5 7.2l-1.2.6.2-1.3-.9-.9 1.3-.2z" fill="currentColor" stroke-width="1"/>'],
+  shopping:["Shopping",'<path d="M5 8h14l-1 13H6z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>'],
+  bouffe:["Bouffe",'<path d="M4 11a8 6 0 0 1 16 0z"/><path d="M3.5 14c1.5 1 3 1 4.3 0s3-1 4.2 0 3 1 4.3 0 3-1 4.2 0"/><path d="M4 17h16v.8a2.2 2.2 0 0 1-2.2 2.2H6.2A2.2 2.2 0 0 1 4 17.8z"/>'],
+  dodo:["Dodo",'<path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/><path d="M14.5 3.5h4l-4 4h4"/>'],
+  dancing:["Dancing",'<circle cx="12" cy="13.5" r="7"/><path d="M12 3v3.5M5 13.5h14M12 6.5v14M6.8 9.5h10.4M6.8 17.5h10.4"/>'],
+  working:["Working",'<rect x="4" y="5" width="16" height="10.5" rx="1.5"/><path d="M2 19h20"/><path d="M10 12l-2-1.8L10 8.5M14 8.5l2 1.7-2 1.8"/>'],
+  sport:["Sport",'<path d="M6.5 7v10M17.5 7v10M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>'],
+  musique:["Musique",'<path d="M9 18V5.5l11-2.5v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/>'],
+  apero:["Apéro",'<path d="M7.5 3h9l-.6 5.5a3.9 3.9 0 0 1-7.8 0z"/><path d="M12 12.5v7.5"/><path d="M8.5 20.5h7"/><path d="M8 6.5h8"/>'],
+  gaming:["Gaming",'<path d="M7 8.5h10a4.5 4.5 0 0 1 4.5 4.5v1.5a2.8 2.8 0 0 1-5 1.7L15 14.5H9l-1.5 1.7a2.8 2.8 0 0 1-5-1.7V13A4.5 4.5 0 0 1 7 8.5z"/><path d="M7.5 11v3M6 12.5h3"/><circle cx="15.8" cy="11.8" r=".9" fill="currentColor"/><circle cx="17.8" cy="13.6" r=".9" fill="currentColor"/>'],
+  lecture:["Lecture",'<path d="M3 5.5c3-1.2 6-1 9 1 3-2 6-2.2 9-1V19c-3-1.2-6-1-9 1-3-2-6-2.2-9-1z"/><path d="M12 6.5V20"/>'],
+  chill:["Chill",'<path d="M4.5 11V8.5A2.5 2.5 0 0 1 7 6h10a2.5 2.5 0 0 1 2.5 2.5V11"/><path d="M2.5 13.5a2 2 0 0 1 4 0V15h11v-1.5a2 2 0 0 1 4 0V18h-19z"/><path d="M5 18v2M19 18v2"/>']
+};
+// Icône à traits (lieu ou activité), couleur = currentColor (le contour)
+function lineIcon(table, key, cls){
+  const e=el("div",cls);
+  if(!table[key]) return e;
+  e.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">'+table[key][1]+'</svg>';
+  e.title=table[key][0];
+  return e;
+}
+const actIcon = k => lineIcon(ACTS, k, "act");
 // Icône « lieu » : SVG à traits, prend la couleur du contour (currentColor)
 function placeIcon(key, cls){
   const e=el("div","place"+(cls?" "+cls:""));
@@ -544,6 +571,7 @@ function watchProfile(id){
       username:String(d.username||"").slice(0,20),
       color:HEX_RE.test(d.color)?d.color:null,
       place:PLACES[d.place]?d.place:"",
+      act:ACTS[d.act]?d.act:"",
       status:typeof d.status==="string"?d.status.slice(0,60):"",
       avail:AVAIL[d.avail]?d.avail:"",
       font:FONTS[d.font]?d.font:"inter",
@@ -557,7 +585,7 @@ function scheduleRender(){ if(rq) return; rq=requestAnimationFrame(()=>{ rq=0; r
 // Fusionne les infos connues d'un joueur avec son profil public en direct
 function look(id, fallback){
   const pr=profiles.get(id)||{};
-  return { ...fallback, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
+  return { ...fallback, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
 }
 function face(name, mood){ return mood || initial(name); }
 function availEl(avail, extra){
@@ -666,7 +694,7 @@ A.onAuthStateChanged(auth, async user=>{
   // profil public : on lit humeur/statut/dispo, puis on resynchronise pseudo + couleur (merge = ne rien effacer)
   const pub=await F.getDoc(F.doc(db,"profiles",me.uid)).catch(()=>null);
   const pd=pub&&pub.exists()?pub.data():{};
-  me.place=PLACES[pd.place]?pd.place:""; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter"; me.edge=HEX_RE.test(pd.edge||"")?pd.edge:"";
+  me.place=PLACES[pd.place]?pd.place:""; me.act=ACTS[pd.act]?pd.act:""; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter"; me.edge=HEX_RE.test(pd.edge||"")?pd.edge:"";
   F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color },{ merge:true }).catch(e=>console.warn("profil public",e));
   renderMe();
   startListeners();
@@ -711,13 +739,17 @@ function renderFriends(){
     const f=look(f0.id,f0);
     const c=el("div","friend pcard"); paintCard(c,f.color,f.edge);
     if(f.place){ const ic=placeIcon(f.place); ic.style.color=edgeOf(f); c.append(ic); }
-    if(f.id===me.uid) c.append(el("span","me","TOI"));   // aperçu de son propre rendu
+    if(f.act){ const ic=actIcon(f.act); ic.style.color=edgeOf(f); c.append(ic); }
     c.append(bigName(f.name,f.font));
     if(f.status) c.append(el("div","fst","« "+f.status+" »"));
-    const m=el("div","meta"); m.append(f.avail?availEl(f.avail):el("div","fs","ajouté "+ago(f.lastSeen))); c.append(m);
+    const m=el("div","meta");
+    m.append(f.avail?availEl(f.avail):el("div","fs", f.id===me.uid ? "c'est toi" : "ajouté "+ago(f.lastSeen)));
+    if(f.id===me.uid && f.avail) m.append(el("span","me","· toi"));   // aperçu de son propre rendu
+    c.append(m);
     const rm=el("button","rm","×"); rm.setAttribute("aria-label","Retirer "+f.name);
     rm.onclick=ev=>{ ev.stopPropagation(); removeFriend(f.id,f.name); };
     c.appendChild(rm);
+    markNew(c,"f:"+f.id);
     c.onclick=()=>showFull(f.name,f.color);
     box.appendChild(c);
   });
@@ -866,29 +898,33 @@ function announceArrivals(fromCache){
   if(seenOnline) now.forEach(id=>{ if(!seenOnline.has(id)) toast(members.get(id).name+" a rejoint le groupe"); });
   seenOnline=now;
 }
+const shownCards=new Set();   // cartes déjà affichées : pas de ré-animation à chaque rafraîchissement
+function markNew(c,key){ if(!shownCards.has(key)){ shownCards.add(key); c.classList.add("new"); } }
 function playerCard(p0,isMe){
   const p = isMe ? p0 : look(p0.id,p0);
   const away=!isMe && !isOn(p);
   const c=el("div","player pcard"+(away?" away":"")); paintCard(c,p.color,p.edge);
   if(p.place){ const ic=placeIcon(p.place); ic.style.color=edgeOf(p); c.append(ic); }
+  if(p.act){ const ic=actIcon(p.act); ic.style.color=edgeOf(p); c.append(ic); }
   c.append(bigName(p.name,p.font));
   if(p.status) c.append(el("div","pstatus","« "+p.status+" »"));
   const m=el("div","meta"); m.append(availEl(p.avail, away?"hors ligne · "+ago(p.t):"en ligne")); c.append(m);
   if(isMe) c.appendChild(el("div","tag","TOI"));
-  else if(friends.has(p.id)) c.appendChild(el("div","add is","✓ ami"));
+  else if(friends.has(p.id)) c.appendChild(el("div","add is","✓"));
   else{
-    const add=el("button","add","＋ Ajouter");
+    const add=el("button","add","＋ ami"); add.setAttribute("aria-label","Ajouter "+p.name+" à mes amis");
     add.onclick=async ev=>{ ev.stopPropagation(); add.disabled=true;
       try{ await addFriend(p.id,p.name,current); }catch(e){ console.warn(e); add.disabled=false; toast("Ajout impossible"); } };
     c.appendChild(add);
   }
+  markNew(c,"p:"+(isMe?"me":p.id));
   c.onclick=()=>showFull(p.name,p.color);
   return c;
 }
 function renderPlayers(){
   if(!me||view!=="vRoom") return;
   const box=$("players"); box.textContent="";
-  box.appendChild(playerCard({ name:me.username, color:me.color, place:me.place, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
+  box.appendChild(playerCard({ name:me.username, color:me.color, place:me.place, act:me.act, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
   const list=[...members.values()].sort((a,b)=>(isOn(b)-isOn(a))||a.name.localeCompare(b.name));
   list.forEach(p=>box.appendChild(playerCard(p,false)));
   if(!list.some(isOn)){
@@ -941,7 +977,7 @@ $("shareBtn").onclick=async()=>{
 
 /* ================= Onglet Profil ================= */
 // Brouillon du profil : rien n'est publié avant « Enregistrer »
-let draft={ color:"#30b0ff", place:"", status:"", avail:"" };
+let draft={ color:"#30b0ff", place:"", act:"", status:"", avail:"" };
 /* --- Roue de couleur (teinte = angle, saturation = distance au centre) + luminosité --- */
 function hsvToHex(h,sat,v){ const f=n=>{ const k=(n+h/60)%6; return v-v*sat*Math.max(0,Math.min(k,4-k,1)); };
   return "#"+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
@@ -994,6 +1030,9 @@ $("edgeAuto").onclick=()=>{ setDraft({ edge:"" }); setWheelTarget("edge"); };
 { const none=el("button","none","aucun"); none.dataset.p=""; none.onclick=()=>setDraft({place:""}); $("places").appendChild(none);
   Object.keys(PLACES).forEach(k=>{ const b=el("button"); b.dataset.p=k; b.append(...placeIcon(k).childNodes, document.createTextNode(PLACES[k][0]));
     b.onclick=()=>setDraft({place:k}); $("places").appendChild(b); }); }
+{ const none=el("button","none","aucune"); none.dataset.a=""; none.onclick=()=>setDraft({act:""}); $("acts").appendChild(none);
+  Object.keys(ACTS).forEach(k=>{ const b=el("button"); b.dataset.a=k; b.append(...actIcon(k).childNodes, document.createTextNode(ACTS[k][0]));
+    b.onclick=()=>setDraft({act:k}); $("acts").appendChild(b); }); }
 $("statusIn").addEventListener("input",e=>setDraft({status:e.target.value.slice(0,60)}));
 document.querySelectorAll("#avail button").forEach(b=>b.onclick=()=>setDraft({avail: draft.avail===b.dataset.v ? "" : b.dataset.v}));
 function setDraft(patch){
@@ -1002,6 +1041,8 @@ function setDraft(patch){
   syncWheel();
   const pv=$("pvAv"); pv.textContent=""; pv.classList.toggle("ph-empty",!draft.place);
   if(draft.place){ pv.append(...placeIcon(draft.place).childNodes); pv.style.color=edgeOf(draft); } else { pv.textContent="＋ lieu"; pv.style.color=""; }
+  const pa2=$("pvAct"); pa2.textContent=""; pa2.classList.toggle("ph-empty",!draft.act);
+  if(draft.act){ pa2.append(...actIcon(draft.act).childNodes); pa2.style.color=edgeOf(draft); } else { pa2.textContent="＋ activité"; pa2.style.color=""; }
   $("pvName").replaceChildren(bigName(me.username,draft.font));
   document.querySelectorAll("#fonts button").forEach(b=>b.classList.toggle("sel",b.dataset.f===draft.font));
   // emplacements vides : affichés en pointillé, uniquement dans l'éditeur
@@ -1011,10 +1052,11 @@ function setDraft(patch){
   if(draft.avail) pa.append(...availEl(draft.avail).childNodes); else pa.textContent="＋ disponibilité";
   $("stCount").textContent=draft.status.length+"/60";
   document.querySelectorAll("#places button").forEach(b=>b.classList.toggle("sel",b.dataset.p===draft.place));
+  document.querySelectorAll("#acts button").forEach(b=>b.classList.toggle("sel",b.dataset.a===draft.act));
   document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
 /* --- Édition directe sur la carte --- */
-const ED_TITLES={ color:"Mes couleurs", place:"Mon lieu", font:"Police du pseudo", status:"Statut & disponibilité" };
+const ED_TITLES={ color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", font:"Police du pseudo", status:"Statut & disponibilité" };
 let edOpen=null;
 function openEditor(sec){
   edOpen=sec;
@@ -1063,7 +1105,7 @@ function openProfile(first){
   $("onboard").classList.toggle("hidden",!onboarding);
   $("logoutBtn").classList.toggle("hidden",onboarding);
   $("saveBtn").textContent=onboarding?"C'est parti →":"Enregistrer";
-  draft={ color:me.color, place:me.place||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
+  draft={ color:me.color, place:me.place||"", act:me.act||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
   wTarget="color"; Object.assign(hsv, hexToHsv(me.color)); if(hsv.v<.12) hsv.v=.12;
   $("statusIn").value=draft.status;
   setDraft({});
@@ -1076,8 +1118,8 @@ $("saveBtn").onclick=async()=>{
   const status=draft.status.replace(/\s+/g," ").trim().slice(0,60);
   try{
     await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft.color });
-    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft.color, place:draft.place, status, avail:draft.avail, font:draft.font, edge:draft.edge });
-    Object.assign(me,{ color:draft.color, place:draft.place, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
+    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft.color, place:draft.place, act:draft.act, status, avail:draft.avail, font:draft.font, edge:draft.edge });
+    Object.assign(me,{ color:draft.color, place:draft.place, act:draft.act, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
     if(current) writePresence(true);          // la couleur suit dans le groupe ouvert
   }catch(e){ console.warn(e); toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
   $("saveBtn").disabled=false;
