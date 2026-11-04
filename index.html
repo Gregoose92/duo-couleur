@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>WHATMOOD</title>
 <meta name="theme-color" content="#0d0e11">
@@ -404,7 +406,7 @@
 <div id="toast"></div>
 
 <script type="module">
-import { firebaseConfig } from "./firebase-config.js";
+const { firebaseConfig } = await import("./firebase-config.js?v="+(new URLSearchParams(location.search).get("v")||"1"));
 const V = "10.12.2";
 const $ = id => document.getElementById(id);
 
@@ -548,7 +550,10 @@ document.querySelectorAll("#tabbar button").forEach(b=>b.onclick=async()=>{
 $("reloadBtn").onclick=async()=>{
   $("reloadBtn").classList.add("spin");
   try{ if(current) await Promise.race([writePresence(false), new Promise(r=>setTimeout(r,400))]); }catch(e){}
-  location.reload();
+  // Contourne le cache du téléphone / de GitHub : on recharge une adresse unique (?v=horodatage)
+  try{ await fetch(location.pathname+"?v="+Date.now(),{cache:"reload"}); }catch(e){}
+  const u=new URL(location.href); u.searchParams.set("v",Date.now());
+  location.replace(u.toString());
 };
 $("backBtn").onclick = async()=>{ await leaveRoom(); setURL(); show("vGroups"); };
 function setURL(code){ history.replaceState(null,"", code ? "?groupe="+encodeURIComponent(code)+(EMU?"&emu":"") : location.pathname+(EMU?"?emu":"")); }
