@@ -36,6 +36,16 @@
   .reload svg{width:15px;height:15px}
   .reload.spin svg{animation:spin .6s linear infinite}
   @keyframes spin{to{transform:rotate(360deg)}}
+  .hl{gap:8px}
+  #qrBg{position:fixed;inset:0;z-index:40;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;padding:24px}
+  .qrcard{background:#fff;color:#111;border-radius:24px;padding:22px 20px 18px;width:min(340px,100%);display:flex;flex-direction:column;
+    align-items:center;gap:10px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .qrcard b{font-size:20px;letter-spacing:1px}
+  .qrimg{width:100%;aspect-ratio:1;display:grid;place-items:center}
+  .qrimg svg{width:100%;height:100%}
+  .qrurl{font:600 12px ui-monospace,Menlo,monospace;color:#555;word-break:break-all}
+  .qrcard .small{color:#777}
   h1{font-size:20px;margin:0;letter-spacing:.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   h2{font-size:13px;color:var(--mute);text-transform:uppercase;letter-spacing:.8px;margin:6px 2px 0;font-weight:600;display:flex;align-items:center;gap:8px}
   h2 .n{background:var(--err);color:#fff;border-radius:999px;padding:0 7px;font-size:11px;line-height:18px}
@@ -285,6 +295,9 @@
       <button class="reload" id="reloadBtn" aria-label="Actualiser la page" title="Actualiser">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></svg>
       </button>
+      <button class="reload" id="qrBtn" aria-label="QR code du site" title="QR code">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"/><path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18zM14 20.5h2M20.5 14v2"/></svg>
+      </button>
       <h1 id="title">WHATMOOD</h1>
     </div>
     <button class="iconbtn hidden" id="backBtn">← Groupes</button>
@@ -448,6 +461,16 @@
 </div>
 <div id="full" class="hidden"><b id="fullName"></b><span>toucher pour fermer</span></div>
 <div id="toast"></div>
+<!-- QR code vers le site -->
+<div id="qrBg" class="hidden">
+  <div class="qrcard" id="qrCard">
+    <b>WHATMOOD</b>
+    <div id="qrImg" class="qrimg"></div>
+    <div class="qrurl" id="qrUrl"></div>
+    <button class="btn" id="qrCopy" style="margin-top:4px">Copier le lien</button>
+    <span class="small">Fais scanner avec l'appareil photo · touche à côté pour fermer</span>
+  </div>
+</div>
 
 <script type="module">
 const { firebaseConfig } = await import("./firebase-config.js?v="+(new URLSearchParams(location.search).get("v")||"1"));
@@ -680,6 +703,24 @@ $("reloadBtn").onclick=async()=>{
   const u=new URL(location.href); u.searchParams.set("v",Date.now());
   location.replace(u.toString());
 };
+// QR code du site : bibliothèque chargée à la demande, lien sans paramètres
+const SITE_URL = location.origin + location.pathname;
+function loadQrLib(){
+  return window.qrcode ? Promise.resolve() : new Promise((res,rej)=>{
+    const sc=document.createElement("script"); sc.src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js";
+    sc.onload=res; sc.onerror=rej; document.head.appendChild(sc);
+  });
+}
+$("qrBtn").onclick=async()=>{
+  $("qrUrl").textContent=SITE_URL; $("qrImg").textContent="…"; $("qrBg").classList.remove("hidden");
+  try{
+    await loadQrLib();
+    const q=qrcode(0,"M"); q.addData(SITE_URL); q.make();
+    $("qrImg").innerHTML=q.createSvgTag({ cellSize:8, margin:2, scalable:true });
+  }catch(e){ $("qrImg").textContent="QR indisponible hors connexion — utilise le lien ci-dessous"; }
+};
+$("qrBg").onclick=e=>{ if(e.target===$("qrBg")) $("qrBg").classList.add("hidden"); };
+$("qrCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(SITE_URL); toast("Lien copié"); }catch(e){ toast(SITE_URL); } };
 $("backBtn").onclick = async()=>{ await leaveRoom(); setURL(); show("vGroups"); };
 function setURL(code){ history.replaceState(null,"", code ? "?groupe="+encodeURIComponent(code)+(EMU?"&emu":"") : location.pathname+(EMU?"?emu":"")); }
 
