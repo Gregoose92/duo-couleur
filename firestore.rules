@@ -67,6 +67,21 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    // Position partagée : lisible UNIQUEMENT par son propriétaire et par les personnes
+    // que le propriétaire a lui-même ajoutées en amis.
+    match /locs/{uid} {
+      allow read: if isOwner(uid)
+        || (signedIn() && exists(/databases/$(db)/documents/users/$(uid)/friends/$(request.auth.uid)));
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['lat', 'lng', 'label', 'prec', 't'])
+        && request.resource.data.lat is number && request.resource.data.lat >= -90  && request.resource.data.lat <= 90
+        && request.resource.data.lng is number && request.resource.data.lng >= -180 && request.resource.data.lng <= 180
+        && request.resource.data.label is string && request.resource.data.label.size() <= 60
+        && request.resource.data.prec in ['quartier', 'precise']
+        && request.resource.data.t == request.time;
+      allow delete: if isOwner(uid);
+    }
+
     // Groupe : nom figé à la création
     match /rooms/{code} {
       allow read: if signedIn() && validCode(code);

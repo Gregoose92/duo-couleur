@@ -139,6 +139,17 @@
   .player.pcard .avl{font-size:max(11px,6.5cqw)}
   .friend.pcard .meta{right:calc(5cqw + 32px)}
   .friend.pcard .me{margin-left:4px;font-size:max(9px,7cqw);font-weight:800;opacity:.8}
+  .loc{display:inline-flex;align-items:center;gap:4px;color:inherit;text-decoration:none;font-weight:700;
+    font-size:max(11px,6cqw);padding:3px 9px;border-radius:999px;background:rgba(0,0,0,.16);max-width:92%;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .loc svg{width:1.15em;height:1.15em;flex:none}
+  .loc.sm{font-size:max(9px,7cqw);padding:2px 6px}
+  #pvLoc{display:inline-flex;max-width:88%;cursor:pointer;border-radius:999px}
+  #pvLoc.ph-empty{font-size:min(3.8vw,2vh);border:1.5px dashed currentColor;padding:3px 12px;opacity:.55}
+  #pvLoc .loc{font-size:min(3.6vw,1.9vh);max-width:100%}
+  .locbox{display:flex;flex-direction:column;gap:10px}
+  .locnow{display:flex;align-items:center;gap:8px;font-size:14px;padding:10px 12px;border-radius:12px;background:#0f1114;border:1px solid var(--line)}
+  .locnow svg{width:18px;height:18px;color:var(--accent);flex:none}
   .fontlist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
   .fontlist button{background:#0f1114;border:2px solid var(--line);color:var(--txt);border-radius:12px;padding:12px 6px;
     font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -357,6 +368,7 @@
       <div class="pn" id="pvName" data-ed="font"></div>
       <div class="pstat" id="pvStatus" data-ed="status"></div>
       <div class="pav" id="pvAvail" data-ed="status"></div>
+      <div id="pvLoc" data-ed="loc"></div>
       <div class="edhint" id="edHint">touche pour modifier</div>
     </div>
     <div class="btns" id="pfBtns">
@@ -385,6 +397,18 @@
     <div data-sec="place"><div class="placelist" id="places"></div></div>
     <div data-sec="act"><div class="placelist" id="acts"></div></div>
     <div data-sec="font"><div class="fontlist" id="fonts"></div></div>
+    <div data-sec="loc">
+      <div class="locbox">
+        <div class="locnow" id="locNow"></div>
+        <div class="seg" id="locPrec">
+          <button data-v="quartier" class="sel">Quartier (~1 km)</button>
+          <button data-v="precise">Précise</button>
+        </div>
+        <button class="btn" id="locShare" style="margin-top:0">📍 Partager ma position</button>
+        <button class="btn ghost" id="locStop" style="margin-top:0">Ne plus partager</button>
+        <p class="small" style="margin:0">Visible uniquement par les personnes que <b>tu as ajoutées en amis</b>. Masquée automatiquement après 24 h.</p>
+      </div>
+    </div>
     <div data-sec="status">
       <label for="statusIn">Mon statut <span id="stCount" style="float:right">0/60</span></label>
       <input type="text" id="statusIn" maxlength="60" placeholder="ex. dispo pour un verre 🍻" enterkeyhint="done">
@@ -583,9 +607,40 @@ function watchProfile(id){
 let rq=0;
 function scheduleRender(){ if(rq) return; rq=requestAnimationFrame(()=>{ rq=0; renderFriends(); renderPlayers(); if(!$("sheet").classList.contains("hidden")) renderSheet(); }); }
 // Fusionne les infos connues d'un joueur avec son profil public en direct
+/* ===== Position (« loc ») ===== */
+const LOC_MAX_AGE = 24*3600*1000;          // masquée après 24 h
+const locs = new Map();                     // uid -> { lat, lng, label, prec, t }
+const locSubs = new Map();
+function watchLoc(id){
+  if(locSubs.has(id)) return;
+  locSubs.set(id, F.onSnapshot(F.doc(db,"locs",id), d=>{
+    if(!d.exists()){ locs.delete(id); scheduleRender(); return; }
+    const v=d.data();
+    if(typeof v.lat!=="number"||typeof v.lng!=="number") return;
+    locs.set(id,{ lat:v.lat, lng:v.lng, label:String(v.label||"Position").slice(0,60), prec:v.prec, t:tms(v.t) });
+    scheduleRender(); if(id===me?.uid) renderLocPanel();
+  }, ()=>{
+    // refusé = cette personne ne t'a pas (encore) ajouté en ami : rien à afficher.
+    // L'abonnement refusé s'arrête ; on retente plus tard, au cas où elle t'ajoute entre-temps.
+    locs.delete(id); locSubs.delete(id);
+    setTimeout(()=>{ if(me && (members.has(id)||friends.has(id))) watchLoc(id); }, 15000);
+  }));
+}
+// âge compact pour les petites étiquettes : « 1 min », « 3 h », « 1 j »
+function shortAgo(t){ const m=Math.max(1,Math.round((Date.now()-t)/60000)); return m<60 ? m+" min" : (m<1440 ? Math.round(m/60)+" h" : Math.round(m/1440)+" j"); }
+const PIN='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0 1 13 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>';
+function locLine(loc, cls){
+  if(!loc || Date.now()-loc.t > LOC_MAX_AGE) return null;
+  const a=el("a","loc"+(cls?" "+cls:""));
+  a.href="https://www.google.com/maps/search/?api=1&query="+loc.lat+","+loc.lng;
+  a.target="_blank"; a.rel="noopener";
+  a.innerHTML=PIN; a.append(document.createTextNode(loc.label+" · "+shortAgo(loc.t)));
+  a.addEventListener("click",e=>e.stopPropagation());   // ouvre la carte, pas le plein écran
+  return a;
+}
 function look(id, fallback){
   const pr=profiles.get(id)||{};
-  return { ...fallback, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
+  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
 }
 function face(name, mood){ return mood || initial(name); }
 function availEl(avail, extra){
@@ -676,6 +731,7 @@ $("logoutBtn").onclick = async ()=>{ await leaveRoom(); stopAll(); await A.signO
 function stopAll(){
   subs.forEach(u=>u()); subs=[];
   profileSubs.forEach(u=>u()); profileSubs.clear(); profiles.clear();
+  locSubs.forEach(u=>u()); locSubs.clear(); locs.clear();
   friends.clear(); groupNames.clear();
 }
 
@@ -698,6 +754,7 @@ A.onAuthStateChanged(auth, async user=>{
   F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color },{ merge:true }).catch(e=>console.warn("profil public",e));
   renderMe();
   startListeners();
+  watchLoc(me.uid);
   if(justSignedUp){ justSignedUp=false; openProfile(true); }
   else if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); }
   else { tab="vGroups"; show("vGroups"); }
@@ -717,7 +774,7 @@ function startListeners(){
       const f=d.data(); ids.add(d.id);
       const prev=friends.get(d.id);
       friends.set(d.id,{ id:d.id, name:String(f.name||"Ami").slice(0,20), lastSeen:tms(f.lastSeen), room:f.room, color:"#3a3d44" });
-      watchProfile(d.id);             // profil de l'ami en direct
+      watchProfile(d.id); watchLoc(d.id);   // profil + position de l'ami en direct
     });
     [...friends.keys()].forEach(id=>{ if(!ids.has(id)) friends.delete(id); });
     renderFriends(); renderPlayers();     // le bouton « Ajouter » devient « ✓ ami »
@@ -742,6 +799,7 @@ function renderFriends(){
     if(f.act){ const ic=actIcon(f.act); ic.style.color=edgeOf(f); c.append(ic); }
     c.append(bigName(f.name,f.font));
     if(f.status) c.append(el("div","fst","« "+f.status+" »"));
+    const ll=locLine(f.loc,"sm"); if(ll) c.append(ll);
     const m=el("div","meta");
     m.append(f.avail?availEl(f.avail):el("div","fs", f.id===me.uid ? "c'est toi" : "ajouté "+ago(f.lastSeen)));
     if(f.id===me.uid && f.avail) m.append(el("span","me","· toi"));   // aperçu de son propre rendu
@@ -866,7 +924,7 @@ async function enterRoom(code, knownName){
       if(d.id===me.uid) return;
       const m=d.data(); if(!HEX_RE.test(String(m.color))) return;
       members.set(d.id,{ id:d.id, name:String(m.name||"Ami").slice(0,20), color:m.color, t:tms(m.t), online:m.online!==false });
-      watchProfile(d.id);
+      watchProfile(d.id); watchLoc(d.id);
     });
     announceArrivals(snap.metadata.fromCache);
     renderPlayers();
@@ -908,6 +966,7 @@ function playerCard(p0,isMe){
   if(p.act){ const ic=actIcon(p.act); ic.style.color=edgeOf(p); c.append(ic); }
   c.append(bigName(p.name,p.font));
   if(p.status) c.append(el("div","pstatus","« "+p.status+" »"));
+  const ll=locLine(isMe?locs.get(me.uid):p.loc); if(ll) c.append(ll);
   const m=el("div","meta"); m.append(availEl(p.avail, away?"hors ligne · "+ago(p.t):"en ligne")); c.append(m);
   if(isMe) c.appendChild(el("div","tag","TOI"));
   else if(friends.has(p.id)) c.appendChild(el("div","add is","✓"));
@@ -1037,6 +1096,7 @@ $("statusIn").addEventListener("input",e=>setDraft({status:e.target.value.slice(
 document.querySelectorAll("#avail button").forEach(b=>b.onclick=()=>setDraft({avail: draft.avail===b.dataset.v ? "" : b.dataset.v}));
 function setDraft(patch){
   Object.assign(draft,patch);
+  renderLocPreview();
   paintCard($("pv"),draft.color,draft.edge);
   syncWheel();
   const pv=$("pvAv"); pv.textContent=""; pv.classList.toggle("ph-empty",!draft.place);
@@ -1056,7 +1116,7 @@ function setDraft(patch){
   document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
 /* --- Édition directe sur la carte --- */
-const ED_TITLES={ color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", font:"Police du pseudo", status:"Statut & disponibilité" };
+const ED_TITLES={ loc:"Ma position", color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", font:"Police du pseudo", status:"Statut & disponibilité" };
 let edOpen=null;
 function openEditor(sec){
   edOpen=sec;
@@ -1064,6 +1124,7 @@ function openEditor(sec){
   document.querySelectorAll("#edSheet [data-sec]").forEach(x=>x.classList.toggle("show",x.dataset.sec===sec));
   document.querySelectorAll("#pv [data-ed]").forEach(x=>x.classList.toggle("on",x.dataset.ed===sec));
   $("pv").classList.toggle("ed-color",sec==="color");
+  if(sec==="loc") renderLocPanel();
   $("edSheet").classList.remove("hidden"); $("edHint").classList.add("hidden");
   $("pfBtns").classList.add("hidden"); $("tabbar").classList.add("hidden");
   document.body.classList.add("editing"); window.scrollTo(0,0);
@@ -1099,6 +1160,61 @@ function buildFonts(){
     b.onclick=()=>setDraft({font:k}); box.appendChild(b);
   });
 }
+/* --- Position dans l'éditeur : action immédiate (pas de brouillon) --- */
+let locPrec="quartier";
+function renderLocPreview(){
+  const box=$("pvLoc"); if(!box||!me) return; box.textContent="";
+  const ll=locLine(locs.get(me.uid));
+  if(ll){ const sp=el("span","loc"); sp.innerHTML=ll.innerHTML; box.append(sp); box.classList.remove("ph-empty"); }   // dans l'éditeur : toucher = ouvrir le panneau, pas la carte
+  else { box.textContent="＋ position"; box.classList.add("ph-empty"); }
+}
+function renderLocPanel(){
+  if(!me) return;
+  const l=locs.get(me.uid), fresh=l && Date.now()-l.t<=LOC_MAX_AGE, now=$("locNow");
+  now.innerHTML=PIN;
+  now.append(document.createTextNode(fresh ? l.label+" · partagée "+ago(l.t)+" ("+(l.prec==="precise"?"précise":"quartier")+")" : "Position non partagée"));
+  $("locStop").classList.toggle("hidden",!l);
+  $("locShare").textContent = fresh ? "📍 Mettre à jour ma position" : "📍 Partager ma position";
+  document.querySelectorAll("#locPrec button").forEach(b=>b.classList.toggle("sel",b.dataset.v===locPrec));
+  renderLocPreview();
+}
+document.querySelectorAll("#locPrec button").forEach(b=>b.onclick=()=>{ locPrec=b.dataset.v; renderLocPanel(); });
+function getPosition(precise){
+  return new Promise((res,rej)=>{
+    if(!navigator.geolocation) return rej(new Error("indisponible"));
+    navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy:precise, timeout:15000, maximumAge:60000 });
+  });
+}
+// Nom du quartier / de la ville (OpenStreetMap), facultatif
+async function placeName(lat,lng){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&accept-language=fr&lat=${lat}&lon=${lng}`);
+    const a=(await r.json()).address||{};
+    const city=a.city||a.town||a.village||a.municipality||"";
+    let part=a.city_district||a.suburb||a.quarter||a.neighbourhood||"";
+    part=part.replace(/\s*Arrondissement\b/i," arr.");            // « Paris 11e Arrondissement » → « Paris 11e arr. »
+    if(part && city && part.toLowerCase().startsWith(city.toLowerCase())) return part.slice(0,60);
+    return (part&&city&&part!==city ? part+", "+city : (city||part||"Position")).slice(0,60);
+  }catch(e){ return "Position"; }
+}
+$("locShare").onclick=async()=>{
+  const btn=$("locShare"); btn.disabled=true; btn.textContent="Localisation…";
+  try{
+    const pos=await getPosition(locPrec==="precise");
+    const k = locPrec==="precise" ? 1e4 : 1e2;        // ~11 m ou ~1 km : on arrondit AVANT d'envoyer
+    const lat=Math.round(pos.coords.latitude*k)/k, lng=Math.round(pos.coords.longitude*k)/k;
+    const label=await placeName(lat,lng);
+    await F.setDoc(F.doc(db,"locs",me.uid),{ lat, lng, label, prec:locPrec, t:F.serverTimestamp() });
+    toast("Position partagée avec tes amis");
+  }catch(e){
+    console.warn(e);
+    toast(e && e.code===1 ? "Autorise la localisation dans les réglages du navigateur" : "Position introuvable, réessaie");
+  }finally{ btn.disabled=false; renderLocPanel(); }
+};
+$("locStop").onclick=async()=>{
+  await F.deleteDoc(F.doc(db,"locs",me.uid)).catch(()=>toast("Impossible d'arrêter le partage"));
+  locs.delete(me.uid); toast("Position retirée"); renderLocPanel();
+};
 function openProfile(first){
   buildFonts();
   onboarding=!!first;
