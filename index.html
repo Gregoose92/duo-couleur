@@ -335,6 +335,7 @@
         <input type="text" id="fName" maxlength="20" placeholder="ex. leo" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
         <button class="btn" id="fAddBtn">Ajouter</button>
       </div>
+      <button class="btn ghost" id="myQrBtn">Mon QR « ajoute-moi en ami »</button>
     </div>
     <div class="friends" id="friends"></div>
   </section>
@@ -455,16 +456,26 @@
 <div id="sheet" class="hidden">
   <div class="grab"></div>
   <h3>Inviter dans <span id="shName"></span></h3>
-  <p class="small" style="margin:0 0 10px">Tes amis recevront l'invitation dans leur onglet Groupes.</p>
+  <p class="small" style="margin:0 0 10px">L'invitation arrive dans leur onglet Groupes.</p>
+  <label for="invName">Inviter par pseudo</label>
+  <div class="joinrow">
+    <input type="text" id="invName" maxlength="20" placeholder="ex. leo" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send">
+    <button class="btn" id="invNameBtn">Inviter</button>
+  </div>
+  <label>Mes amis</label>
   <div id="shList"></div>
-  <button class="btn ghost" id="shareBtn">Partager le lien d'invitation</button>
+  <div class="btns" style="margin-top:14px">
+    <button class="btn ghost" id="shQrBtn">QR code du groupe</button>
+    <button class="btn ghost" id="shareBtn">Partager le lien</button>
+  </div>
 </div>
 <div id="full" class="hidden"><b id="fullName"></b><span>toucher pour fermer</span></div>
 <div id="toast"></div>
 <!-- QR code vers le site -->
 <div id="qrBg" class="hidden">
   <div class="qrcard" id="qrCard">
-    <b>WHATMOOD</b>
+    <b id="qrTitle">WHATMOOD</b>
+    <span class="small" id="qrSub" style="margin-top:-6px"></span>
     <div id="qrImg" class="qrimg"></div>
     <div class="qrurl" id="qrUrl"></div>
     <button class="btn" id="qrCopy" style="margin-top:4px">Copier le lien</button>
@@ -527,6 +538,8 @@ let me = null;                       // { uid, username, color }
 let view = "vBoot", tab = "vGroups";
 let onboarding = false, justSignedUp = false;
 let pendingRoom = cleanCode(params.get("groupe") || params.get("salon"));
+let pendingFriend = (params.get("ami")||"").trim().toLowerCase();   // lien / QR « ajoute-moi en ami »
+if(!/^[a-z0-9_.-]{3,20}$/.test(pendingFriend)) pendingFriend="";
 let current = null, currentName = "";
 let unsubMembers=null, hb=null, tick=null;
 let members = new Map(), seenOnline = null;
@@ -711,16 +724,23 @@ function loadQrLib(){
     sc.onload=res; sc.onerror=rej; document.head.appendChild(sc);
   });
 }
-$("qrBtn").onclick=async()=>{
-  $("qrUrl").textContent=SITE_URL; $("qrImg").textContent="…"; $("qrBg").classList.remove("hidden");
+// Fenêtre QR générique : site, groupe ou « ajoute-moi en ami »
+let qrLink=SITE_URL;
+async function showQR(url, title, sub){
+  qrLink=url;
+  $("qrTitle").textContent=title||"WHATMOOD"; $("qrSub").textContent=sub||"";
+  $("qrUrl").textContent=url; $("qrImg").textContent="…"; $("qrBg").classList.remove("hidden");
   try{
     await loadQrLib();
-    const q=qrcode(0,"M"); q.addData(SITE_URL); q.make();
+    const q=qrcode(0,"M"); q.addData(url); q.make();
     $("qrImg").innerHTML=q.createSvgTag({ cellSize:8, margin:2, scalable:true });
   }catch(e){ $("qrImg").textContent="QR indisponible hors connexion — utilise le lien ci-dessous"; }
-};
+}
+$("qrBtn").onclick=()=>showQR(SITE_URL,"WHATMOOD");
 $("qrBg").onclick=e=>{ if(e.target===$("qrBg")) $("qrBg").classList.add("hidden"); };
-$("qrCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(SITE_URL); toast("Lien copié"); }catch(e){ toast(SITE_URL); } };
+$("qrCopy").onclick=async()=>{ try{ await navigator.clipboard.writeText(qrLink); toast("Lien copié"); }catch(e){ toast(qrLink); } };
+const groupURL = code => SITE_URL+"?groupe="+encodeURIComponent(code);
+const friendURL = () => SITE_URL+"?ami="+encodeURIComponent(me.username);
 $("backBtn").onclick = async()=>{ await leaveRoom(); setURL(); show("vGroups"); };
 function setURL(code){ history.replaceState(null,"", code ? "?groupe="+encodeURIComponent(code)+(EMU?"&emu":"") : location.pathname+(EMU?"?emu":"")); }
 
@@ -797,9 +817,18 @@ A.onAuthStateChanged(auth, async user=>{
   startListeners();
   watchLoc(me.uid);
   if(justSignedUp){ justSignedUp=false; openProfile(true); }
-  else if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); }
-  else { tab="vGroups"; show("vGroups"); }
+  else afterLogin();
 });
+// Où aller une fois connecté : lien de groupe, lien « ami », ou onglet Groupes
+async function afterLogin(){
+  if(pendingFriend){
+    const u=pendingFriend; pendingFriend=null;
+    setURL();
+    if(u!==me.username){ await addFriendByUsername(u); if(!pendingRoom){ tab="vFriends"; show("vFriends"); return; } }
+  }
+  if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); }
+  else { tab="vGroups"; show("vGroups"); }
+}
 function renderMe(){ paint($("tabAv"), me.color); $("tabAv").textContent=initial(me.username); }
 
 /* ================= Abonnements globaux ================= */
@@ -853,22 +882,29 @@ function renderFriends(){
     box.appendChild(c);
   });
 }
-// Ajout par pseudo : recherche dans les profils publics
+// Recherche d'un joueur par pseudo dans les profils publics → uid ou null
+async function findUid(u){
+  const s=await F.getDocs(F.query(F.collection(db,"profiles"),F.where("username","==",u),F.limit(1)));
+  return s.empty ? null : s.docs[0].id;
+}
+async function addFriendByUsername(u){
+  try{
+    const id=await findUid(u);
+    if(!id){ toast("Aucun joueur « "+u+" »"); return false; }
+    if(friends.has(id)){ toast(u+" est déjà ton ami"); return true; }
+    await addFriend(id,u); return true;
+  }catch(e){ console.warn(e); toast("Ajout impossible"); return false; }
+}
 async function addByName(){
   const u=$("fName").value.trim().toLowerCase();
   if(!USER_RE.test(u)){ toast("Pseudo invalide"); $("fName").focus(); return; }
   $("fAddBtn").disabled=true;
-  try{
-    const s=await F.getDocs(F.query(F.collection(db,"profiles"),F.where("username","==",u),F.limit(1)));
-    if(s.empty){ toast("Aucun joueur « "+u+" »"); return; }
-    const d=s.docs[0];
-    if(friends.has(d.id)){ toast(u+" est déjà ton ami"); return; }
-    await addFriend(d.id,u); $("fName").value="";
-  }catch(e){ console.warn(e); toast("Ajout impossible"); }
-  finally{ $("fAddBtn").disabled=false; }
+  if(await addFriendByUsername(u)) $("fName").value="";
+  $("fAddBtn").disabled=false;
 }
 $("fAddBtn").onclick=addByName;
 $("fName").addEventListener("keydown",e=>{ if(e.key==="Enter") addByName(); });
+$("myQrBtn").onclick=()=>showQR(friendURL(), me.username, "Scanne pour m'ajouter en ami");
 
 /* ================= Onglet Groupes ================= */
 function renderInvites(snap){
@@ -1044,7 +1080,7 @@ $("inviteBtn").onclick=openSheet;
 function renderSheet(){
   const box=$("shList"); box.textContent="";
   const list=[...friends.values()].filter(f=>f.id!==me.uid);   // on ne s'invite pas soi-même
-  if(!list.length){ box.innerHTML='<p class="small">Tu n\'as pas encore d\'amis dans l\'app : partage le lien ci-dessous. Ceux qui rejoignent deviendront tes amis.</p>'; return; }
+  if(!list.length){ box.innerHTML='<p class="small">Pas encore d\'amis dans l\'app : invite par pseudo ci-dessus, ou fais scanner le QR code du groupe.</p>'; return; }
   list.forEach(f0=>{
     const f=look(f0.id,f0);
     const r=el("div","frow");
@@ -1059,18 +1095,40 @@ function renderSheet(){
       const b=el("button","btn sm","Inviter");
       b.onclick=async()=>{
         b.disabled=true;
-        try{
-          await F.setDoc(F.doc(db,"invites",f.id,"items",current),{ fromUid:me.uid, fromName:me.username, groupName:currentName.slice(0,30), t:F.serverTimestamp() });
-          invited.add(key); renderSheet(); toast(f.name+" est invité");
-        }catch(e){ console.warn(e); b.disabled=false; toast("Invitation impossible"); }
+        if(!await sendInvite(f.id,f.name)) b.disabled=false;
       };
       r.appendChild(b);
     }
     box.appendChild(r);
   });
 }
+// Envoie l'invitation au groupe ouvert (ami ou non)
+async function sendInvite(id, name){
+  try{
+    await F.setDoc(F.doc(db,"invites",id,"items",current),{ fromUid:me.uid, fromName:me.username, groupName:currentName.slice(0,30), t:F.serverTimestamp() });
+    invited.add(current+"|"+id); renderSheet(); toast(name+" est invité");
+    return true;
+  }catch(e){ console.warn(e); toast("Invitation impossible"); return false; }
+}
+// Inviter n'importe quel joueur par son pseudo, même s'il n'est pas (encore) ton ami
+async function inviteByName(){
+  const u=$("invName").value.trim().toLowerCase();
+  if(!USER_RE.test(u)){ toast("Pseudo invalide"); $("invName").focus(); return; }
+  if(u===me.username){ toast("Tu es déjà dans le groupe 😉"); return; }
+  $("invNameBtn").disabled=true;
+  try{
+    const id=await findUid(u);
+    if(!id){ toast("Aucun joueur « "+u+" »"); return; }
+    if(members.has(id) && isOn(members.get(id))){ toast(u+" est déjà là"); return; }
+    if(await sendInvite(id,u)) $("invName").value="";
+  }catch(e){ console.warn(e); toast("Invitation impossible"); }
+  finally{ $("invNameBtn").disabled=false; }
+}
+$("invNameBtn").onclick=inviteByName;
+$("invName").addEventListener("keydown",e=>{ if(e.key==="Enter") inviteByName(); });
+$("shQrBtn").onclick=()=>showQR(groupURL(current), currentName, "Scanne pour rejoindre le groupe");
 $("shareBtn").onclick=async()=>{
-  const url=location.origin+location.pathname+"?groupe="+encodeURIComponent(current);
+  const url=groupURL(current);
   if(navigator.share){ try{ await navigator.share({title:"WHATMOOD",text:"Rejoins le groupe « "+currentName+" » sur WHATMOOD",url}); return; }catch(e){ if(e.name==="AbortError")return; } }
   try{ await navigator.clipboard.writeText(url); toast("Lien copié"); }catch(e){ toast(url); }
 };
@@ -1282,7 +1340,7 @@ $("saveBtn").onclick=async()=>{
   $("saveBtn").disabled=false;
   if(onboarding){
     onboarding=false; toast("Profil créé !");
-    if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); } else { show("vGroups"); }
+    afterLogin();
   } else toast("Profil enregistré");
 };
 
