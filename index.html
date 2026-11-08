@@ -112,7 +112,7 @@
   .preview.sq{width:min(100%,50vh);aspect-ratio:1;min-height:0;margin:0 auto;padding:6%;gap:4%;position:relative;cursor:pointer;
     border-radius:28px;transition:background .25s ease,box-shadow .25s ease,transform .2s ease}
   .preview.sq .pn{cursor:pointer;padding:2px 10px;border-radius:14px}
-  .preview.sq .place,.preview.sq .act{cursor:pointer}
+  .preview.sq .place,.preview.sq .act,.preview.sq .wish{cursor:pointer}
   .preview.sq .pstat{font-size:min(4.4vw,2.3vh);cursor:pointer;padding:2px 8px;border-radius:10px}
   .preview.sq .pav{cursor:pointer;font-size:min(3.8vw,2vh)}
   .preview.sq .ph-empty{opacity:.55;font-style:normal;border:1.5px dashed currentColor;border-radius:999px;padding:3px 12px}
@@ -128,6 +128,11 @@
   .pcard .act{position:absolute;top:6cqw;left:38cqw;width:24cqw;height:24cqw}
   .pcard .act svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 1px rgba(255,255,255,.18))}
   .pcard .act.ph-empty{width:auto;height:auto;left:50%;transform:translateX(-50%);font-size:4.2cqw;padding:3px 10px;white-space:nowrap}
+  .pcard .wish{position:absolute;top:6cqw;right:6cqw;width:24cqw;height:24cqw}
+  .pcard .wish svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 1px rgba(255,255,255,.18))}
+  .pcard .wish.ph-empty{width:auto;height:auto;font-size:4.2cqw;padding:3px 10px;white-space:nowrap}
+  .friend.pcard .wish{top:5cqw;right:5cqw;width:29cqw;height:29cqw}
+  .friend.pcard .wish svg{stroke-width:2.6}
   .friend.pcard .place{top:5cqw;left:5cqw;width:29cqw;height:29cqw}
   .friend.pcard .act{top:5cqw;left:35.5cqw;width:29cqw;height:29cqw}
   .friend.pcard .act svg{stroke-width:2.6}
@@ -378,6 +383,7 @@
     <div class="preview sq pcard" id="pv" data-ed="color">
       <div class="place" id="pvAv" data-ed="place"></div>
       <div class="act" id="pvAct" data-ed="act"></div>
+      <div class="wish" id="pvWish" data-ed="wish"></div>
       <div class="pn" id="pvName" data-ed="font"></div>
       <div class="pstat" id="pvStatus" data-ed="status"></div>
       <div class="pav" id="pvAvail" data-ed="status"></div>
@@ -409,6 +415,7 @@
     </div>
     <div data-sec="place"><div class="placelist" id="places"></div></div>
     <div data-sec="act"><div class="placelist" id="acts"></div></div>
+    <div data-sec="wish"><div class="placelist" id="wishes"></div></div>
     <div data-sec="font"><div class="fontlist" id="fonts"></div></div>
     <div data-sec="loc">
       <div class="locbox">
@@ -589,6 +596,21 @@ const ACTS = {            // clé → [nom, tracés SVG] — même style que les
   lecture:["Lecture",'<path d="M3 5.5c3-1.2 6-1 9 1 3-2 6-2.2 9-1V19c-3-1.2-6-1-9 1-3-2-6-2.2-9-1z"/><path d="M12 6.5V20"/>'],
   chill:["Chill",'<path d="M4.5 11V8.5A2.5 2.5 0 0 1 7 6h10a2.5 2.5 0 0 1 2.5 2.5V11"/><path d="M2.5 13.5a2 2 0 0 1 4 0V15h11v-1.5a2 2 0 0 1 4 0V18h-19z"/><path d="M5 18v2M19 18v2"/>']
 };
+const WISHES = {          // « envie de » — même style que lieux et activités
+  sortir:["Sortir",'<path d="M14 4H6v16h8"/><path d="M10 12h10.5"/><path d="M17.5 8.5 21 12l-3.5 3.5"/>'],
+  boire:["Boire un verre",'<path d="M5 8.5h10V19a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2z"/><path d="M15 11h2a2 2 0 0 1 2 2v2.5a2 2 0 0 1-2 2h-2"/><path d="M5 8.5A2.5 2.5 0 0 1 7.5 5a3 3 0 0 1 5 0A2.5 2.5 0 0 1 15 8.5"/><path d="M8.5 12.5v5M11.5 12.5v5"/>'],
+  manger:["Manger",'<path d="M12 21 3.5 6c5.3-2.7 11.7-2.7 17 0z"/><path d="M5 8.7c4.5-2.1 9.5-2.1 14 0"/><circle cx="10.5" cy="11" r="1" fill="currentColor"/><circle cx="13.8" cy="13.5" r="1" fill="currentColor"/><circle cx="11.6" cy="16.2" r="1" fill="currentColor"/>'],
+  danser:["Danser",'<circle cx="13.5" cy="4.5" r="2"/><path d="M13 7l-1.5 6 3 3v5"/><path d="M8 8.5l4.5-1.5 3.5 3"/><path d="M11.5 13 8 15.5 6 20"/>'],
+  fete:["Faire la fête",'<path d="M4 20.5 9 8l7 7z"/><path d="M8 11.5l4.5 4.5"/><path d="M14 4.5l.8-1.8M18.5 8l2-.8M16.8 5.8l1.4-1.4M20 12.5l1.6.4M11 3.5l.3 1"/>'],
+  monde:["Voir du monde",'<circle cx="12" cy="8" r="3"/><path d="M6.5 19.5a5.5 5.5 0 0 1 11 0"/><circle cx="5" cy="10" r="2.2"/><path d="M1.8 18a3.4 3.4 0 0 1 4.2-3.4"/><circle cx="19" cy="10" r="2.2"/><path d="M22.2 18a3.4 3.4 0 0 0-4.2-3.4"/>'],
+  chiller:["Chiller",'<path d="M3 5v15M21 5v15"/><path d="M3 10c4 6.5 14 6.5 18 0"/><path d="M8 8.5c1-1.2 2-1.2 3 0s2 1.2 3 0"/>'],
+  dormir:["Dormir",'<path d="M3.5 8.5h5l-5 6h5"/><path d="M11.5 3.5h4l-4 5h4"/><path d="M14.5 13.5h6l-6 7h6"/>'],
+  rentrer:["Rentrer",'<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v10h13V10"/><path d="M12 10.5v6.5M9.3 14.3 12 17l2.7-2.7"/>'],
+  bouger:["Sport",'<path d="M2.5 17h12l4.5 1.3c1.3.4 2.5 1.1 2.5 2.2H2.5z"/><path d="M2.5 17l2-8.5 4 1 1 3 5 1.8"/><path d="M8 13.5l1.5-1M10.5 15l1.4-1"/>'],
+  calin:["Câlin",'<path d="M12 20s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.3a4.3 4.3 0 0 1 7.5 2.5C19.5 15.4 12 20 12 20z"/>'],
+  voyager:["Voyager",'<rect x="4.5" y="7" width="15" height="13" rx="2.2"/><path d="M9 7V4.8h6V7"/><path d="M9 11v5.5M15 11v5.5"/>'],
+  saispas:["Sais pas",'<circle cx="12" cy="12" r="9"/><path d="M9.3 9.4a2.8 2.8 0 1 1 4 2.5c-.8.4-1.3 1-1.3 2"/><circle cx="12" cy="17" r="1" fill="currentColor"/>']
+};
 // Icône à traits (lieu ou activité), couleur = currentColor (le contour)
 function lineIcon(table, key, cls){
   const e=el("div",cls);
@@ -598,6 +620,7 @@ function lineIcon(table, key, cls){
   return e;
 }
 const actIcon = k => lineIcon(ACTS, k, "act");
+const wishIcon = k => lineIcon(WISHES, k, "wish");
 // Icône « lieu » : SVG à traits, prend la couleur du contour (currentColor)
 function placeIcon(key, cls){
   const e=el("div","place"+(cls?" "+cls:""));
@@ -619,6 +642,7 @@ function watchProfile(id){
       color:HEX_RE.test(d.color)?d.color:null,
       place:PLACES[d.place]?d.place:"",
       act:ACTS[d.act]?d.act:"",
+      wish:WISHES[d.wish]?d.wish:"",
       status:typeof d.status==="string"?d.status.slice(0,60):"",
       avail:AVAIL[d.avail]?d.avail:"",
       font:FONTS[d.font]?d.font:"inter",
@@ -663,7 +687,7 @@ function locLine(loc, cls){
 }
 function look(id, fallback){
   const pr=profiles.get(id)||{};
-  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
+  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", wish:pr.wish||"", status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
 }
 function face(name, mood){ return mood || initial(name); }
 function availEl(avail, extra){
@@ -791,7 +815,7 @@ A.onAuthStateChanged(auth, async user=>{
   // profil public : on lit humeur/statut/dispo, puis on resynchronise pseudo + couleur (merge = ne rien effacer)
   const pub=await F.getDoc(F.doc(db,"profiles",me.uid)).catch(()=>null);
   const pd=pub&&pub.exists()?pub.data():{};
-  me.place=PLACES[pd.place]?pd.place:""; me.act=ACTS[pd.act]?pd.act:""; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter"; me.edge=HEX_RE.test(pd.edge||"")?pd.edge:"";
+  me.place=PLACES[pd.place]?pd.place:""; me.act=ACTS[pd.act]?pd.act:""; me.wish=WISHES[pd.wish]?pd.wish:""; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter"; me.edge=HEX_RE.test(pd.edge||"")?pd.edge:"";
   F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color },{ merge:true }).catch(e=>console.warn("profil public",e));
   renderMe();
   startListeners();
@@ -838,6 +862,7 @@ function renderFriends(){
     const c=el("div","friend pcard"); paintCard(c,f.color,f.edge);
     if(f.place){ const ic=placeIcon(f.place); ic.style.color=edgeOf(f); c.append(ic); }
     if(f.act){ const ic=actIcon(f.act); ic.style.color=edgeOf(f); c.append(ic); }
+    if(f.wish){ const ic=wishIcon(f.wish); ic.style.color=edgeOf(f); c.append(ic); }
     c.append(bigName(f.name,f.font));
     if(f.status) c.append(el("div","fst","« "+f.status+" »"));
     const ll=locLine(f.loc,"sm"); if(ll) c.append(ll);
@@ -1005,6 +1030,7 @@ function playerCard(p0,isMe){
   const c=el("div","player pcard"+(away?" away":"")); paintCard(c,p.color,p.edge);
   if(p.place){ const ic=placeIcon(p.place); ic.style.color=edgeOf(p); c.append(ic); }
   if(p.act){ const ic=actIcon(p.act); ic.style.color=edgeOf(p); c.append(ic); }
+  if(p.wish){ const ic=wishIcon(p.wish); ic.style.color=edgeOf(p); c.append(ic); }
   c.append(bigName(p.name,p.font));
   if(p.status) c.append(el("div","pstatus","« "+p.status+" »"));
   const ll=locLine(isMe?locs.get(me.uid):p.loc); if(ll) c.append(ll);
@@ -1024,7 +1050,7 @@ function playerCard(p0,isMe){
 function renderPlayers(){
   if(!me||view!=="vRoom") return;
   const box=$("players"); box.textContent="";
-  box.appendChild(playerCard({ name:me.username, color:me.color, place:me.place, act:me.act, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
+  box.appendChild(playerCard({ name:me.username, color:me.color, place:me.place, act:me.act, wish:me.wish, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
   const list=[...members.values()].sort((a,b)=>(isOn(b)-isOn(a))||a.name.localeCompare(b.name));
   list.forEach(p=>box.appendChild(playerCard(p,false)));
   if(!list.some(isOn)){
@@ -1077,7 +1103,7 @@ $("shareBtn").onclick=async()=>{
 
 /* ================= Onglet Profil ================= */
 // Brouillon du profil : rien n'est publié avant « Enregistrer »
-let draft={ color:"#30b0ff", place:"", act:"", status:"", avail:"" };
+let draft={ color:"#30b0ff", place:"", act:"", wish:"", status:"", avail:"" };
 /* --- Roue de couleur (teinte = angle, saturation = distance au centre) + luminosité --- */
 function hsvToHex(h,sat,v){ const f=n=>{ const k=(n+h/60)%6; return v-v*sat*Math.max(0,Math.min(k,4-k,1)); };
   return "#"+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
@@ -1133,6 +1159,9 @@ $("edgeAuto").onclick=()=>{ setDraft({ edge:"" }); setWheelTarget("edge"); };
 { const none=el("button","none","aucune"); none.dataset.a=""; none.onclick=()=>setDraft({act:""}); $("acts").appendChild(none);
   Object.keys(ACTS).forEach(k=>{ const b=el("button"); b.dataset.a=k; b.append(...actIcon(k).childNodes, document.createTextNode(ACTS[k][0]));
     b.onclick=()=>setDraft({act:k}); $("acts").appendChild(b); }); }
+{ const none=el("button","none","aucune"); none.dataset.w=""; none.onclick=()=>setDraft({wish:""}); $("wishes").appendChild(none);
+  Object.keys(WISHES).forEach(k=>{ const b=el("button"); b.dataset.w=k; b.append(...wishIcon(k).childNodes, document.createTextNode(WISHES[k][0]));
+    b.onclick=()=>setDraft({wish:k}); $("wishes").appendChild(b); }); }
 $("statusIn").addEventListener("input",e=>setDraft({status:e.target.value.slice(0,60)}));
 document.querySelectorAll("#avail button").forEach(b=>b.onclick=()=>setDraft({avail: draft.avail===b.dataset.v ? "" : b.dataset.v}));
 function setDraft(patch){
@@ -1144,6 +1173,8 @@ function setDraft(patch){
   if(draft.place){ pv.append(...placeIcon(draft.place).childNodes); pv.style.color=edgeOf(draft); } else { pv.textContent="＋ lieu"; pv.style.color=""; }
   const pa2=$("pvAct"); pa2.textContent=""; pa2.classList.toggle("ph-empty",!draft.act);
   if(draft.act){ pa2.append(...actIcon(draft.act).childNodes); pa2.style.color=edgeOf(draft); } else { pa2.textContent="＋ activité"; pa2.style.color=""; }
+  const pw=$("pvWish"); pw.textContent=""; pw.classList.toggle("ph-empty",!draft.wish);
+  if(draft.wish){ pw.append(...wishIcon(draft.wish).childNodes); pw.style.color=edgeOf(draft); } else { pw.textContent="＋ envie"; pw.style.color=""; }
   $("pvName").replaceChildren(bigName(me.username,draft.font));
   document.querySelectorAll("#fonts button").forEach(b=>b.classList.toggle("sel",b.dataset.f===draft.font));
   // emplacements vides : affichés en pointillé, uniquement dans l'éditeur
@@ -1154,10 +1185,11 @@ function setDraft(patch){
   $("stCount").textContent=draft.status.length+"/60";
   document.querySelectorAll("#places button").forEach(b=>b.classList.toggle("sel",b.dataset.p===draft.place));
   document.querySelectorAll("#acts button").forEach(b=>b.classList.toggle("sel",b.dataset.a===draft.act));
+  document.querySelectorAll("#wishes button").forEach(b=>b.classList.toggle("sel",b.dataset.w===draft.wish));
   document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
 /* --- Édition directe sur la carte --- */
-const ED_TITLES={ loc:"Ma position", color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", font:"Police du pseudo", status:"Statut & disponibilité" };
+const ED_TITLES={ loc:"Ma position", color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", wish:"J'ai envie de…", font:"Police du pseudo", status:"Statut & disponibilité" };
 let edOpen=null;
 function openEditor(sec){
   edOpen=sec;
@@ -1262,7 +1294,7 @@ function openProfile(first){
   $("onboard").classList.toggle("hidden",!onboarding);
   $("logoutBtn").classList.toggle("hidden",onboarding);
   $("saveBtn").textContent=onboarding?"C'est parti →":"Enregistrer";
-  draft={ color:me.color, place:me.place||"", act:me.act||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
+  draft={ color:me.color, place:me.place||"", act:me.act||"", wish:me.wish||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
   wTarget="color"; Object.assign(hsv, hexToHsv(me.color)); if(hsv.v<.12) hsv.v=.12;
   $("statusIn").value=draft.status;
   setDraft({});
@@ -1275,8 +1307,8 @@ $("saveBtn").onclick=async()=>{
   const status=draft.status.replace(/\s+/g," ").trim().slice(0,60);
   try{
     await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft.color });
-    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft.color, place:draft.place, act:draft.act, status, avail:draft.avail, font:draft.font, edge:draft.edge });
-    Object.assign(me,{ color:draft.color, place:draft.place, act:draft.act, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
+    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, status, avail:draft.avail, font:draft.font, edge:draft.edge });
+    Object.assign(me,{ color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
     if(current) writePresence(true);          // la couleur suit dans le groupe ouvert
   }catch(e){ console.warn(e); toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
   $("saveBtn").disabled=false;

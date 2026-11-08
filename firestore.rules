@@ -50,11 +50,11 @@ service cloud.firestore {
       }
     }
 
-    // Profil public : pseudo, couleur, lieu, activité, statut, disponibilité, police, contour — visible par les connectés
+    // Profil public : pseudo, couleur, lieu, activité, envie, statut, disponibilité, police, contour — visible par les connectés
     match /profiles/{uid} {
       allow read: if signedIn();
       allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'place', 'act', 'status', 'avail', 'font', 'edge'])
+        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'place', 'act', 'wish', 'status', 'avail', 'font', 'edge'])
         && request.resource.data.username == myUsername()
         && isHex(request.resource.data.color)
         && (!('mood' in request.resource.data)   || (request.resource.data.mood is string && request.resource.data.mood.size() <= 16))
@@ -63,6 +63,7 @@ service cloud.firestore {
         && (!('font' in request.resource.data)   || request.resource.data.font in ['inter','bebas','bungee','righteous','orbitron','marker','pacifico','caveat','playfair','monoton','pixel'])
         && (!('place' in request.resource.data)  || request.resource.data.place in ['', 'maison','metro','bar','parc','ecole','ville','campagne','travail','resto','cafe','sport','plage','concert','cine','voyage','route','montagne','soiree','shopping','dodo'])
         && (!('act' in request.resource.data)    || request.resource.data.act in ['', 'after','shopping','bouffe','dodo','dancing','working','sport','musique','apero','gaming','lecture','chill'])
+        && (!('wish' in request.resource.data)   || request.resource.data.wish in ['', 'sortir','boire','manger','danser','fete','monde','chiller','dormir','rentrer','bouger','calin','voyager','saispas'])
         && (!('edge' in request.resource.data)   || request.resource.data.edge == '' || isHex(request.resource.data.edge));
       allow delete: if false;
     }
