@@ -131,7 +131,28 @@
   .pcard .wish{position:absolute;top:6cqw;right:6cqw;width:24cqw;height:24cqw}
   .pcard .wish svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 1px rgba(255,255,255,.18))}
   .pcard .wish.ph-empty{width:auto;height:auto;font-size:4.2cqw;padding:3px 10px;white-space:nowrap}
-  /* Bouton ▶ musique en haut à droite : les 3 logos se resserrent (classe .hm) */
+  /* Rangée du haut des cartes : [mood][lieu][activité][envie][▶] en colonnes égales */
+  .pcard .toprow{position:absolute;top:6cqw;left:5cqw;right:5cqw;display:flex;justify-content:space-between;align-items:center;gap:2cqw}
+  .pcard .toprow>*{position:static!important;flex:0 0 auto;width:17cqw!important;height:17cqw!important;transform:none!important;margin:0!important}
+  .pcard .toprow svg{width:100%;height:100%;display:block}
+  .pcard .toprow .ph-empty{width:17cqw!important;height:auto!important;font-size:3.1cqw!important;padding:2px 0!important;text-align:center;white-space:normal;line-height:1.1;border-radius:8px!important}
+  .pcard .toprow .mbtnslot:empty{visibility:hidden}
+  .pcard .toprow .mbtn{width:17cqw!important;height:17cqw!important;position:relative!important}   /* la note ♫ se place sur le bouton */
+  .mbtnslot .mbtn{position:relative!important;top:auto!important;right:auto!important;width:100%!important;height:100%!important}
+  .player.pcard .bign,.preview.sq .pn{margin-top:14cqw}
+  .mring svg text{paint-order:normal}
+  .mvbig{font-size:54px;font-weight:800;text-align:center;line-height:1;font-variant-numeric:tabular-nums}
+  .mvrange{background:linear-gradient(90deg,#4a5068,#7cf7c5)!important;margin-top:10px}
+  .mvlab{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:6px}
+  .mvpre{display:flex;gap:6px;margin-top:10px}
+  .mvpre button{flex:1;background:#0f1114;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:9px 0;font-weight:700}
+  .qmood{grid-column:1/-1;display:flex;flex-direction:column;gap:4px}
+  .qmood .btn{margin-top:10px}
+  .ficon .mring{width:34px;height:34px}
+  .ficon .mring svg{width:100%;height:100%}
+  .nowslots{grid-template-columns:repeat(4,1fr)!important}
+  .slot .si .mring,.slot .si svg{width:100%;height:100%}
+  /* Bouton ▶ musique (ancienne mise en page .hm conservée sans effet) */
   .pcard.hm .place{left:5cqw;width:21cqw;height:21cqw}
   .pcard.hm .act{left:28.5cqw;width:21cqw;height:21cqw}
   .pcard.hm .wish{right:auto;left:52cqw;width:21cqw;height:21cqw}
@@ -266,7 +287,7 @@
   .friends{display:block}
   /* ===== Tableau d'amis ===== */
   .ftable{display:flex;flex-direction:column;gap:6px}
-  .frow2{display:grid;grid-template-columns:minmax(0,1.9fr) repeat(3,minmax(0,1fr)) 30px;align-items:center;
+  .frow2{display:grid;grid-template-columns:minmax(0,1.7fr) repeat(4,minmax(0,1fr)) 28px;align-items:center;
     border-radius:14px;min-height:62px;cursor:pointer;overflow:hidden;transition:background .3s}
   .frow2.new{animation:pop .3s ease}
   .frow2 .fc{display:flex;align-items:center;justify-content:center;min-width:0;height:100%;padding:6px 4px;
@@ -414,6 +435,7 @@
     <div class="nowbar" id="nowBar">
       <div class="nowhead"><b>Moi maintenant</b><span id="nowAge"></span></div>
       <div class="nowslots">
+        <button class="slot" data-k="mv"><div class="si"></div><span class="sl">Mood</span></button>
         <button class="slot" data-k="place"><div class="si"></div><span class="sl">Lieu</span></button>
         <button class="slot" data-k="act"><div class="si"></div><span class="sl">Activité</span></button>
         <button class="slot" data-k="wish"><div class="si"></div><span class="sl">Envie</span></button>
@@ -473,10 +495,13 @@
     <div class="onboard hidden" id="onboard"><h3>Bienvenue 👋</h3><p class="small" style="margin:0">Crée ton profil : c'est ce que tes amis verront.</p></div>
     <!-- La carte carrée EST l'éditeur : on touche un élément pour le modifier -->
     <div class="preview sq pcard" id="pv" data-ed="color">
-      <div class="place" id="pvAv" data-ed="place"></div>
-      <div class="act" id="pvAct" data-ed="act"></div>
-      <div class="wish" id="pvWish" data-ed="wish"></div>
-      <div id="pvMbtn"></div>
+      <div class="toprow" id="pvTop">
+        <div class="mring" id="pvMv" data-ed="mv"></div>
+        <div class="place" id="pvAv" data-ed="place"></div>
+        <div class="act" id="pvAct" data-ed="act"></div>
+        <div class="wish" id="pvWish" data-ed="wish"></div>
+        <div id="pvMbtn" class="mbtnslot"></div>
+      </div>
       <div class="pn" id="pvName" data-ed="font"></div>
       <div class="pstat" id="pvStatus" data-ed="status"></div>
       <div class="pav" id="pvAvail" data-ed="status"></div>
@@ -511,6 +536,12 @@
     <div data-sec="act"><div class="placelist" id="acts"></div></div>
     <div data-sec="wish"><div class="placelist" id="wishes"></div></div>
     <div data-sec="font"><div class="fontlist" id="fonts"></div></div>
+    <div data-sec="mv">
+      <div class="mvbig" id="mvBig">—</div>
+      <input type="range" id="mvIn" min="0" max="100" step="1" value="50" aria-label="Mood de 0 à 100" class="mvrange">
+      <div class="mvlab"><span>0 · au plus bas</span><span>100 · au top</span></div>
+      <button class="btn ghost" id="mvClear" style="margin-top:10px">Ne pas indiquer</button>
+    </div>
     <div data-sec="music">
       <div class="genres" id="genres"></div>
       <label for="musicIn">Ou tape ton style</label>
@@ -771,6 +802,18 @@ function musicChip(p, cls){
   e.addEventListener("click",ev=>{ ev.stopPropagation(); ev.preventDefault(); openMusic(p); });
   return e;
 }
+/* ===== Mood 0–100 : anneau de jauge avec le chiffre au centre (couleur = contour) ===== */
+const validMv = v => Number.isInteger(v) && v>=0 && v<=100;
+function moodRing(v, cls){
+  const e=el("div","mring"+(cls?" "+cls:""));
+  if(!validMv(v)) return e;
+  const C=2*Math.PI*9.2, d=(v/100)*C;
+  e.innerHTML=`<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-opacity=".25" stroke-width="2.6"/>`+
+    `<circle cx="12" cy="12" r="9.2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-dasharray="${d} ${C}" transform="rotate(-90 12 12)"/>`+
+    `<text x="12" y="12.2" text-anchor="middle" dominant-baseline="central" fill="currentColor" font-size="${v===100?7.2:8.6}" font-weight="800" font-family="-apple-system,Inter,sans-serif">${v}</text></svg>`;
+  e.title="Mood "+v+"/100";
+  return e;
+}
 // Bouton rond ▶ (couleur du contour) qui lance le mood musical du joueur
 function musicButton(p){
   if(!p.music && !p.musicUrl) return null;
@@ -859,6 +902,7 @@ function watchProfile(id){
       wish:WISHES[d.wish]?d.wish:"",
       st:d.st&&typeof d.st.toMillis==="function"?d.st.toMillis():0,
       music:typeof d.music==="string"?d.music.slice(0,28):"",
+      mv:validMv(d.mv)?d.mv:-1,
       musicUrl:typeof d.musicUrl==="string"&&musicHost(d.musicUrl)?d.musicUrl:"",
       status:typeof d.status==="string"?d.status.slice(0,60):"",
       avail:AVAIL[d.avail]?d.avail:"",
@@ -904,7 +948,7 @@ function locLine(loc, cls){
 }
 function look(id, fallback){
   const pr=profiles.get(id)||{};
-  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", wish:pr.wish||"", music:pr.music||"", musicUrl:pr.musicUrl||"", st:pr.st||0, status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
+  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", wish:pr.wish||"", music:pr.music||"", musicUrl:pr.musicUrl||"", mv:validMv(pr.mv)?pr.mv:-1, st:pr.st||0, status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
 }
 function face(name, mood){ return mood || initial(name); }
 function availEl(avail, extra){
@@ -1033,6 +1077,7 @@ A.onAuthStateChanged(auth, async user=>{
   const pub=await F.getDoc(F.doc(db,"profiles",me.uid)).catch(()=>null);
   const pd=pub&&pub.exists()?pub.data():{};
   me.place=PLACES[pd.place]?pd.place:""; me.act=ACTS[pd.act]?pd.act:""; me.wish=WISHES[pd.wish]?pd.wish:""; me.st=pd.st&&typeof pd.st.toMillis==="function"?pd.st.toMillis():0; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter"; me.edge=HEX_RE.test(pd.edge||"")?pd.edge:"";
+  me.mv=validMv(pd.mv)?pd.mv:-1;
   me.music=typeof pd.music==="string"?pd.music.slice(0,28):""; me.musicUrl=typeof pd.musicUrl==="string"&&musicHost(pd.musicUrl)?pd.musicUrl:"";
   F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color },{ merge:true }).catch(e=>console.warn("profil public",e));
   renderMe();
@@ -1078,6 +1123,9 @@ function renderNowBar(){
   bar.classList.toggle("stale", fr!=="ok");
   bar.querySelectorAll(".slot").forEach(b=>{
     const k=b.dataset.k, key=me[k], si=b.querySelector(".si"); si.textContent="";
+    if(k==="mv"){ si.style.color=edge;
+      if(validMv(me.mv)){ si.append(...moodRing(me.mv).childNodes); } else { si.append(el("span","plus","＋")); si.style.color=""; }
+      b.querySelector(".sl").textContent="Mood"; return; }
     const tbl=QTABLES[k][0];
     if(key && tbl[key]){ si.append(...lineIcon(tbl,key,"x").childNodes); si.style.color=edge; b.querySelector(".sl").textContent=tbl[key][0]; }
     else { si.append(el("span","plus","＋")); si.style.color=""; b.querySelector(".sl").textContent={place:"Lieu",act:"Activité",wish:"Envie"}[k]; }
@@ -1087,7 +1135,7 @@ function renderNowBar(){
 }
 // Enregistre l'état tout de suite (sans passer par l'éditeur) et l'horodate
 async function quickSave(patch){
-  const rec={ username:me.username, color:me.color, place:me.place||"", act:me.act||"", wish:me.wish||"", status:me.status||"",
+  const rec={ username:me.username, color:me.color, mv:validMv(me.mv)?me.mv:-1, place:me.place||"", act:me.act||"", wish:me.wish||"", status:me.status||"",
               avail:me.avail||"", font:me.font||"inter", edge:me.edge||"", music:me.music||"", musicUrl:me.musicUrl||"", ...patch, st:F.serverTimestamp() };
   try{ await F.setDoc(F.doc(db,"profiles",me.uid), rec, { merge:true }); Object.assign(me,patch); me.st=Date.now(); renderNowBar(); scheduleRender(); }
   catch(e){ console.warn(e); toast("Mise à jour impossible"); }
@@ -1107,7 +1155,21 @@ function openQuickMusic(){
   $("qBg").classList.remove("hidden"); $("qSheet").classList.remove("hidden");
 }
 function closeQuick(){ $("qBg").classList.add("hidden"); $("qSheet").classList.add("hidden"); }
-document.querySelectorAll("#nowBar .slot").forEach(b=>b.onclick=()=>openQuick(b.dataset.k));
+document.querySelectorAll("#nowBar .slot").forEach(b=>b.onclick=()=> b.dataset.k==="mv" ? openQuickMood() : openQuick(b.dataset.k));
+// Choix rapide du mood : curseur 0–100 + raccourcis, enregistré à la validation
+function openQuickMood(){
+  $("qTitle").textContent="Mon mood (0–100)"; const box=$("qList"); box.textContent="";
+  let v=validMv(me.mv)?me.mv:50;
+  const wrap=el("div","qmood"); const big=el("div","mvbig",String(v));
+  const rg=document.createElement("input"); rg.type="range"; rg.min=0; rg.max=100; rg.value=v; rg.className="mvrange";
+  rg.oninput=()=>{ v=parseInt(rg.value,10); big.textContent=v; };
+  const pre=el("div","mvpre"); [0,25,50,75,100].forEach(n=>{ const b=el("button",null,String(n)); b.onclick=()=>{ v=n; rg.value=n; big.textContent=n; }; pre.append(b); });
+  const ok=el("button","btn","Valider"); ok.onclick=()=>{ closeQuick(); quickSave({mv:v}); toast("Mood "+v+"/100"); };
+  const clr=el("button","btn ghost","Ne pas indiquer"); clr.style.marginTop="0"; clr.onclick=()=>{ closeQuick(); quickSave({mv:-1}); };
+  wrap.append(big, rg, el("div","mvlab"), pre, ok, clr); wrap.querySelector(".mvlab").innerHTML="<span>0 · au plus bas</span><span>100 · au top</span>";
+  box.append(wrap);
+  $("qBg").classList.remove("hidden"); $("qSheet").classList.remove("hidden");
+}
 $("qBg").onclick=closeQuick; $("qClose").onclick=closeQuick;
 $("nowMusic").onclick=openQuickMusic;
 $("mBg").onclick=closeMusic; $("mClose").onclick=closeMusic;
@@ -1121,7 +1183,7 @@ function renderFriends(){
   }
   const tbl=el("div","ftable");
   const head=el("div","frow2 fhead");
-  ["Pseudo","Lieu","Activité","Envie",""].forEach(t=>head.append(el("div","fc",t)));
+  ["Pseudo","Mood","Lieu","Activité","Envie",""].forEach(t=>head.append(el("div","fc",t)));
   tbl.append(head);
   // toi d'abord, puis ordre alphabétique
   const list=[...friends.values()].map(f0=>look(f0.id,f0))
@@ -1144,7 +1206,11 @@ function renderFriends(){
     else if(f.id===me.uid) sub.append(el("span","me","toi"));
     n.append(sub);
     r.append(n);
-    // 2-4. icônes lieu / activité / envie, couleur du contour
+    // 2. mood 0–100
+    { const c=el("div","fc ficon"); c.style.color=edge;
+      if(fr!=="expired" && validMv(f.mv)){ const r=moodRing(f.mv); if(fr==="stale") r.classList.add("stale-ic"); c.append(r); } else c.append(el("span","dash","—"));
+      r.append(c); }
+    // 3-5. icônes lieu / activité / envie, couleur du contour
     stateIcons(f).forEach(([mk,k])=>{
       const c=el("div","fc ficon");
       if(k){ const ic=mk(k); ic.style.color=edge; if(fr==="stale") ic.classList.add("stale-ic"); c.append(ic); } else c.append(el("span","dash","—"));
@@ -1352,9 +1418,12 @@ function playerCard(p0,isMe){
   const p = isMe ? p0 : look(p0.id,p0);
   const away=!isMe && !isOn(p);
   const c=el("div","player pcard"+(away?" away":"")); paintCard(c,p.color,p.edge);
-  const fr=freshness(p);
-  stateIcons(p).forEach(([mk,k])=>{ if(k){ const ic=mk(k); ic.style.color=edgeOf(p); if(fr==="stale") ic.classList.add("stale-ic"); c.append(ic); } });
-  if(fr!=="expired"){ const mb=musicButton({...p, name:isMe?"":p.name}); if(mb){ c.classList.add("hm"); c.append(mb); } }
+  const fr=freshness(p), top=el("div","toprow"); top.style.color=edgeOf(p);
+  const ring=moodRing(fr==="expired"?-1:p.mv); if(fr==="stale") ring.classList.add("stale-ic"); top.append(ring);
+  // une case par logo, vide si non renseigné : les colonnes restent alignées d'une carte à l'autre
+  stateIcons(p).forEach(([mk,k])=>{ const ic=k?mk(k):el("div","slotv"); if(k&&fr==="stale") ic.classList.add("stale-ic"); top.append(ic); });
+  if(fr!=="expired"){ const mb=musicButton({...p, name:isMe?"":p.name}); if(mb) top.append(mb); }
+  c.append(top);
   c.append(bigName(p.name,p.font));
   if(p.status) c.append(el("div","pstatus","« "+p.status+" »"));
   if(fr!=="expired"){ const mc=musicChip(p); if(mc) c.append(mc); }
@@ -1377,7 +1446,7 @@ function playerCard(p0,isMe){
 function renderPlayers(){
   if(!me||view!=="vRoom") return;
   const box=$("players"); box.textContent="";
-  box.appendChild(playerCard({ name:me.username, color:me.color, place:me.place, act:me.act, wish:me.wish, music:me.music, musicUrl:me.musicUrl, st:me.st, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
+  box.appendChild(playerCard({ name:me.username, color:me.color, mv:me.mv, place:me.place, act:me.act, wish:me.wish, music:me.music, musicUrl:me.musicUrl, st:me.st, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
   const list=[...members.values()].sort((a,b)=>(isOn(b)-isOn(a))||a.name.localeCompare(b.name));
   list.forEach(p=>box.appendChild(playerCard(p,false)));
   if(!list.some(isOn)){
@@ -1430,7 +1499,7 @@ $("shareBtn").onclick=async()=>{
 
 /* ================= Onglet Profil ================= */
 // Brouillon du profil : rien n'est publié avant « Enregistrer »
-let draft={ color:"#30b0ff", place:"", act:"", wish:"", status:"", avail:"", music:"", musicUrl:"" };
+let draft={ color:"#30b0ff", mv:-1, place:"", act:"", wish:"", status:"", avail:"", music:"", musicUrl:"" };
 /* --- Roue de couleur (teinte = angle, saturation = distance au centre) + luminosité --- */
 function hsvToHex(h,sat,v){ const f=n=>{ const k=(n+h/60)%6; return v-v*sat*Math.max(0,Math.min(k,4-k,1)); };
   return "#"+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
@@ -1495,13 +1564,17 @@ function setDraft(patch){
   Object.assign(draft,patch);
   renderLocPreview();
   renderMusicPreview();
+  { const r=$("pvMv"); r.innerHTML=""; r.classList.toggle("ph-empty",!validMv(draft.mv));
+    if(validMv(draft.mv)) r.append(...moodRing(draft.mv).childNodes); else r.textContent="＋ mood";
+    $("pvTop").style.color=edgeOf(draft);
+    $("mvBig").textContent=validMv(draft.mv)?draft.mv:"—"; if(validMv(draft.mv)) $("mvIn").value=draft.mv; }
   { const holder=$("pvMbtn"); holder.textContent="";
     const mp={ color:draft.color, edge:draft.edge, music:(draft.music||"").trim(), musicUrl:musicHost(draft.musicUrl||"")?draft.musicUrl:"" };
-    const mb=musicButton(mp); $("pv").classList.toggle("hm",!!mb); if(mb) holder.append(mb); }
+    const mb=musicButton(mp); if(mb) holder.append(mb); }
   paintCard($("pv"),draft.color,draft.edge);
   syncWheel();
   const pv=$("pvAv"); pv.textContent=""; pv.classList.toggle("ph-empty",!draft.place);
-  if(draft.place){ pv.append(...placeIcon(draft.place).childNodes); pv.style.color=edgeOf(draft); } else { pv.textContent="＋ lieu"; pv.style.color=""; }
+  if(draft.place){ pv.append(...placeIcon(draft.place).childNodes); } else { pv.textContent="＋ lieu"; pv.style.color=""; }
   const pa2=$("pvAct"); pa2.textContent=""; pa2.classList.toggle("ph-empty",!draft.act);
   if(draft.act){ pa2.append(...actIcon(draft.act).childNodes); pa2.style.color=edgeOf(draft); } else { pa2.textContent="＋ activité"; pa2.style.color=""; }
   const pw=$("pvWish"); pw.textContent=""; pw.classList.toggle("ph-empty",!draft.wish);
@@ -1520,7 +1593,7 @@ function setDraft(patch){
   document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
 /* --- Édition directe sur la carte --- */
-const ED_TITLES={ music:"Mood musical", loc:"Ma position", color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", wish:"J'ai envie de…", font:"Police du pseudo", status:"Statut & disponibilité" };
+const ED_TITLES={ mv:"Mon mood (0–100)", music:"Mood musical", loc:"Ma position", color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", wish:"J'ai envie de…", font:"Police du pseudo", status:"Statut & disponibilité" };
 let edOpen=null;
 function openEditor(sec){
   edOpen=sec;
@@ -1633,13 +1706,15 @@ function renderMusicPreview(){
   $("musicHint").textContent = !u ? "" : (h ? "✓ Lien "+h+" reconnu" : "✗ Lien non reconnu");
   $("musicHint").style.color = !u ? "" : (h ? "var(--accent)" : "var(--err)");
 }
+$("mvIn").addEventListener("input",e=>setDraft({mv:parseInt(e.target.value,10)}));
+$("mvClear").onclick=()=>setDraft({mv:-1});
 function openProfile(first){
   buildFonts();
   onboarding=!!first;
   $("onboard").classList.toggle("hidden",!onboarding);
   $("logoutBtn").classList.toggle("hidden",onboarding);
   $("saveBtn").textContent=onboarding?"C'est parti →":"Enregistrer";
-  draft={ color:me.color, place:me.place||"", act:me.act||"", wish:me.wish||"", music:me.music||"", musicUrl:me.musicUrl||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
+  draft={ color:me.color, mv:validMv(me.mv)?me.mv:-1, place:me.place||"", act:me.act||"", wish:me.wish||"", music:me.music||"", musicUrl:me.musicUrl||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
   wTarget="color"; Object.assign(hsv, hexToHsv(me.color)); if(hsv.v<.12) hsv.v=.12;
   $("statusIn").value=draft.status; $("musicIn").value=draft.music; $("musicUrlIn").value=draft.musicUrl;
   setDraft({});
@@ -1655,13 +1730,13 @@ $("saveBtn").onclick=async()=>{
     const music=(draft.music||"").replace(/\s+/g," ").trim().slice(0,28);
     const musicUrl=musicHost((draft.musicUrl||"").trim())?draft.musicUrl.trim():"";
     if((draft.musicUrl||"").trim() && !musicUrl){ toast("Lien musical non reconnu (Spotify, SoundCloud, YouTube, Deezer, Apple Music)"); $("saveBtn").disabled=false; openEditor("music"); return; }
-    const changed = draft.place!==me.place || draft.act!==me.act || draft.wish!==me.wish || status!==(me.status||"") || draft.avail!==(me.avail||"")
+    const changed = draft.mv!==(validMv(me.mv)?me.mv:-1) || draft.place!==me.place || draft.act!==me.act || draft.wish!==me.wish || status!==(me.status||"") || draft.avail!==(me.avail||"")
       || music!==(me.music||"") || musicUrl!==(me.musicUrl||"");
-    const rec={ username:me.username, color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge };
+    const rec={ username:me.username, color:draft.color, mv:draft.mv, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge };
     if(changed) rec.st=F.serverTimestamp();
     await F.setDoc(F.doc(db,"profiles",me.uid), rec, { merge:true });
     if(changed) me.st=Date.now();
-    Object.assign(me,{ color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
+    Object.assign(me,{ color:draft.color, mv:draft.mv, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
     if(current) writePresence(true);          // la couleur suit dans le groupe ouvert
   }catch(e){ console.warn(e); toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
   $("saveBtn").disabled=false;
