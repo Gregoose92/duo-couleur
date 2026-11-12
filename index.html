@@ -191,6 +191,15 @@
   #pvMusic{display:inline-flex;max-width:88%;cursor:pointer;border-radius:999px}
   #pvMusic.ph-empty{font-size:min(3.8vw,2vh);border:1.5px dashed currentColor;padding:3px 12px;opacity:.55}
   #pvMusic .mchip{font-size:min(3.8vw,2vh)}
+  button.mchip{border:0;cursor:pointer;font-family:inherit}
+  #mBg{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:15}
+  .msheet{max-height:75vh;z-index:17}
+  .msheet iframe{width:100%;border:0;border-radius:12px;background:#000;display:block}
+  #mBody{display:flex;flex-direction:column;gap:10px}
+  #mBody .small{margin:0}
+  .msearch{display:flex;gap:8px;flex-wrap:wrap}
+  .msearch a{flex:1;text-align:center;background:#0f1114;border:1px solid var(--line);color:var(--txt);text-decoration:none;
+    border-radius:10px;padding:10px 6px;font-size:13px;font-weight:600}
   .genres{display:flex;flex-wrap:wrap;gap:6px}
   .genres button{background:#0f1114;border:1.5px solid var(--line);color:var(--txt);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:600}
   .genres button.sel{border-color:var(--accent);background:#1d2a26;color:var(--accent)}
@@ -549,6 +558,12 @@
 </div>
 <div id="full" class="hidden"><b id="fullName"></b><span>toucher pour fermer</span></div>
 <div id="toast"></div>
+<!-- Lecteur musical intégré -->
+<div id="mBg" class="hidden"></div>
+<div id="mSheet" class="edsheet msheet hidden">
+  <div class="edhead"><div><b id="mTitle"></b><div class="small" id="mWho"></div></div><button class="btn sm ghost" id="mClose">Fermer</button></div>
+  <div id="mBody"></div>
+</div>
 <!-- Choix rapide d'un logo (barre « Moi maintenant ») -->
 <div id="qBg" class="hidden"></div>
 <div id="qSheet" class="edsheet hidden">
@@ -735,12 +750,75 @@ const NOTE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-wi
 function musicChip(p, cls){
   if(!p.music && !p.musicUrl) return null;
   const host=musicHost(p.musicUrl||"");
-  const e=el(host?"a":"span","mchip"+(cls?" "+cls:""));
-  e.innerHTML=NOTE;
+  const e=el("button","mchip"+(cls?" "+cls:""));
+  e.type="button"; e.innerHTML=NOTE;
   e.append(document.createTextNode(p.music||"Mon son"));
-  if(host){ e.href=p.musicUrl; e.target="_blank"; e.rel="noopener"; e.append(el("span","mplay","▶")); e.title="Écouter sur "+host; e.addEventListener("click",ev=>ev.stopPropagation()); }
+  e.append(el("span","mplay","▶"));
+  e.setAttribute("aria-label","Écouter le mood musical de "+(p.name||"cet ami"));
+  e.addEventListener("click",ev=>{ ev.stopPropagation(); ev.preventDefault(); openMusic(p); });
   return e;
 }
+/* ===== Lecteur intégré : convertit un lien en lecteur officiel « embed » ===== */
+function embedFor(u){
+  let x; try{ x=new URL(u); }catch(e){ return null; }
+  const h=x.hostname, path=x.pathname.replace(/\/+$/,"");
+  // Spotify : /track|album|playlist|artist|episode|show/ID (éventuellement /intl-fr/…)
+  if(h==="open.spotify.com"){
+    const m=path.match(/\/(track|album|playlist|artist|episode|show)\/([A-Za-z0-9]+)/);
+    if(m) return { src:`https://open.spotify.com/embed/${m[1]}/${m[2]}?utm_source=generator&theme=0`, h: m[1]==="track"||m[1]==="episode"?152:352 };
+  }
+  // SoundCloud : widget officiel
+  if(/(^|\.)soundcloud\.com$/.test(h))
+    return { src:"https://w.soundcloud.com/player/?url="+encodeURIComponent(u)+"&color=%23ff5500&auto_play=true&visual=true&hide_related=true", h:300 };
+  // YouTube / YouTube Music : vidéo, short ou playlist (domaine sans cookies)
+  if(["www.youtube.com","youtube.com","m.youtube.com","music.youtube.com","youtu.be"].includes(h)){
+    let id=""; const list=x.searchParams.get("list");
+    if(h==="youtu.be") id=path.slice(1);
+    else if(path==="/watch") id=x.searchParams.get("v")||"";
+    else { const m=path.match(/\/(shorts|embed|live)\/([\w-]{6,})/); if(m) id=m[2]; }
+    if(id && /^[\w-]{6,20}$/.test(id)) return { src:`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0`, h:220 };
+    if(list && /^[\w-]+$/.test(list)) return { src:`https://www.youtube-nocookie.com/embed/videoseries?list=${list}&playsinline=1`, h:220 };
+  }
+  // Deezer : /track|album|playlist/ID (éventuellement /fr/…)
+  if(h==="www.deezer.com"){
+    const m=path.match(/\/(track|album|playlist)\/(\d+)/);
+    if(m) return { src:`https://widget.deezer.com/widget/dark/${m[1]}/${m[2]}`, h: m[1]==="track"?150:300 };
+  }
+  // Apple Music : même chemin sur embed.music.apple.com
+  if(h==="music.apple.com") return { src:"https://embed.music.apple.com"+x.pathname+x.search, h: x.searchParams.get("i")?175:350 };
+  return null;   // liens courts (spotify.link, deezer.page.link…) : pas d'aperçu, bouton « Ouvrir »
+}
+function openMusic(p){
+  const box=$("mBody"); box.textContent="";
+  $("mTitle").textContent=(p.music||"Mood musical");
+  $("mWho").textContent=p.name?("Ce que "+p.name+" a envie d'écouter"):"";
+  const host=musicHost(p.musicUrl||""), emb=host?embedFor(p.musicUrl):null;
+  if(emb){
+    const f=document.createElement("iframe");
+    f.src=emb.src; f.height=emb.h; f.loading="lazy";
+    f.allow="autoplay; encrypted-media; clipboard-write; fullscreen; picture-in-picture";
+    f.setAttribute("allowfullscreen",""); f.setAttribute("frameborder","0");
+    f.title="Lecteur "+host;
+    box.append(f, el("p","small","Appuie sur ▶ dans le lecteur si la lecture ne démarre pas seule."));
+  }
+  if(host){
+    const a=el("a","btn ghost","Ouvrir dans "+host); a.href=p.musicUrl; a.target="_blank"; a.rel="noopener"; a.style.marginTop=emb?"0":"4px";
+    box.append(a);
+  }
+  if(!host){
+    box.append(el("p","small", (p.name||"Cet ami")+" n'a pas partagé de son précis. Écouter ce style :"));
+  }
+  if(p.music){   // recherche du style sur les plateformes
+    const q=encodeURIComponent(p.music), row=el("div","msearch");
+    [["Spotify","https://open.spotify.com/search/"+q],["YouTube","https://www.youtube.com/results?search_query="+q],["SoundCloud","https://soundcloud.com/search?q="+q]]
+      .forEach(([n,u])=>{ const a=el("a",null,"🔎 "+n); a.href=u; a.target="_blank"; a.rel="noopener"; row.append(a); });
+    if(host) box.append(el("p","small","Ou chercher « "+p.music+" » :"));
+    box.append(row);
+  }
+  $("mBg").classList.remove("hidden"); $("mSheet").classList.remove("hidden");
+}
+// Fermer = retirer le lecteur, ce qui coupe le son
+function closeMusic(){ $("mBody").textContent=""; $("mBg").classList.add("hidden"); $("mSheet").classList.add("hidden"); }
 const AVAIL = { dispo:["Dispo","#34c759"], occupe:["Occupé","#ff9500"], dnd:["Pas dispo","#ff3b30"] };
 // Abonnement au profil public d'un joueur (ami ou membre d'un groupe) : couleur, humeur, statut, dispo
 function watchProfile(id){
@@ -1007,6 +1085,7 @@ function closeQuick(){ $("qBg").classList.add("hidden"); $("qSheet").classList.a
 document.querySelectorAll("#nowBar .slot").forEach(b=>b.onclick=()=>openQuick(b.dataset.k));
 $("qBg").onclick=closeQuick; $("qClose").onclick=closeQuick;
 $("nowMusic").onclick=openQuickMusic;
+$("mBg").onclick=closeMusic; $("mClose").onclick=closeMusic;
 $("nowOk").onclick=()=>{ quickSave({}); toast("État confirmé"); };
 function renderFriends(){
   renderNowBar();
@@ -1518,7 +1597,7 @@ $("musicUrlIn").addEventListener("input",e=>setDraft({musicUrl:e.target.value.tr
 function renderMusicPreview(){
   const box=$("pvMusic"); if(!box) return; box.textContent="";
   const mc=musicChip({ music:(draft.music||"").trim(), musicUrl:musicHost(draft.musicUrl||"")?draft.musicUrl:"" });
-  if(mc){ const sp=el("span","mchip"); sp.innerHTML=mc.innerHTML; box.append(sp); box.classList.remove("ph-empty"); }   // dans l'éditeur : toucher = modifier
+  if(mc){ const sp=el("span","mchip"); sp.innerHTML=mc.innerHTML; box.append(sp); box.classList.remove("ph-empty"); }   // span sans écouteur : toucher = modifier   // dans l'éditeur : toucher = modifier
   else { box.textContent="＋ mood musical"; box.classList.add("ph-empty"); }
   document.querySelectorAll("#genres button").forEach(b=>b.classList.toggle("sel",b.dataset.g===draft.music));
   const u=(draft.musicUrl||"").trim(), h=musicHost(u);
