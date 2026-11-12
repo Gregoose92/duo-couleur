@@ -209,7 +209,29 @@
   .onboard h3{margin:0 0 4px;font-size:20px}
 
   /* Amis */
-  .friends{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .friends{display:block}
+  /* ===== Tableau d'amis ===== */
+  .ftable{display:flex;flex-direction:column;gap:6px}
+  .frow2{display:grid;grid-template-columns:minmax(0,1.9fr) repeat(3,minmax(0,1fr)) 30px;align-items:center;
+    border-radius:14px;min-height:62px;cursor:pointer;overflow:hidden;transition:background .3s}
+  .frow2.new{animation:pop .3s ease}
+  .frow2 .fc{display:flex;align-items:center;justify-content:center;min-width:0;height:100%;padding:6px 4px;
+    border-left:1px solid rgba(0,0,0,.14)}
+  .frow2 .fc:first-child{border-left:0;justify-content:flex-start;padding-left:12px}
+  .frow2 .fc:last-child{border-left:0;padding:0}
+  .fhead{min-height:0;background:transparent;cursor:default;color:var(--mute);font-size:11px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.7px}
+  .fhead .fc{border-left:1px solid var(--line);padding:2px 4px}
+  .fname{flex-direction:column;align-items:flex-start!important;gap:2px}
+  .fnm{font-weight:800;font-size:17px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+  .fsub{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:11px;opacity:.9;max-width:100%;overflow:hidden;white-space:nowrap;padding:2px 0 2px 3px}
+  .fsub .avl{font-size:11px}
+  .fsub .loc{font-size:11px;padding:1px 6px;max-width:100%}
+  .fsub .me{font-weight:800;text-transform:uppercase;font-size:10px;opacity:.75}
+  .ficon .place,.ficon .act,.ficon .wish{position:static;width:34px;height:34px}
+  .ficon svg{width:100%;height:100%;display:block;stroke-width:2.3}
+  .ficon .dash{opacity:.35;font-weight:700}
+  .frow2 .rm{position:static;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.22);color:inherit;font-size:14px;line-height:1;padding:0}
   .friend{border-radius:18px;aspect-ratio:1/1.15;padding:10px;display:flex;flex-direction:column;justify-content:space-between;
     cursor:pointer;transition:background .3s,transform .15s;overflow:hidden}
   .friend:active{transform:scale(.96)}
@@ -849,34 +871,49 @@ function startListeners(){
 }
 
 /* ================= Onglet Amis ================= */
+// Liste d'amis en tableau : une ligne par ami — Pseudo | Lieu | Activité | Envie
 function renderFriends(){
   const box=$("friends"); box.textContent="";
   if(!friends.size){
-    box.style.display="block";
-    box.innerHTML='<div class="empty-list">Pas encore d\'amis.<br>Ajoute-les par pseudo ci-dessus, ou avec le bouton <b>＋ Ajouter</b> sur leur carte dans un groupe.</div>';
+    box.innerHTML='<div class="empty-list">Pas encore d\'amis.<br>Ajoute-les par pseudo ci-dessus, ou avec le bouton <b>＋ ami</b> sur leur carte dans un groupe.</div>';
     return;
   }
-  box.style.display="";
-  [...friends.values()].forEach(f0=>{
-    const f=look(f0.id,f0);
-    const c=el("div","friend pcard"); paintCard(c,f.color,f.edge);
-    if(f.place){ const ic=placeIcon(f.place); ic.style.color=edgeOf(f); c.append(ic); }
-    if(f.act){ const ic=actIcon(f.act); ic.style.color=edgeOf(f); c.append(ic); }
-    if(f.wish){ const ic=wishIcon(f.wish); ic.style.color=edgeOf(f); c.append(ic); }
-    c.append(bigName(f.name,f.font));
-    if(f.status) c.append(el("div","fst","« "+f.status+" »"));
-    const ll=locLine(f.loc,"sm"); if(ll) c.append(ll);
-    const m=el("div","meta");
-    m.append(f.avail?availEl(f.avail):el("div","fs", f.id===me.uid ? "c'est toi" : "ajouté "+ago(f.lastSeen)));
-    if(f.id===me.uid && f.avail) m.append(el("span","me","· toi"));   // aperçu de son propre rendu
-    c.append(m);
-    const rm=el("button","rm","×"); rm.setAttribute("aria-label","Retirer "+f.name);
-    rm.onclick=ev=>{ ev.stopPropagation(); removeFriend(f.id,f.name); };
-    c.appendChild(rm);
-    markNew(c,"f:"+f.id);
-    c.onclick=()=>showFull(f.name,f.color);
-    box.appendChild(c);
+  const tbl=el("div","ftable");
+  const head=el("div","frow2 fhead");
+  ["Pseudo","Lieu","Activité","Envie",""].forEach(t=>head.append(el("div","fc",t)));
+  tbl.append(head);
+  // toi d'abord, puis ordre alphabétique
+  const list=[...friends.values()].map(f0=>look(f0.id,f0))
+    .sort((a,b)=>(b.id===me.uid)-(a.id===me.uid) || a.name.localeCompare(b.name));
+  list.forEach(f=>{
+    const edge=edgeOf(f);
+    const r=el("div","frow2"); paintCard(r,f.color,f.edge);
+    // 1. pseudo (+ dispo / position en petit dessous)
+    const n=el("div","fc fname");
+    const nm=el("div","fnm",f.name); const fnt=FONTS[f.font]||FONTS.inter; nm.style.fontFamily=fnt[1];
+    if(f.font==="pixel") nm.style.fontSize="11px";
+    n.append(nm);
+    const sub=el("div","fsub");
+    if(f.avail) sub.append(availEl(f.avail));
+    const ll=locLine(f.loc,"sm"); if(ll) sub.append(ll);
+    if(!sub.childNodes.length) sub.append(document.createTextNode(f.id===me.uid?"c'est toi":(f.status?"« "+f.status+" »":"")));
+    else if(f.id===me.uid) sub.append(el("span","me","toi"));
+    n.append(sub);
+    r.append(n);
+    // 2-4. icônes lieu / activité / envie, couleur du contour
+    [[placeIcon,f.place],[actIcon,f.act],[wishIcon,f.wish]].forEach(([mk,k])=>{
+      const c=el("div","fc ficon");
+      if(k){ const ic=mk(k); ic.style.color=edge; c.append(ic); } else c.append(el("span","dash","—"));
+      r.append(c);
+    });
+    // 5. retirer
+    const x=el("div","fc"); const rm=el("button","rm","×"); rm.setAttribute("aria-label","Retirer "+f.name);
+    rm.onclick=ev=>{ ev.stopPropagation(); removeFriend(f.id,f.name); }; x.append(rm); r.append(x);
+    markNew(r,"f:"+f.id);
+    r.onclick=()=>showFull(f.name,f.color);
+    tbl.append(r);
   });
+  box.append(tbl);
 }
 // Ajout par pseudo : recherche dans les profils publics
 async function addByName(){
