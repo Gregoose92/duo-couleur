@@ -65,7 +65,7 @@ service cloud.firestore {
     match /profiles/{uid} {
       allow read: if signedIn();
       allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'place', 'act', 'wish', 'status', 'avail', 'font', 'edge', 'st'])
+        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'place', 'act', 'wish', 'status', 'avail', 'font', 'edge', 'st', 'music', 'musicUrl'])
         && request.resource.data.username == myUsername()
         && isHex(request.resource.data.color)
         && (!('mood' in request.resource.data)   || (request.resource.data.mood is string && request.resource.data.mood.size() <= 16))
@@ -77,6 +77,10 @@ service cloud.firestore {
         && (!('wish' in request.resource.data)   || request.resource.data.wish in ['', 'sortir','boire','manger','danser','fete','monde','chiller','dormir','rentrer','bouger','calin','voyager','saispas'])
         && (!('st' in request.resource.data) || request.resource.data.st == request.time
             || (resource != null && ('st' in resource.data) && request.resource.data.st == resource.data.st))
+        && (!('music' in request.resource.data)    || (request.resource.data.music is string && request.resource.data.music.size() <= 28))
+        && (!('musicUrl' in request.resource.data) || request.resource.data.musicUrl == ''
+            || (request.resource.data.musicUrl is string && request.resource.data.musicUrl.size() <= 300
+                && request.resource.data.musicUrl.matches('https://(open[.]spotify[.]com|spotify[.]link|soundcloud[.]com|on[.]soundcloud[.]com|m[.]soundcloud[.]com|www[.]youtube[.]com|youtube[.]com|m[.]youtube[.]com|youtu[.]be|music[.]youtube[.]com|www[.]deezer[.]com|deezer[.]page[.]link|link[.]deezer[.]com|music[.]apple[.]com)/.*')))
         && (!('edge' in request.resource.data)   || request.resource.data.edge == '' || isHex(request.resource.data.edge));
       allow delete: if false;
     }

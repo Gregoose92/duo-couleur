@@ -182,6 +182,22 @@
   /* états anciens */
   .stale-ic{opacity:.4}
   .fage{opacity:.75}
+  /* Mood musical */
+  .mchip{display:inline-flex;align-items:center;gap:5px;color:inherit;text-decoration:none;font-weight:800;
+    font-size:max(11px,6cqw);padding:3px 10px;border-radius:999px;background:rgba(0,0,0,.2);max-width:92%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .mchip svg{width:1.1em;height:1.1em;flex:none}
+  .mchip .mplay{font-weight:700;opacity:.8;font-size:.85em;margin-left:2px}
+  .mchip.sm{font-size:10.5px;padding:1px 7px}
+  #pvMusic{display:inline-flex;max-width:88%;cursor:pointer;border-radius:999px}
+  #pvMusic.ph-empty{font-size:min(3.8vw,2vh);border:1.5px dashed currentColor;padding:3px 12px;opacity:.55}
+  #pvMusic .mchip{font-size:min(3.8vw,2vh)}
+  .genres{display:flex;flex-wrap:wrap;gap:6px}
+  .genres button{background:#0f1114;border:1.5px solid var(--line);color:var(--txt);border-radius:999px;padding:7px 11px;font-size:13px;font-weight:600}
+  .genres button.sel{border-color:var(--accent);background:#1d2a26;color:var(--accent)}
+  .placelist button.genre{font-size:12px;padding:12px 4px}
+  .nowmusic{display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(0,0,0,.14);color:inherit;border:0;border-radius:10px;
+    padding:9px;font-weight:700;font-size:13px}
+  .nowmusic svg{width:16px;height:16px}
   .fontlist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
   .fontlist button{background:#0f1114;border:2px solid var(--line);color:var(--txt);border-radius:12px;padding:12px 6px;
     font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -381,6 +397,7 @@
         <button class="slot" data-k="act"><div class="si"></div><span class="sl">Activité</span></button>
         <button class="slot" data-k="wish"><div class="si"></div><span class="sl">Envie</span></button>
       </div>
+      <button class="nowmusic" id="nowMusic"></button>
       <button class="nowok" id="nowOk">✓ Toujours ça</button>
     </div>
     <!-- 2. Demandes d'ami reçues -->
@@ -441,6 +458,7 @@
       <div class="pn" id="pvName" data-ed="font"></div>
       <div class="pstat" id="pvStatus" data-ed="status"></div>
       <div class="pav" id="pvAvail" data-ed="status"></div>
+      <div id="pvMusic" data-ed="music"></div>
       <div id="pvLoc" data-ed="loc"></div>
       <div class="edhint" id="edHint">touche pour modifier</div>
     </div>
@@ -471,6 +489,15 @@
     <div data-sec="act"><div class="placelist" id="acts"></div></div>
     <div data-sec="wish"><div class="placelist" id="wishes"></div></div>
     <div data-sec="font"><div class="fontlist" id="fonts"></div></div>
+    <div data-sec="music">
+      <div class="genres" id="genres"></div>
+      <label for="musicIn">Ou tape ton style</label>
+      <input type="text" id="musicIn" maxlength="28" placeholder="ex. Hard techno industrielle">
+      <label for="musicUrlIn">Lien vers un son (facultatif)</label>
+      <input type="text" id="musicUrlIn" inputmode="url" autocapitalize="off" autocorrect="off" spellcheck="false"
+        placeholder="Spotify, SoundCloud, YouTube, Deezer, Apple Music">
+      <div class="small" id="musicHint" style="margin-top:6px"></div>
+    </div>
     <div data-sec="loc">
       <div class="locbox">
         <div class="locnow" id="locNow"></div>
@@ -695,6 +722,25 @@ function freshness(p){ if(!p.st) return "ok"; const a=Date.now()-p.st; return a>
 // les 3 logos d'un joueur selon la fraîcheur : [fabrique, clé] avec clé vide si expiré
 function stateIcons(p){ const f=freshness(p); return [[placeIcon,f==="expired"?"":p.place],[actIcon,f==="expired"?"":p.act],[wishIcon,f==="expired"?"":p.wish]]; }
 const edgeOf = p => HEX_RE.test(p.edge||"") ? p.edge : autoEdge(p.color);
+/* ===== Mood musical : genre (étiquette ♫) + lien vers un son ===== */
+const GENRES=["Hard techno","Techno","Tech house","House","Trance","Drum & bass","Dubstep","Électro","Disco","Funk","Hip-hop","Rap FR",
+  "R&B","Afro","Reggae","Latino","Pop","Rock","Metal","Jazz","Classique","Chill / lo-fi","Ambient","Variété"];
+// liens acceptés (mêmes domaines que dans les règles Firebase)
+const MUSIC_HOSTS=[["open.spotify.com","Spotify"],["spotify.link","Spotify"],["soundcloud.com","SoundCloud"],["on.soundcloud.com","SoundCloud"],
+  ["m.soundcloud.com","SoundCloud"],["www.youtube.com","YouTube"],["youtube.com","YouTube"],["m.youtube.com","YouTube"],["youtu.be","YouTube"],
+  ["music.youtube.com","YouTube Music"],["www.deezer.com","Deezer"],["deezer.page.link","Deezer"],["link.deezer.com","Deezer"],["music.apple.com","Apple Music"]];
+function musicHost(u){ try{ const x=new URL(u); if(x.protocol!=="https:") return ""; const h=MUSIC_HOSTS.find(([d])=>d===x.hostname); return h?h[1]:""; }catch(e){ return ""; } }
+const NOTE='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5.5l11-2.5v13"/><circle cx="6" cy="18" r="3"/><circle cx="17" cy="16" r="3"/></svg>';
+// Étiquette « ♫ Hard techno · ▶ SoundCloud » ; lien cliquable si un son est partagé
+function musicChip(p, cls){
+  if(!p.music && !p.musicUrl) return null;
+  const host=musicHost(p.musicUrl||"");
+  const e=el(host?"a":"span","mchip"+(cls?" "+cls:""));
+  e.innerHTML=NOTE;
+  e.append(document.createTextNode(p.music||"Mon son"));
+  if(host){ e.href=p.musicUrl; e.target="_blank"; e.rel="noopener"; e.append(el("span","mplay","▶")); e.title="Écouter sur "+host; e.addEventListener("click",ev=>ev.stopPropagation()); }
+  return e;
+}
 const AVAIL = { dispo:["Dispo","#34c759"], occupe:["Occupé","#ff9500"], dnd:["Pas dispo","#ff3b30"] };
 // Abonnement au profil public d'un joueur (ami ou membre d'un groupe) : couleur, humeur, statut, dispo
 function watchProfile(id){
@@ -709,6 +755,8 @@ function watchProfile(id){
       act:ACTS[d.act]?d.act:"",
       wish:WISHES[d.wish]?d.wish:"",
       st:d.st&&typeof d.st.toMillis==="function"?d.st.toMillis():0,
+      music:typeof d.music==="string"?d.music.slice(0,28):"",
+      musicUrl:typeof d.musicUrl==="string"&&musicHost(d.musicUrl)?d.musicUrl:"",
       status:typeof d.status==="string"?d.status.slice(0,60):"",
       avail:AVAIL[d.avail]?d.avail:"",
       font:FONTS[d.font]?d.font:"inter",
@@ -753,7 +801,7 @@ function locLine(loc, cls){
 }
 function look(id, fallback){
   const pr=profiles.get(id)||{};
-  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", wish:pr.wish||"", st:pr.st||0, status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
+  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", wish:pr.wish||"", music:pr.music||"", musicUrl:pr.musicUrl||"", st:pr.st||0, status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
 }
 function face(name, mood){ return mood || initial(name); }
 function availEl(avail, extra){
@@ -882,6 +930,7 @@ A.onAuthStateChanged(auth, async user=>{
   const pub=await F.getDoc(F.doc(db,"profiles",me.uid)).catch(()=>null);
   const pd=pub&&pub.exists()?pub.data():{};
   me.place=PLACES[pd.place]?pd.place:""; me.act=ACTS[pd.act]?pd.act:""; me.wish=WISHES[pd.wish]?pd.wish:""; me.st=pd.st&&typeof pd.st.toMillis==="function"?pd.st.toMillis():0; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter"; me.edge=HEX_RE.test(pd.edge||"")?pd.edge:"";
+  me.music=typeof pd.music==="string"?pd.music.slice(0,28):""; me.musicUrl=typeof pd.musicUrl==="string"&&musicHost(pd.musicUrl)?pd.musicUrl:"";
   F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color },{ merge:true }).catch(e=>console.warn("profil public",e));
   renderMe();
   startListeners();
@@ -930,12 +979,13 @@ function renderNowBar(){
     if(key && tbl[key]){ si.append(...lineIcon(tbl,key,"x").childNodes); si.style.color=edge; b.querySelector(".sl").textContent=tbl[key][0]; }
     else { si.append(el("span","plus","＋")); si.style.color=""; b.querySelector(".sl").textContent={place:"Lieu",act:"Activité",wish:"Envie"}[k]; }
   });
+  const nm=$("nowMusic"); nm.innerHTML=NOTE; nm.append(document.createTextNode(me.music ? me.music+(me.musicUrl?" · ▶ "+musicHost(me.musicUrl):"") : "＋ mood musical"));
   $("nowAge").textContent = me.st ? (fr==="expired"?"expiré · ":"")+"mis à jour il y a "+shortAgo(me.st) : "";
 }
 // Enregistre l'état tout de suite (sans passer par l'éditeur) et l'horodate
 async function quickSave(patch){
   const rec={ username:me.username, color:me.color, place:me.place||"", act:me.act||"", wish:me.wish||"", status:me.status||"",
-              avail:me.avail||"", font:me.font||"inter", edge:me.edge||"", ...patch, st:F.serverTimestamp() };
+              avail:me.avail||"", font:me.font||"inter", edge:me.edge||"", music:me.music||"", musicUrl:me.musicUrl||"", ...patch, st:F.serverTimestamp() };
   try{ await F.setDoc(F.doc(db,"profiles",me.uid), rec, { merge:true }); Object.assign(me,patch); me.st=Date.now(); renderNowBar(); scheduleRender(); }
   catch(e){ console.warn(e); toast("Mise à jour impossible"); }
 }
@@ -947,9 +997,16 @@ function openQuick(k){
     if(me[k]===key) b.classList.add("sel"); b.onclick=()=>{ closeQuick(); quickSave({[k]:key}); toast(tbl[key][0]); }; box.append(b); });
   $("qBg").classList.remove("hidden"); $("qSheet").classList.remove("hidden");
 }
+function openQuickMusic(){
+  $("qTitle").textContent="Mood musical"; const box=$("qList"); box.textContent="";
+  const none=el("button","none","aucun"); none.onclick=()=>{ closeQuick(); quickSave({music:""}); }; if(!me.music) none.classList.add("sel"); box.append(none);
+  GENRES.forEach(g=>{ const b=el("button","genre",g); if(me.music===g) b.classList.add("sel"); b.onclick=()=>{ closeQuick(); quickSave({music:g}); toast("♫ "+g); }; box.append(b); });
+  $("qBg").classList.remove("hidden"); $("qSheet").classList.remove("hidden");
+}
 function closeQuick(){ $("qBg").classList.add("hidden"); $("qSheet").classList.add("hidden"); }
 document.querySelectorAll("#nowBar .slot").forEach(b=>b.onclick=()=>openQuick(b.dataset.k));
 $("qBg").onclick=closeQuick; $("qClose").onclick=closeQuick;
+$("nowMusic").onclick=openQuickMusic;
 $("nowOk").onclick=()=>{ quickSave({}); toast("État confirmé"); };
 function renderFriends(){
   renderNowBar();
@@ -976,6 +1033,7 @@ function renderFriends(){
     const sub=el("div","fsub");
     if(f.avail) sub.append(availEl(f.avail));
     const ll=locLine(f.loc,"sm"); if(ll) sub.append(ll);
+    if(freshness(f)!=="expired"){ const mc=musicChip(f,"sm"); if(mc) sub.append(mc); }
     const fr=freshness(f);
     if(f.st) sub.append(el("span","fage", fr==="expired" ? "état expiré" : shortAgo(f.st)));
     if(!sub.childNodes.length) sub.append(document.createTextNode(f.id===me.uid?"c'est toi":(f.status?"« "+f.status+" »":"")));
@@ -1194,6 +1252,7 @@ function playerCard(p0,isMe){
   stateIcons(p).forEach(([mk,k])=>{ if(k){ const ic=mk(k); ic.style.color=edgeOf(p); if(fr==="stale") ic.classList.add("stale-ic"); c.append(ic); } });
   c.append(bigName(p.name,p.font));
   if(p.status) c.append(el("div","pstatus","« "+p.status+" »"));
+  if(fr!=="expired"){ const mc=musicChip(p); if(mc) c.append(mc); }
   const ll=locLine(isMe?locs.get(me.uid):p.loc); if(ll) c.append(ll);
   const m=el("div","meta"); m.append(availEl(p.avail, away?"hors ligne · "+ago(p.t):"en ligne")); c.append(m);
   if(isMe) c.appendChild(el("div","tag","TOI"));
@@ -1213,7 +1272,7 @@ function playerCard(p0,isMe){
 function renderPlayers(){
   if(!me||view!=="vRoom") return;
   const box=$("players"); box.textContent="";
-  box.appendChild(playerCard({ name:me.username, color:me.color, place:me.place, act:me.act, wish:me.wish, st:me.st, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
+  box.appendChild(playerCard({ name:me.username, color:me.color, place:me.place, act:me.act, wish:me.wish, music:me.music, musicUrl:me.musicUrl, st:me.st, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
   const list=[...members.values()].sort((a,b)=>(isOn(b)-isOn(a))||a.name.localeCompare(b.name));
   list.forEach(p=>box.appendChild(playerCard(p,false)));
   if(!list.some(isOn)){
@@ -1266,7 +1325,7 @@ $("shareBtn").onclick=async()=>{
 
 /* ================= Onglet Profil ================= */
 // Brouillon du profil : rien n'est publié avant « Enregistrer »
-let draft={ color:"#30b0ff", place:"", act:"", wish:"", status:"", avail:"" };
+let draft={ color:"#30b0ff", place:"", act:"", wish:"", status:"", avail:"", music:"", musicUrl:"" };
 /* --- Roue de couleur (teinte = angle, saturation = distance au centre) + luminosité --- */
 function hsvToHex(h,sat,v){ const f=n=>{ const k=(n+h/60)%6; return v-v*sat*Math.max(0,Math.min(k,4-k,1)); };
   return "#"+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
@@ -1330,6 +1389,7 @@ document.querySelectorAll("#avail button").forEach(b=>b.onclick=()=>setDraft({av
 function setDraft(patch){
   Object.assign(draft,patch);
   renderLocPreview();
+  renderMusicPreview();
   paintCard($("pv"),draft.color,draft.edge);
   syncWheel();
   const pv=$("pvAv"); pv.textContent=""; pv.classList.toggle("ph-empty",!draft.place);
@@ -1352,7 +1412,7 @@ function setDraft(patch){
   document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
 /* --- Édition directe sur la carte --- */
-const ED_TITLES={ loc:"Ma position", color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", wish:"J'ai envie de…", font:"Police du pseudo", status:"Statut & disponibilité" };
+const ED_TITLES={ music:"Mood musical", loc:"Ma position", color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", wish:"J'ai envie de…", font:"Police du pseudo", status:"Statut & disponibilité" };
 let edOpen=null;
 function openEditor(sec){
   edOpen=sec;
@@ -1451,15 +1511,29 @@ $("locStop").onclick=async()=>{
   await F.deleteDoc(F.doc(db,"locs",me.uid)).catch(()=>toast("Impossible d'arrêter le partage"));
   locs.delete(me.uid); toast("Position retirée"); renderLocPanel();
 };
+/* --- Mood musical dans l'éditeur --- */
+GENRES.forEach(g=>{ const b=el("button",null,g); b.dataset.g=g; b.onclick=()=>{ $("musicIn").value=(draft.music===g?"":g); setDraft({music:$("musicIn").value}); }; $("genres").append(b); });
+$("musicIn").addEventListener("input",e=>setDraft({music:e.target.value.slice(0,28)}));
+$("musicUrlIn").addEventListener("input",e=>setDraft({musicUrl:e.target.value.trim()}));
+function renderMusicPreview(){
+  const box=$("pvMusic"); if(!box) return; box.textContent="";
+  const mc=musicChip({ music:(draft.music||"").trim(), musicUrl:musicHost(draft.musicUrl||"")?draft.musicUrl:"" });
+  if(mc){ const sp=el("span","mchip"); sp.innerHTML=mc.innerHTML; box.append(sp); box.classList.remove("ph-empty"); }   // dans l'éditeur : toucher = modifier
+  else { box.textContent="＋ mood musical"; box.classList.add("ph-empty"); }
+  document.querySelectorAll("#genres button").forEach(b=>b.classList.toggle("sel",b.dataset.g===draft.music));
+  const u=(draft.musicUrl||"").trim(), h=musicHost(u);
+  $("musicHint").textContent = !u ? "" : (h ? "✓ Lien "+h+" reconnu" : "✗ Lien non reconnu");
+  $("musicHint").style.color = !u ? "" : (h ? "var(--accent)" : "var(--err)");
+}
 function openProfile(first){
   buildFonts();
   onboarding=!!first;
   $("onboard").classList.toggle("hidden",!onboarding);
   $("logoutBtn").classList.toggle("hidden",onboarding);
   $("saveBtn").textContent=onboarding?"C'est parti →":"Enregistrer";
-  draft={ color:me.color, place:me.place||"", act:me.act||"", wish:me.wish||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
+  draft={ color:me.color, place:me.place||"", act:me.act||"", wish:me.wish||"", music:me.music||"", musicUrl:me.musicUrl||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
   wTarget="color"; Object.assign(hsv, hexToHsv(me.color)); if(hsv.v<.12) hsv.v=.12;
-  $("statusIn").value=draft.status;
+  $("statusIn").value=draft.status; $("musicIn").value=draft.music; $("musicUrlIn").value=draft.musicUrl;
   setDraft({});
   show("vProfile");
   closeEditor();
@@ -1470,12 +1544,16 @@ $("saveBtn").onclick=async()=>{
   const status=draft.status.replace(/\s+/g," ").trim().slice(0,60);
   try{
     await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft.color });
-    const changed = draft.place!==me.place || draft.act!==me.act || draft.wish!==me.wish || status!==(me.status||"") || draft.avail!==(me.avail||"");
-    const rec={ username:me.username, color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, status, avail:draft.avail, font:draft.font, edge:draft.edge };
+    const music=(draft.music||"").replace(/\s+/g," ").trim().slice(0,28);
+    const musicUrl=musicHost((draft.musicUrl||"").trim())?draft.musicUrl.trim():"";
+    if((draft.musicUrl||"").trim() && !musicUrl){ toast("Lien musical non reconnu (Spotify, SoundCloud, YouTube, Deezer, Apple Music)"); $("saveBtn").disabled=false; openEditor("music"); return; }
+    const changed = draft.place!==me.place || draft.act!==me.act || draft.wish!==me.wish || status!==(me.status||"") || draft.avail!==(me.avail||"")
+      || music!==(me.music||"") || musicUrl!==(me.musicUrl||"");
+    const rec={ username:me.username, color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge };
     if(changed) rec.st=F.serverTimestamp();
     await F.setDoc(F.doc(db,"profiles",me.uid), rec, { merge:true });
     if(changed) me.st=Date.now();
-    Object.assign(me,{ color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
+    Object.assign(me,{ color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
     if(current) writePresence(true);          // la couleur suit dans le groupe ouvert
   }catch(e){ console.warn(e); toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
   $("saveBtn").disabled=false;
