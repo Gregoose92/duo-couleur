@@ -165,6 +165,23 @@
   .locbox{display:flex;flex-direction:column;gap:10px}
   .locnow{display:flex;align-items:center;gap:8px;font-size:14px;padding:10px 12px;border-radius:12px;background:#0f1114;border:1px solid var(--line)}
   .locnow svg{width:18px;height:18px;color:var(--accent);flex:none}
+  /* Moi maintenant */
+  .nowbar{border-radius:18px;padding:12px 14px 12px;display:flex;flex-direction:column;gap:10px;transition:background .3s}
+  .nowhead{display:flex;justify-content:space-between;align-items:baseline;font-size:15px}
+  .nowhead span{font-size:12px;opacity:.8}
+  .nowslots{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .slot{background:rgba(0,0,0,.14);border:0;border-radius:14px;padding:10px 4px 8px;color:inherit;display:flex;flex-direction:column;
+    align-items:center;gap:4px;font-size:11px;font-weight:700}
+  .slot .si{width:44px;height:44px;display:grid;place-items:center}
+  .slot .si svg{width:100%;height:100%;stroke-width:2.2}
+  .slot .si .plus{font-size:26px;font-weight:400;opacity:.6}
+  .slot:active{transform:scale(.96)}
+  .nowok{background:rgba(0,0,0,.2);color:inherit;border:0;border-radius:10px;padding:9px;font-weight:700;font-size:13px}
+  .nowbar.stale .si{opacity:.45}
+  #qBg{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:15}
+  /* états anciens */
+  .stale-ic{opacity:.4}
+  .fage{opacity:.75}
   .fontlist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
   .fontlist button{background:#0f1114;border:2px solid var(--line);color:var(--txt);border-radius:12px;padding:12px 6px;
     font-size:20px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -356,11 +373,26 @@
 
   <!-- Onglet 1 : Amis -->
   <section id="vFriends" class="hidden col">
+    <!-- 4. Moi maintenant : changer son état en un geste -->
+    <div class="nowbar" id="nowBar">
+      <div class="nowhead"><b>Moi maintenant</b><span id="nowAge"></span></div>
+      <div class="nowslots">
+        <button class="slot" data-k="place"><div class="si"></div><span class="sl">Lieu</span></button>
+        <button class="slot" data-k="act"><div class="si"></div><span class="sl">Activité</span></button>
+        <button class="slot" data-k="wish"><div class="si"></div><span class="sl">Envie</span></button>
+      </div>
+      <button class="nowok" id="nowOk">✓ Toujours ça</button>
+    </div>
+    <!-- 2. Demandes d'ami reçues -->
+    <div id="reqWrap" class="col hidden" style="gap:8px">
+      <h2>Demandes d'ami <span class="n" id="reqN"></span></h2>
+      <div class="list" id="reqs"></div>
+    </div>
     <div class="card">
       <label for="fName">Ajouter un ami par pseudo</label>
       <div class="joinrow">
         <input type="text" id="fName" maxlength="20" placeholder="ex. leo" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
-        <button class="btn" id="fAddBtn">Ajouter</button>
+        <button class="btn" id="fAddBtn">Demander</button>
       </div>
     </div>
     <div class="friends" id="friends"></div>
@@ -468,7 +500,7 @@
 <nav id="tabbar" class="hidden"><div class="in">
   <button data-tab="vFriends" id="tabFriends">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17" cy="9" r="2.8"/><path d="M16.5 14.2c2.9.3 5 2.4 5 5.3"/></svg>
-    Amis
+    Amis<span class="badge hidden" id="fBadge"></span>
   </button>
   <button data-tab="vGroups" id="tabGroups">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3" y="3" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="2"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="2"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2"/></svg>
@@ -490,6 +522,12 @@
 </div>
 <div id="full" class="hidden"><b id="fullName"></b><span>toucher pour fermer</span></div>
 <div id="toast"></div>
+<!-- Choix rapide d'un logo (barre « Moi maintenant ») -->
+<div id="qBg" class="hidden"></div>
+<div id="qSheet" class="edsheet hidden">
+  <div class="edhead"><b id="qTitle"></b><button class="btn sm ghost" id="qClose">Fermer</button></div>
+  <div class="placelist" id="qList"></div>
+</div>
 <!-- QR code vers le site -->
 <div id="qrBg" class="hidden">
   <div class="qrcard" id="qrCard">
@@ -651,6 +689,11 @@ function placeIcon(key, cls){
   e.title=PLACES[key][0];
   return e;
 }
+// Fraîcheur de l'état : estompé après 3 h, masqué après 24 h (0 = ancien compte sans date → affiché normalement)
+const FADE_MS=3*3600*1000, HIDE_MS=24*3600*1000;
+function freshness(p){ if(!p.st) return "ok"; const a=Date.now()-p.st; return a>HIDE_MS?"expired":(a>FADE_MS?"stale":"ok"); }
+// les 3 logos d'un joueur selon la fraîcheur : [fabrique, clé] avec clé vide si expiré
+function stateIcons(p){ const f=freshness(p); return [[placeIcon,f==="expired"?"":p.place],[actIcon,f==="expired"?"":p.act],[wishIcon,f==="expired"?"":p.wish]]; }
 const edgeOf = p => HEX_RE.test(p.edge||"") ? p.edge : autoEdge(p.color);
 const AVAIL = { dispo:["Dispo","#34c759"], occupe:["Occupé","#ff9500"], dnd:["Pas dispo","#ff3b30"] };
 // Abonnement au profil public d'un joueur (ami ou membre d'un groupe) : couleur, humeur, statut, dispo
@@ -665,6 +708,7 @@ function watchProfile(id){
       place:PLACES[d.place]?d.place:"",
       act:ACTS[d.act]?d.act:"",
       wish:WISHES[d.wish]?d.wish:"",
+      st:d.st&&typeof d.st.toMillis==="function"?d.st.toMillis():0,
       status:typeof d.status==="string"?d.status.slice(0,60):"",
       avail:AVAIL[d.avail]?d.avail:"",
       font:FONTS[d.font]?d.font:"inter",
@@ -709,7 +753,7 @@ function locLine(loc, cls){
 }
 function look(id, fallback){
   const pr=profiles.get(id)||{};
-  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", wish:pr.wish||"", status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
+  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", wish:pr.wish||"", st:pr.st||0, status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
 }
 function face(name, mood){ return mood || initial(name); }
 function availEl(avail, extra){
@@ -837,16 +881,16 @@ A.onAuthStateChanged(auth, async user=>{
   // profil public : on lit humeur/statut/dispo, puis on resynchronise pseudo + couleur (merge = ne rien effacer)
   const pub=await F.getDoc(F.doc(db,"profiles",me.uid)).catch(()=>null);
   const pd=pub&&pub.exists()?pub.data():{};
-  me.place=PLACES[pd.place]?pd.place:""; me.act=ACTS[pd.act]?pd.act:""; me.wish=WISHES[pd.wish]?pd.wish:""; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter"; me.edge=HEX_RE.test(pd.edge||"")?pd.edge:"";
+  me.place=PLACES[pd.place]?pd.place:""; me.act=ACTS[pd.act]?pd.act:""; me.wish=WISHES[pd.wish]?pd.wish:""; me.st=pd.st&&typeof pd.st.toMillis==="function"?pd.st.toMillis():0; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter"; me.edge=HEX_RE.test(pd.edge||"")?pd.edge:"";
   F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color },{ merge:true }).catch(e=>console.warn("profil public",e));
   renderMe();
   startListeners();
   watchLoc(me.uid);
   if(justSignedUp){ justSignedUp=false; openProfile(true); }
   else if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); }
-  else { tab="vGroups"; show("vGroups"); }
+  else { tab="vFriends"; show("vFriends"); }
 });
-function renderMe(){ paint($("tabAv"), me.color); $("tabAv").textContent=initial(me.username); }
+function renderMe(){ if(typeof renderNowBar==="function") renderNowBar(); paint($("tabAv"), me.color); $("tabAv").textContent=initial(me.username); }
 
 /* ================= Abonnements globaux ================= */
 function startListeners(){
@@ -866,16 +910,52 @@ function startListeners(){
     [...friends.keys()].forEach(id=>{ if(!ids.has(id)) friends.delete(id); });
     renderFriends(); renderPlayers();     // le bouton « Ajouter » devient « ✓ ami »
   }, ()=>{}));
+  // Demandes d'ami reçues
+  subs.push(F.onSnapshot(F.query(F.collection(db,"requests",me.uid,"items"),F.orderBy("t","desc")), renderRequests, ()=>{}));
   // Invitations reçues
   subs.push(F.onSnapshot(F.query(F.collection(db,"invites",me.uid,"items"),F.orderBy("t","desc")), renderInvites, ()=>{}));
 }
 
 /* ================= Onglet Amis ================= */
 // Liste d'amis en tableau : une ligne par ami — Pseudo | Lieu | Activité | Envie
+const QTABLES={ place:[PLACES,"Où es-tu ?","p"], act:[ACTS,"Que fais-tu ?","a"], wish:[WISHES,"Envie de…","w"] };
+function renderNowBar(){
+  if(!me) return;
+  const bar=$("nowBar"); paintCard(bar, me.color, me.edge);
+  const edge=edgeOf(me), fr=freshness(me);
+  bar.classList.toggle("stale", fr!=="ok");
+  bar.querySelectorAll(".slot").forEach(b=>{
+    const k=b.dataset.k, key=me[k], si=b.querySelector(".si"); si.textContent="";
+    const tbl=QTABLES[k][0];
+    if(key && tbl[key]){ si.append(...lineIcon(tbl,key,"x").childNodes); si.style.color=edge; b.querySelector(".sl").textContent=tbl[key][0]; }
+    else { si.append(el("span","plus","＋")); si.style.color=""; b.querySelector(".sl").textContent={place:"Lieu",act:"Activité",wish:"Envie"}[k]; }
+  });
+  $("nowAge").textContent = me.st ? (fr==="expired"?"expiré · ":"")+"mis à jour il y a "+shortAgo(me.st) : "";
+}
+// Enregistre l'état tout de suite (sans passer par l'éditeur) et l'horodate
+async function quickSave(patch){
+  const rec={ username:me.username, color:me.color, place:me.place||"", act:me.act||"", wish:me.wish||"", status:me.status||"",
+              avail:me.avail||"", font:me.font||"inter", edge:me.edge||"", ...patch, st:F.serverTimestamp() };
+  try{ await F.setDoc(F.doc(db,"profiles",me.uid), rec, { merge:true }); Object.assign(me,patch); me.st=Date.now(); renderNowBar(); scheduleRender(); }
+  catch(e){ console.warn(e); toast("Mise à jour impossible"); }
+}
+function openQuick(k){
+  const [tbl,title,attr]=QTABLES[k]; $("qTitle").textContent=title;
+  const box=$("qList"); box.textContent="";
+  const none=el("button","none","aucun"); none.onclick=()=>{ closeQuick(); quickSave({[k]:""}); }; if(!me[k]) none.classList.add("sel"); box.append(none);
+  Object.keys(tbl).forEach(key=>{ const b=el("button"); b.append(...lineIcon(tbl,key,"x").childNodes, document.createTextNode(tbl[key][0]));
+    if(me[k]===key) b.classList.add("sel"); b.onclick=()=>{ closeQuick(); quickSave({[k]:key}); toast(tbl[key][0]); }; box.append(b); });
+  $("qBg").classList.remove("hidden"); $("qSheet").classList.remove("hidden");
+}
+function closeQuick(){ $("qBg").classList.add("hidden"); $("qSheet").classList.add("hidden"); }
+document.querySelectorAll("#nowBar .slot").forEach(b=>b.onclick=()=>openQuick(b.dataset.k));
+$("qBg").onclick=closeQuick; $("qClose").onclick=closeQuick;
+$("nowOk").onclick=()=>{ quickSave({}); toast("État confirmé"); };
 function renderFriends(){
+  renderNowBar();
   const box=$("friends"); box.textContent="";
   if(!friends.size){
-    box.innerHTML='<div class="empty-list">Pas encore d\'amis.<br>Ajoute-les par pseudo ci-dessus, ou avec le bouton <b>＋ ami</b> sur leur carte dans un groupe.</div>';
+    box.innerHTML='<div class="empty-list">Pas encore d\'amis.<br>Envoie une demande par pseudo ci-dessus, ou avec le bouton <b>＋ ami</b> sur leur carte dans un groupe.</div>';
     return;
   }
   const tbl=el("div","ftable");
@@ -896,14 +976,16 @@ function renderFriends(){
     const sub=el("div","fsub");
     if(f.avail) sub.append(availEl(f.avail));
     const ll=locLine(f.loc,"sm"); if(ll) sub.append(ll);
+    const fr=freshness(f);
+    if(f.st) sub.append(el("span","fage", fr==="expired" ? "état expiré" : shortAgo(f.st)));
     if(!sub.childNodes.length) sub.append(document.createTextNode(f.id===me.uid?"c'est toi":(f.status?"« "+f.status+" »":"")));
     else if(f.id===me.uid) sub.append(el("span","me","toi"));
     n.append(sub);
     r.append(n);
     // 2-4. icônes lieu / activité / envie, couleur du contour
-    [[placeIcon,f.place],[actIcon,f.act],[wishIcon,f.wish]].forEach(([mk,k])=>{
+    stateIcons(f).forEach(([mk,k])=>{
       const c=el("div","fc ficon");
-      if(k){ const ic=mk(k); ic.style.color=edge; c.append(ic); } else c.append(el("span","dash","—"));
+      if(k){ const ic=mk(k); ic.style.color=edge; if(fr==="stale") ic.classList.add("stale-ic"); c.append(ic); } else c.append(el("span","dash","—"));
       r.append(c);
     });
     // 5. retirer
@@ -925,8 +1007,8 @@ async function addByName(){
     if(s.empty){ toast("Aucun joueur « "+u+" »"); return; }
     const d=s.docs[0];
     if(friends.has(d.id)){ toast(u+" est déjà ton ami"); return; }
-    await addFriend(d.id,u); $("fName").value="";
-  }catch(e){ console.warn(e); toast("Ajout impossible"); }
+    await requestFriend(d.id,u); $("fName").value="";
+  }catch(e){ console.warn(e); toast("Demande impossible"); }
   finally{ $("fAddBtn").disabled=false; }
 }
 $("fAddBtn").onclick=addByName;
@@ -1041,15 +1123,58 @@ async function leaveRoom(){
   if(current){ await writePresence(false); current=null; }
   closeSheet();
 }
-// Ajout manuel d'un ami (bouton sur sa carte ou recherche par pseudo)
-async function addFriend(id, name, room){
-  const rec={ name:String(name).slice(0,20), lastSeen:F.serverTimestamp() }; if(room) rec.room=room;
-  await F.setDoc(F.doc(db,"users",me.uid,"friends",id), rec);
-  toast(name+" ajouté à tes amis");
+/* ===== Amitié réciproque par demande ===== */
+const incoming=new Map();   // uid → pseudo : demandes reçues
+const sent=new Set();       // demandes envoyées pendant cette session
+// S'ajouter soi-même (aperçu de son propre rendu) : direct, sans demande
+async function addSelf(){
+  await F.setDoc(F.doc(db,"users",me.uid,"friends",me.uid),{ name:me.username, lastSeen:F.serverTimestamp() });
+  toast("Tu t'es ajouté à ta liste");
 }
+// Envoyer une demande (ou accepter directement si l'autre nous en a déjà envoyé une)
+async function requestFriend(id, name){
+  if(id===me.uid) return addSelf();
+  if(friends.has(id)){ toast(name+" est déjà ton ami"); return; }
+  if(incoming.has(id)) return acceptRequest(id, incoming.get(id));
+  await F.setDoc(F.doc(db,"requests",id,"items",me.uid),{ fromName:me.username, t:F.serverTimestamp() });
+  sent.add(id); toast("Demande envoyée à "+name); scheduleRender();
+}
+// Accepter : les deux fiches d'amitié + suppression de la demande, en un seul lot
+async function acceptRequest(id, name){
+  const b=F.writeBatch(db);
+  b.set(F.doc(db,"users",me.uid,"friends",id),{ name:String(name).slice(0,20), lastSeen:F.serverTimestamp() });
+  b.set(F.doc(db,"users",id,"friends",me.uid),{ name:me.username, lastSeen:F.serverTimestamp() });
+  b.delete(F.doc(db,"requests",me.uid,"items",id));
+  await b.commit();
+  toast("Toi et "+name+" êtes maintenant amis");
+}
+async function declineRequest(id){ await F.deleteDoc(F.doc(db,"requests",me.uid,"items",id)).catch(()=>toast("Impossible de refuser")); }
+// Retirer : des deux côtés
 async function removeFriend(id, name){
-  await F.deleteDoc(F.doc(db,"users",me.uid,"friends",id)).catch(()=>toast("Suppression impossible"));
-  toast(name+" retiré de tes amis");
+  try{
+    const b=F.writeBatch(db);
+    b.delete(F.doc(db,"users",me.uid,"friends",id));
+    if(id!==me.uid) b.delete(F.doc(db,"users",id,"friends",me.uid));
+    await b.commit();
+    toast(name+" retiré de tes amis");
+  }catch(e){ console.warn(e); toast("Suppression impossible"); }
+}
+function renderRequests(snap){
+  incoming.clear();
+  const box=$("reqs"); box.textContent="";
+  snap.docs.forEach(d=>{
+    const v=d.data(), name=String(v.fromName||"?").slice(0,20); incoming.set(d.id,name);
+    const r=el("div","row invite");
+    const g=el("div","av gav",initial(name)); g.style.background="#24423a"; g.style.color="var(--accent)";
+    const info=el("div","info"); info.append(el("div","tt",name), el("div","when","veut être ton ami · "+ago(tms(v.t))));
+    const ok=el("button","btn sm","Accepter"); ok.onclick=async()=>{ ok.disabled=true; try{ await acceptRequest(d.id,name); }catch(e){ console.warn(e); ok.disabled=false; toast("Impossible d'accepter"); } };
+    const no=el("button","del","×"); no.setAttribute("aria-label","Refuser"); no.onclick=()=>declineRequest(d.id);
+    r.append(g,info,ok,no); box.appendChild(r);
+  });
+  const n=snap.size;
+  $("reqWrap").classList.toggle("hidden",!n); $("reqN").textContent=n;
+  $("fBadge").textContent=n; $("fBadge").classList.toggle("hidden",!n);
+  scheduleRender();
 }
 function setStatus(s,t){ $("dot").className="dot "+s; $("stTxt").textContent=t; }
 const isOn = m => m.online && Date.now()-m.t < AWAY_MS;
@@ -1065,19 +1190,20 @@ function playerCard(p0,isMe){
   const p = isMe ? p0 : look(p0.id,p0);
   const away=!isMe && !isOn(p);
   const c=el("div","player pcard"+(away?" away":"")); paintCard(c,p.color,p.edge);
-  if(p.place){ const ic=placeIcon(p.place); ic.style.color=edgeOf(p); c.append(ic); }
-  if(p.act){ const ic=actIcon(p.act); ic.style.color=edgeOf(p); c.append(ic); }
-  if(p.wish){ const ic=wishIcon(p.wish); ic.style.color=edgeOf(p); c.append(ic); }
+  const fr=freshness(p);
+  stateIcons(p).forEach(([mk,k])=>{ if(k){ const ic=mk(k); ic.style.color=edgeOf(p); if(fr==="stale") ic.classList.add("stale-ic"); c.append(ic); } });
   c.append(bigName(p.name,p.font));
   if(p.status) c.append(el("div","pstatus","« "+p.status+" »"));
   const ll=locLine(isMe?locs.get(me.uid):p.loc); if(ll) c.append(ll);
   const m=el("div","meta"); m.append(availEl(p.avail, away?"hors ligne · "+ago(p.t):"en ligne")); c.append(m);
   if(isMe) c.appendChild(el("div","tag","TOI"));
   else if(friends.has(p.id)) c.appendChild(el("div","add is","✓"));
+  else if(sent.has(p.id)) c.appendChild(el("div","add is","envoyée"));
   else{
-    const add=el("button","add","＋ ami"); add.setAttribute("aria-label","Ajouter "+p.name+" à mes amis");
+    const lbl=incoming.has(p.id)?"✓ accepter":"＋ ami";
+    const add=el("button","add",lbl); add.setAttribute("aria-label",(incoming.has(p.id)?"Accepter ":"Demander ")+p.name+" en ami");
     add.onclick=async ev=>{ ev.stopPropagation(); add.disabled=true;
-      try{ await addFriend(p.id,p.name,current); }catch(e){ console.warn(e); add.disabled=false; toast("Ajout impossible"); } };
+      try{ await requestFriend(p.id,p.name); }catch(e){ console.warn(e); add.disabled=false; toast("Demande impossible"); } };
     c.appendChild(add);
   }
   markNew(c,"p:"+(isMe?"me":p.id));
@@ -1087,7 +1213,7 @@ function playerCard(p0,isMe){
 function renderPlayers(){
   if(!me||view!=="vRoom") return;
   const box=$("players"); box.textContent="";
-  box.appendChild(playerCard({ name:me.username, color:me.color, place:me.place, act:me.act, wish:me.wish, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
+  box.appendChild(playerCard({ name:me.username, color:me.color, place:me.place, act:me.act, wish:me.wish, st:me.st, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
   const list=[...members.values()].sort((a,b)=>(isOn(b)-isOn(a))||a.name.localeCompare(b.name));
   list.forEach(p=>box.appendChild(playerCard(p,false)));
   if(!list.some(isOn)){
@@ -1344,14 +1470,18 @@ $("saveBtn").onclick=async()=>{
   const status=draft.status.replace(/\s+/g," ").trim().slice(0,60);
   try{
     await F.updateDoc(F.doc(db,"users",me.uid),{ color:draft.color });
-    await F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, status, avail:draft.avail, font:draft.font, edge:draft.edge });
+    const changed = draft.place!==me.place || draft.act!==me.act || draft.wish!==me.wish || status!==(me.status||"") || draft.avail!==(me.avail||"");
+    const rec={ username:me.username, color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, status, avail:draft.avail, font:draft.font, edge:draft.edge };
+    if(changed) rec.st=F.serverTimestamp();
+    await F.setDoc(F.doc(db,"profiles",me.uid), rec, { merge:true });
+    if(changed) me.st=Date.now();
     Object.assign(me,{ color:draft.color, place:draft.place, act:draft.act, wish:draft.wish, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
     if(current) writePresence(true);          // la couleur suit dans le groupe ouvert
   }catch(e){ console.warn(e); toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
   $("saveBtn").disabled=false;
   if(onboarding){
     onboarding=false; toast("Profil créé !");
-    if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); } else { show("vGroups"); }
+    if(pendingRoom){ const c=pendingRoom; pendingRoom=null; enterRoom(c); } else { show("vFriends"); }
   } else toast("Profil enregistré");
 };
 

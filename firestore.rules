@@ -38,15 +38,26 @@ service cloud.firestore {
           && (!('name' in request.resource.data) || validName(request.resource.data.name));
       }
 
-      // Mes amis (ajoutés manuellement, un par un ; on peut s'ajouter soi-même pour voir son rendu). Le profil doit exister.
+      // Mes amis — amitié RÉCIPROQUE, créée uniquement en acceptant une demande.
+      // B accepte la demande de A : B écrit users/B/friends/A ET users/A/friends/B dans le même lot.
+      // (on peut aussi s'ajouter soi-même pour voir son rendu)
       match /friends/{fid} {
-        allow read, delete: if isOwner(uid);
-        allow create, update: if isOwner(uid)
-          && exists(/databases/$(db)/documents/profiles/$(fid))
+        allow read: if isOwner(uid);
+        allow delete: if isOwner(uid) || (signedIn() && request.auth.uid == fid);   // chacun peut rompre
+        allow create: if exists(/databases/$(db)/documents/profiles/$(fid))
           && request.resource.data.keys().hasOnly(['name', 'lastSeen', 'room'])
           && request.resource.data.name is string && request.resource.data.name.size() <= 20
           && request.resource.data.lastSeen == request.time
-          && (!('room' in request.resource.data) || validCode(request.resource.data.room));
+          && (!('room' in request.resource.data) || validCode(request.resource.data.room))
+          && (
+            (isOwner(uid) && (fid == uid || exists(/databases/$(db)/documents/requests/$(uid)/items/$(fid))))
+            || (signedIn() && request.auth.uid == fid
+                && exists(/databases/$(db)/documents/requests/$(fid)/items/$(uid))
+                && request.resource.data.name == myUsername())
+          );
+        allow update: if isOwner(uid)
+          && request.resource.data.keys().hasOnly(['name', 'lastSeen', 'room'])
+          && request.resource.data.lastSeen == request.time;
       }
     }
 
@@ -54,7 +65,7 @@ service cloud.firestore {
     match /profiles/{uid} {
       allow read: if signedIn();
       allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'place', 'act', 'wish', 'status', 'avail', 'font', 'edge'])
+        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'place', 'act', 'wish', 'status', 'avail', 'font', 'edge', 'st'])
         && request.resource.data.username == myUsername()
         && isHex(request.resource.data.color)
         && (!('mood' in request.resource.data)   || (request.resource.data.mood is string && request.resource.data.mood.size() <= 16))
@@ -64,6 +75,8 @@ service cloud.firestore {
         && (!('place' in request.resource.data)  || request.resource.data.place in ['', 'maison','metro','bar','parc','ecole','ville','campagne','travail','resto','cafe','sport','plage','concert','cine','voyage','route','montagne','soiree','shopping','dodo'])
         && (!('act' in request.resource.data)    || request.resource.data.act in ['', 'after','shopping','bouffe','dodo','dancing','working','sport','musique','apero','gaming','lecture','chill'])
         && (!('wish' in request.resource.data)   || request.resource.data.wish in ['', 'sortir','boire','manger','danser','fete','monde','chiller','dormir','rentrer','bouger','calin','voyager','saispas'])
+        && (!('st' in request.resource.data) || request.resource.data.st == request.time
+            || (resource != null && ('st' in resource.data) && request.resource.data.st == resource.data.st))
         && (!('edge' in request.resource.data)   || request.resource.data.edge == '' || isHex(request.resource.data.edge));
       allow delete: if false;
     }
@@ -81,6 +94,17 @@ service cloud.firestore {
         && request.resource.data.prec in ['quartier', 'precise']
         && request.resource.data.t == request.time;
       allow delete: if isOwner(uid);
+    }
+
+    // Demandes d'ami : requests/{destinataire}/items/{expéditeur}
+    match /requests/{to}/items/{from} {
+      allow read: if isOwner(to) || isOwner(from);
+      allow create: if signedIn() && request.auth.uid == from && from != to
+        && exists(/databases/$(db)/documents/profiles/$(to))
+        && request.resource.data.keys().hasOnly(['fromName', 't'])
+        && request.resource.data.fromName == myUsername()
+        && request.resource.data.t == request.time;
+      allow delete: if isOwner(to) || isOwner(from);       // refuser / annuler
     }
 
     // Groupe : nom figé à la création
