@@ -131,6 +131,18 @@
   .pcard .wish{position:absolute;top:6cqw;right:6cqw;width:24cqw;height:24cqw}
   .pcard .wish svg{width:100%;height:100%;display:block;filter:drop-shadow(0 0 1px rgba(255,255,255,.18))}
   .pcard .wish.ph-empty{width:auto;height:auto;font-size:4.2cqw;padding:3px 10px;white-space:nowrap}
+  /* Bouton ▶ musique en haut à droite : les 3 logos se resserrent (classe .hm) */
+  .pcard.hm .place{left:5cqw;width:21cqw;height:21cqw}
+  .pcard.hm .act{left:28.5cqw;width:21cqw;height:21cqw}
+  .pcard.hm .wish{right:auto;left:52cqw;width:21cqw;height:21cqw}
+  .pcard.hm .act.ph-empty{left:39cqw}
+  .pcard.hm .wish.ph-empty{left:auto;right:23cqw}
+  .mbtn{position:absolute;top:7.5cqw;right:5cqw;width:17cqw;height:17cqw;border-radius:50%;border:0;padding:0;cursor:pointer;
+    display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.3);transition:transform .15s}
+  .mbtn:active{transform:scale(.9)}
+  .mbtn svg{width:48%;height:48%;margin-left:8%}
+  .mbtn i{position:absolute;bottom:-2px;right:-2px;width:42%;height:42%;border-radius:50%;display:grid;place-items:center;font-style:normal;
+    font-size:max(8px,4.5cqw);box-shadow:0 0 0 2px currentColor}
   .friend.pcard .wish{top:5cqw;right:5cqw;width:29cqw;height:29cqw}
   .friend.pcard .wish svg{stroke-width:2.6}
   .friend.pcard .place{top:5cqw;left:5cqw;width:29cqw;height:29cqw}
@@ -464,6 +476,7 @@
       <div class="place" id="pvAv" data-ed="place"></div>
       <div class="act" id="pvAct" data-ed="act"></div>
       <div class="wish" id="pvWish" data-ed="wish"></div>
+      <div id="pvMbtn"></div>
       <div class="pn" id="pvName" data-ed="font"></div>
       <div class="pstat" id="pvStatus" data-ed="status"></div>
       <div class="pav" id="pvAvail" data-ed="status"></div>
@@ -757,6 +770,18 @@ function musicChip(p, cls){
   e.setAttribute("aria-label","Écouter le mood musical de "+(p.name||"cet ami"));
   e.addEventListener("click",ev=>{ ev.stopPropagation(); ev.preventDefault(); openMusic(p); });
   return e;
+}
+// Bouton rond ▶ (couleur du contour) qui lance le mood musical du joueur
+function musicButton(p){
+  if(!p.music && !p.musicUrl) return null;
+  const edge=edgeOf(p), b=el("button","mbtn");
+  b.type="button"; b.style.background=edge; b.style.color=p.color;
+  b.innerHTML='<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l13-7.5z"/></svg>';
+  const note=el("i",null,"♫"); note.style.background=edge; note.style.color=p.color; b.append(note);
+  b.setAttribute("aria-label","Écouter "+(p.music||"le son")+(p.name?" de "+p.name:""));
+  b.title=p.music||"Écouter";
+  b.addEventListener("click",ev=>{ ev.stopPropagation(); ev.preventDefault(); openMusic(p); });
+  return b;
 }
 /* ===== Lecteur intégré : convertit un lien en lecteur officiel « embed » ===== */
 function embedFor(u){
@@ -1329,6 +1354,7 @@ function playerCard(p0,isMe){
   const c=el("div","player pcard"+(away?" away":"")); paintCard(c,p.color,p.edge);
   const fr=freshness(p);
   stateIcons(p).forEach(([mk,k])=>{ if(k){ const ic=mk(k); ic.style.color=edgeOf(p); if(fr==="stale") ic.classList.add("stale-ic"); c.append(ic); } });
+  if(fr!=="expired"){ const mb=musicButton({...p, name:isMe?"":p.name}); if(mb){ c.classList.add("hm"); c.append(mb); } }
   c.append(bigName(p.name,p.font));
   if(p.status) c.append(el("div","pstatus","« "+p.status+" »"));
   if(fr!=="expired"){ const mc=musicChip(p); if(mc) c.append(mc); }
@@ -1469,6 +1495,9 @@ function setDraft(patch){
   Object.assign(draft,patch);
   renderLocPreview();
   renderMusicPreview();
+  { const holder=$("pvMbtn"); holder.textContent="";
+    const mp={ color:draft.color, edge:draft.edge, music:(draft.music||"").trim(), musicUrl:musicHost(draft.musicUrl||"")?draft.musicUrl:"" };
+    const mb=musicButton(mp); $("pv").classList.toggle("hm",!!mb); if(mb) holder.append(mb); }
   paintCard($("pv"),draft.color,draft.edge);
   syncWheel();
   const pv=$("pvAv"); pv.textContent=""; pv.classList.toggle("ph-empty",!draft.place);
