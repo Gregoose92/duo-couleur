@@ -141,6 +141,22 @@
   .mbtnslot .mbtn{position:relative!important;top:auto!important;right:auto!important;width:100%!important;height:100%!important}
   .player.pcard .bign,.preview.sq .pn{margin-top:14cqw}
   .mring svg text{paint-order:normal}
+  /* Viens me rejoindre */
+  .joinb{display:inline-flex;align-items:center;gap:6px;font-weight:800;text-decoration:none;border-radius:999px;
+    padding:6px 12px;font-size:max(11px,5.6cqw);max-width:92%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    box-shadow:0 3px 12px rgba(0,0,0,.3);animation:joinpulse 1.8s ease-in-out infinite}
+  .joinb svg{width:1.25em;height:1.25em;flex:none}
+  .joinb.sm{font-size:11px;padding:3px 9px;margin:2px 0 1px;animation:none}
+  @keyframes joinpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  .player.joining{outline:3px solid rgba(255,255,255,.55);outline-offset:-3px}
+  .frow2.joining{outline:2px solid rgba(255,255,255,.55);outline-offset:-2px}
+  #pvJoin{display:inline-flex;max-width:92%;cursor:pointer;border-radius:999px}
+  #pvJoin.ph-empty{font-size:min(3.6vw,1.9vh);border:1.5px dashed currentColor;padding:3px 12px;opacity:.55}
+  #pvJoin .joinb{font-size:min(3.8vw,2vh);animation:none}
+  .nowjoin{display:flex;align-items:center;justify-content:center;gap:7px;background:rgba(0,0,0,.14);color:inherit;border:0;border-radius:10px;
+    padding:10px;font-weight:800;font-size:13px;transition:background .2s}
+  .nowjoin svg{width:18px;height:18px}
+  .nowjoin.on{box-shadow:0 3px 14px rgba(0,0,0,.35);animation:joinpulse 1.8s ease-in-out infinite}
   .mvbig{font-size:54px;font-weight:800;text-align:center;line-height:1;font-variant-numeric:tabular-nums}
   .mvrange{background:linear-gradient(90deg,#4a5068,#7cf7c5)!important;margin-top:10px}
   .mvlab{display:flex;justify-content:space-between;font-size:11px;color:var(--mute);margin-top:6px}
@@ -440,6 +456,7 @@
         <button class="slot" data-k="act"><div class="si"></div><span class="sl">Activité</span></button>
         <button class="slot" data-k="wish"><div class="si"></div><span class="sl">Envie</span></button>
       </div>
+      <button class="nowjoin" id="nowJoin"></button>
       <button class="nowmusic" id="nowMusic"></button>
       <button class="nowok" id="nowOk">✓ Toujours ça</button>
     </div>
@@ -505,6 +522,7 @@
       <div class="pn" id="pvName" data-ed="font"></div>
       <div class="pstat" id="pvStatus" data-ed="status"></div>
       <div class="pav" id="pvAvail" data-ed="status"></div>
+      <div id="pvJoin" data-ed="join"></div>
       <div id="pvMusic" data-ed="music"></div>
       <div id="pvLoc" data-ed="loc"></div>
       <div class="edhint" id="edHint">touche pour modifier</div>
@@ -536,6 +554,10 @@
     <div data-sec="act"><div class="placelist" id="acts"></div></div>
     <div data-sec="wish"><div class="placelist" id="wishes"></div></div>
     <div data-sec="font"><div class="fontlist" id="fonts"></div></div>
+    <div data-sec="join">
+      <p class="small" style="margin:0 0 10px">Tes amis voient un bandeau « Viens me rejoindre ! » sur ta carte, avec ton lieu. Aucun message n'est envoyé.</p>
+      <button class="btn" id="joinToggle" style="margin-top:0"></button>
+    </div>
     <div data-sec="mv">
       <div class="mvbig" id="mvBig">—</div>
       <input type="range" id="mvIn" min="0" max="100" step="1" value="50" aria-label="Mood de 0 à 100" class="mvrange">
@@ -802,6 +824,21 @@ function musicChip(p, cls){
   e.addEventListener("click",ev=>{ ev.stopPropagation(); ev.preventDefault(); openMusic(p); });
   return e;
 }
+/* ===== Mode « Viens me rejoindre ! » ===== */
+const MEGA='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10v4h3l7 4.5V5.5L6 10z"/><path d="M16.5 9a4 4 0 0 1 0 6"/><path d="M19 6.5a7.5 7.5 0 0 1 0 11"/></svg>';
+// Bannière bien visible ; touche = ouvre la carte si l'ami partage sa position
+function joinBanner(p, cls){
+  if(!p.join || freshness(p)==="expired") return null;
+  const edge=edgeOf(p);
+  const b=el(p.loc?"a":"div","joinb"+(cls?" "+cls:""));
+  b.style.background=edge; b.style.color=p.color;
+  b.innerHTML=MEGA;
+  const where = p.place && PLACES[p.place] ? " · "+PLACES[p.place][0] : (p.loc ? " · "+p.loc.label : "");
+  b.append(el("span",null,(cls==="full"?"Viens me rejoindre !":"Rejoins-moi !")+where));   // version courte sur les cartes et le tableau
+  if(p.loc){ b.href="https://www.google.com/maps/search/?api=1&query="+p.loc.lat+","+p.loc.lng; b.target="_blank"; b.rel="noopener";
+    b.addEventListener("click",e=>e.stopPropagation()); }
+  return b;
+}
 /* ===== Mood 0–100 : anneau de jauge avec le chiffre au centre (couleur = contour) ===== */
 const validMv = v => Number.isInteger(v) && v>=0 && v<=100;
 function moodRing(v, cls){
@@ -903,6 +940,7 @@ function watchProfile(id){
       st:d.st&&typeof d.st.toMillis==="function"?d.st.toMillis():0,
       music:typeof d.music==="string"?d.music.slice(0,28):"",
       mv:validMv(d.mv)?d.mv:-1,
+      join:d.join===true,
       musicUrl:typeof d.musicUrl==="string"&&musicHost(d.musicUrl)?d.musicUrl:"",
       status:typeof d.status==="string"?d.status.slice(0,60):"",
       avail:AVAIL[d.avail]?d.avail:"",
@@ -948,7 +986,7 @@ function locLine(loc, cls){
 }
 function look(id, fallback){
   const pr=profiles.get(id)||{};
-  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", wish:pr.wish||"", music:pr.music||"", musicUrl:pr.musicUrl||"", mv:validMv(pr.mv)?pr.mv:-1, st:pr.st||0, status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
+  return { ...fallback, loc:locs.get(id)||null, color:pr.color||fallback.color, name:pr.username||fallback.name, place:pr.place||"", act:pr.act||"", wish:pr.wish||"", music:pr.music||"", musicUrl:pr.musicUrl||"", mv:validMv(pr.mv)?pr.mv:-1, join:pr.join===true, st:pr.st||0, status:pr.status||"", avail:pr.avail||"", font:pr.font||"inter", edge:pr.edge||"" };
 }
 function face(name, mood){ return mood || initial(name); }
 function availEl(avail, extra){
@@ -1077,7 +1115,7 @@ A.onAuthStateChanged(auth, async user=>{
   const pub=await F.getDoc(F.doc(db,"profiles",me.uid)).catch(()=>null);
   const pd=pub&&pub.exists()?pub.data():{};
   me.place=PLACES[pd.place]?pd.place:""; me.act=ACTS[pd.act]?pd.act:""; me.wish=WISHES[pd.wish]?pd.wish:""; me.st=pd.st&&typeof pd.st.toMillis==="function"?pd.st.toMillis():0; me.status=typeof pd.status==="string"?pd.status:""; me.avail=AVAIL[pd.avail]?pd.avail:""; me.font=FONTS[pd.font]?pd.font:"inter"; me.edge=HEX_RE.test(pd.edge||"")?pd.edge:"";
-  me.mv=validMv(pd.mv)?pd.mv:-1;
+  me.mv=validMv(pd.mv)?pd.mv:-1; me.join=pd.join===true;
   me.music=typeof pd.music==="string"?pd.music.slice(0,28):""; me.musicUrl=typeof pd.musicUrl==="string"&&musicHost(pd.musicUrl)?pd.musicUrl:"";
   F.setDoc(F.doc(db,"profiles",me.uid),{ username:me.username, color:me.color },{ merge:true }).catch(e=>console.warn("profil public",e));
   renderMe();
@@ -1130,12 +1168,15 @@ function renderNowBar(){
     if(key && tbl[key]){ si.append(...lineIcon(tbl,key,"x").childNodes); si.style.color=edge; b.querySelector(".sl").textContent=tbl[key][0]; }
     else { si.append(el("span","plus","＋")); si.style.color=""; b.querySelector(".sl").textContent={place:"Lieu",act:"Activité",wish:"Envie"}[k]; }
   });
+  const nj=$("nowJoin"); nj.innerHTML=MEGA; nj.classList.toggle("on",!!me.join);
+  nj.append(document.createTextNode(me.join ? "Viens me rejoindre ! · activé" : "Mode « Viens me rejoindre »"));
+  if(me.join){ nj.style.background=edgeOf(me); nj.style.color=me.color; } else { nj.style.background=""; nj.style.color=""; }
   const nm=$("nowMusic"); nm.innerHTML=NOTE; nm.append(document.createTextNode(me.music ? me.music+(me.musicUrl?" · ▶ "+musicHost(me.musicUrl):"") : "＋ mood musical"));
   $("nowAge").textContent = me.st ? (fr==="expired"?"expiré · ":"")+"mis à jour il y a "+shortAgo(me.st) : "";
 }
 // Enregistre l'état tout de suite (sans passer par l'éditeur) et l'horodate
 async function quickSave(patch){
-  const rec={ username:me.username, color:me.color, mv:validMv(me.mv)?me.mv:-1, place:me.place||"", act:me.act||"", wish:me.wish||"", status:me.status||"",
+  const rec={ username:me.username, color:me.color, mv:validMv(me.mv)?me.mv:-1, join:!!me.join, place:me.place||"", act:me.act||"", wish:me.wish||"", status:me.status||"",
               avail:me.avail||"", font:me.font||"inter", edge:me.edge||"", music:me.music||"", musicUrl:me.musicUrl||"", ...patch, st:F.serverTimestamp() };
   try{ await F.setDoc(F.doc(db,"profiles",me.uid), rec, { merge:true }); Object.assign(me,patch); me.st=Date.now(); renderNowBar(); scheduleRender(); }
   catch(e){ console.warn(e); toast("Mise à jour impossible"); }
@@ -1172,6 +1213,7 @@ function openQuickMood(){
 }
 $("qBg").onclick=closeQuick; $("qClose").onclick=closeQuick;
 $("nowMusic").onclick=openQuickMusic;
+$("nowJoin").onclick=()=>{ const on=!me.join; quickSave({join:on}); toast(on?"Tes amis voient « Viens me rejoindre ! »":"Mode invitation coupé"); };
 $("mBg").onclick=closeMusic; $("mClose").onclick=closeMusic;
 $("nowOk").onclick=()=>{ quickSave({}); toast("État confirmé"); };
 function renderFriends(){
@@ -1187,7 +1229,7 @@ function renderFriends(){
   tbl.append(head);
   // toi d'abord, puis ordre alphabétique
   const list=[...friends.values()].map(f0=>look(f0.id,f0))
-    .sort((a,b)=>(b.id===me.uid)-(a.id===me.uid) || a.name.localeCompare(b.name));
+    .sort((a,b)=>(b.id===me.uid)-(a.id===me.uid) || (!!joinBanner(b))-(!!joinBanner(a)) || a.name.localeCompare(b.name));   // « Viens me rejoindre » en premier
   list.forEach(f=>{
     const edge=edgeOf(f);
     const r=el("div","frow2"); paintCard(r,f.color,f.edge);
@@ -1197,6 +1239,7 @@ function renderFriends(){
     if(f.font==="pixel") nm.style.fontSize="11px";
     n.append(nm);
     const sub=el("div","fsub");
+    const jb=joinBanner(f,"sm"); if(jb){ n.append(jb); r.classList.add("joining"); }
     if(f.avail) sub.append(availEl(f.avail));
     const ll=locLine(f.loc,"sm"); if(ll) sub.append(ll);
     if(freshness(f)!=="expired"){ const mc=musicChip(f,"sm"); if(mc) sub.append(mc); }
@@ -1428,6 +1471,7 @@ function playerCard(p0,isMe){
   if(p.status) c.append(el("div","pstatus","« "+p.status+" »"));
   if(fr!=="expired"){ const mc=musicChip(p); if(mc) c.append(mc); }
   const ll=locLine(isMe?locs.get(me.uid):p.loc); if(ll) c.append(ll);
+  const jb=joinBanner(p); if(jb){ c.append(jb); c.classList.add("joining"); }
   const m=el("div","meta"); m.append(availEl(p.avail, away?"hors ligne · "+ago(p.t):"en ligne")); c.append(m);
   if(isMe) c.appendChild(el("div","tag","TOI"));
   else if(friends.has(p.id)) c.appendChild(el("div","add is","✓"));
@@ -1446,7 +1490,7 @@ function playerCard(p0,isMe){
 function renderPlayers(){
   if(!me||view!=="vRoom") return;
   const box=$("players"); box.textContent="";
-  box.appendChild(playerCard({ name:me.username, color:me.color, mv:me.mv, place:me.place, act:me.act, wish:me.wish, music:me.music, musicUrl:me.musicUrl, st:me.st, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
+  box.appendChild(playerCard({ name:me.username, color:me.color, mv:me.mv, join:me.join, loc:locs.get(me.uid)||null, place:me.place, act:me.act, wish:me.wish, music:me.music, musicUrl:me.musicUrl, st:me.st, status:me.status, avail:me.avail, font:me.font, edge:me.edge },true));
   const list=[...members.values()].sort((a,b)=>(isOn(b)-isOn(a))||a.name.localeCompare(b.name));
   list.forEach(p=>box.appendChild(playerCard(p,false)));
   if(!list.some(isOn)){
@@ -1499,7 +1543,7 @@ $("shareBtn").onclick=async()=>{
 
 /* ================= Onglet Profil ================= */
 // Brouillon du profil : rien n'est publié avant « Enregistrer »
-let draft={ color:"#30b0ff", mv:-1, place:"", act:"", wish:"", status:"", avail:"", music:"", musicUrl:"" };
+let draft={ color:"#30b0ff", mv:-1, join:false, place:"", act:"", wish:"", status:"", avail:"", music:"", musicUrl:"" };
 /* --- Roue de couleur (teinte = angle, saturation = distance au centre) + luminosité --- */
 function hsvToHex(h,sat,v){ const f=n=>{ const k=(n+h/60)%6; return v-v*sat*Math.max(0,Math.min(k,4-k,1)); };
   return "#"+[f(5),f(3),f(1)].map(x=>Math.round(x*255).toString(16).padStart(2,"0")).join(""); }
@@ -1564,6 +1608,11 @@ function setDraft(patch){
   Object.assign(draft,patch);
   renderLocPreview();
   renderMusicPreview();
+  { const j=$("pvJoin"); j.textContent=""; j.classList.toggle("ph-empty",!draft.join);
+    if(draft.join){ const jb=joinBanner({ ...draft, st:Date.now(), loc:locs.get(me?.uid)||null },"full"); if(jb){ const sp=el("span","joinb"); sp.innerHTML=jb.innerHTML; sp.style.cssText=jb.style.cssText; j.append(sp); } }
+    else j.textContent="＋ viens me rejoindre";
+    $("joinToggle").textContent = draft.join ? "Désactiver" : "Activer « Viens me rejoindre ! »";
+    $("joinToggle").classList.toggle("ghost", !!draft.join); }
   { const r=$("pvMv"); r.innerHTML=""; r.classList.toggle("ph-empty",!validMv(draft.mv));
     if(validMv(draft.mv)) r.append(...moodRing(draft.mv).childNodes); else r.textContent="＋ mood";
     $("pvTop").style.color=edgeOf(draft);
@@ -1593,7 +1642,7 @@ function setDraft(patch){
   document.querySelectorAll("#avail button").forEach(b=>b.classList.toggle("sel",b.dataset.v===draft.avail));
 }
 /* --- Édition directe sur la carte --- */
-const ED_TITLES={ mv:"Mon mood (0–100)", music:"Mood musical", loc:"Ma position", color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", wish:"J'ai envie de…", font:"Police du pseudo", status:"Statut & disponibilité" };
+const ED_TITLES={ join:"Viens me rejoindre !", mv:"Mon mood (0–100)", music:"Mood musical", loc:"Ma position", color:"Mes couleurs", place:"Mon lieu", act:"Mon activité", wish:"J'ai envie de…", font:"Police du pseudo", status:"Statut & disponibilité" };
 let edOpen=null;
 function openEditor(sec){
   edOpen=sec;
@@ -1706,6 +1755,7 @@ function renderMusicPreview(){
   $("musicHint").textContent = !u ? "" : (h ? "✓ Lien "+h+" reconnu" : "✗ Lien non reconnu");
   $("musicHint").style.color = !u ? "" : (h ? "var(--accent)" : "var(--err)");
 }
+$("joinToggle").onclick=()=>setDraft({join:!draft.join});
 $("mvIn").addEventListener("input",e=>setDraft({mv:parseInt(e.target.value,10)}));
 $("mvClear").onclick=()=>setDraft({mv:-1});
 function openProfile(first){
@@ -1714,7 +1764,7 @@ function openProfile(first){
   $("onboard").classList.toggle("hidden",!onboarding);
   $("logoutBtn").classList.toggle("hidden",onboarding);
   $("saveBtn").textContent=onboarding?"C'est parti →":"Enregistrer";
-  draft={ color:me.color, mv:validMv(me.mv)?me.mv:-1, place:me.place||"", act:me.act||"", wish:me.wish||"", music:me.music||"", musicUrl:me.musicUrl||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
+  draft={ color:me.color, mv:validMv(me.mv)?me.mv:-1, join:!!me.join, place:me.place||"", act:me.act||"", wish:me.wish||"", music:me.music||"", musicUrl:me.musicUrl||"", status:me.status||"", avail:me.avail||"", font:me.font||"inter", edge:me.edge||"" };
   wTarget="color"; Object.assign(hsv, hexToHsv(me.color)); if(hsv.v<.12) hsv.v=.12;
   $("statusIn").value=draft.status; $("musicIn").value=draft.music; $("musicUrlIn").value=draft.musicUrl;
   setDraft({});
@@ -1730,13 +1780,13 @@ $("saveBtn").onclick=async()=>{
     const music=(draft.music||"").replace(/\s+/g," ").trim().slice(0,28);
     const musicUrl=musicHost((draft.musicUrl||"").trim())?draft.musicUrl.trim():"";
     if((draft.musicUrl||"").trim() && !musicUrl){ toast("Lien musical non reconnu (Spotify, SoundCloud, YouTube, Deezer, Apple Music)"); $("saveBtn").disabled=false; openEditor("music"); return; }
-    const changed = draft.mv!==(validMv(me.mv)?me.mv:-1) || draft.place!==me.place || draft.act!==me.act || draft.wish!==me.wish || status!==(me.status||"") || draft.avail!==(me.avail||"")
+    const changed = draft.join!==!!me.join || draft.mv!==(validMv(me.mv)?me.mv:-1) || draft.place!==me.place || draft.act!==me.act || draft.wish!==me.wish || status!==(me.status||"") || draft.avail!==(me.avail||"")
       || music!==(me.music||"") || musicUrl!==(me.musicUrl||"");
-    const rec={ username:me.username, color:draft.color, mv:draft.mv, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge };
+    const rec={ username:me.username, color:draft.color, mv:draft.mv, join:!!draft.join, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge };
     if(changed) rec.st=F.serverTimestamp();
     await F.setDoc(F.doc(db,"profiles",me.uid), rec, { merge:true });
     if(changed) me.st=Date.now();
-    Object.assign(me,{ color:draft.color, mv:draft.mv, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
+    Object.assign(me,{ color:draft.color, mv:draft.mv, join:!!draft.join, place:draft.place, act:draft.act, wish:draft.wish, music, musicUrl, status, avail:draft.avail, font:draft.font, edge:draft.edge }); renderMe();
     if(current) writePresence(true);          // la couleur suit dans le groupe ouvert
   }catch(e){ console.warn(e); toast("Enregistrement impossible"); $("saveBtn").disabled=false; return; }
   $("saveBtn").disabled=false;

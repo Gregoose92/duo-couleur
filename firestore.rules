@@ -65,7 +65,7 @@ service cloud.firestore {
     match /profiles/{uid} {
       allow read: if signedIn();
       allow create, update: if isOwner(uid)
-        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'place', 'act', 'wish', 'status', 'avail', 'font', 'edge', 'st', 'music', 'musicUrl', 'mv'])
+        && request.resource.data.keys().hasOnly(['username', 'color', 'mood', 'place', 'act', 'wish', 'status', 'avail', 'font', 'edge', 'st', 'music', 'musicUrl', 'mv', 'join'])
         && request.resource.data.username == myUsername()
         && isHex(request.resource.data.color)
         && (!('mood' in request.resource.data)   || (request.resource.data.mood is string && request.resource.data.mood.size() <= 16))
@@ -77,6 +77,7 @@ service cloud.firestore {
         && (!('wish' in request.resource.data)   || request.resource.data.wish in ['', 'sortir','boire','manger','danser','fete','monde','chiller','dormir','rentrer','bouger','calin','voyager','saispas'])
         && (!('st' in request.resource.data) || request.resource.data.st == request.time
             || (resource != null && ('st' in resource.data) && request.resource.data.st == resource.data.st))
+        && (!('join' in request.resource.data) || request.resource.data.join is bool)
         && (!('mv' in request.resource.data) || (request.resource.data.mv is int && request.resource.data.mv >= -1 && request.resource.data.mv <= 100))
         && (!('music' in request.resource.data)    || (request.resource.data.music is string && request.resource.data.music.size() <= 28))
         && (!('musicUrl' in request.resource.data) || request.resource.data.musicUrl == ''
